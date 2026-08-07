@@ -13,14 +13,16 @@
 
 ## 本地开发
 
-项目直接使用当前已激活的 Python 环境，不强制创建额外虚拟环境。PowerShell：
+使用本机现有的 Python 3.11+ 创建项目虚拟环境；这不会下载新的 Python 版本。PowerShell：
 
 ```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-如果本机存在多个 Python 版本，请先确认上述 `python` 指向希望使用的 Python 3.11+ 环境。
+如果本机存在多个 Python 版本，请在创建 `.venv` 前确认上述 `python` 指向希望使用的现有 Python 3.11+ 环境。后续命令均在激活的 `.venv` 中执行。
 
 验证安装：
 
