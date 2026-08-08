@@ -13,7 +13,7 @@
 | Project planning | Complete | `main` / `e72f50e` | Development plan and Issue backlog published |
 | JAI-001 Project bootstrap | Complete, awaiting merge | `feature/jai-001-project-bootstrap` / `b965a47` | Python package, `.venv` workflow, Ruff, Mypy, Pytest |
 | JAI-002 Configuration/logging/errors | Complete, awaiting merge | `feature/jai-002-config-logging` / `c6fea0e` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
-| JAI-003 API/PostgreSQL/health | Complete, awaiting push/merge | `feature/jai-003-api-postgres-health` / `ea794e9` | FastAPI, PostgreSQL pool, health checks and Compose verified |
+| JAI-003 API/PostgreSQL/health | Complete, awaiting merge | `feature/jai-003-api-postgres-health` / `ea794e9` | FastAPI, PostgreSQL pool, health checks and Compose verified |
 
 ## 2. Environment readiness
 
@@ -136,14 +136,14 @@ Reuse the existing Python installation and maintain dependencies in repository-l
 - Failure verification: stopping PostgreSQL caused ready to return 503 with a sanitized response; after restart it returned 200 again.
 - First API image pull failed because Docker Hub authentication timed out; a targeted retry succeeded.
 - Two GitHub push attempts timed out on port 443; all commits remain safe in the local repository.
+- GitHub connectivity recovered later on 2026-08-08 and the branch was pushed successfully.
 - Containers were left running for local inspection at `http://localhost:8000`.
 
 ## 6. Next actions
 
 ### Codex
 
-1. Push the completed JAI-003 branch when GitHub is reachable.
-2. Start JAI-004 test and CI baseline after the preceding stacked Pull Requests are merged or explicitly approved for continued stacking.
+1. Start JAI-004 test and CI baseline after the preceding stacked Pull Requests are merged or explicitly approved for continued stacking.
 
 ### User
 
