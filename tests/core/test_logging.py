@@ -3,13 +3,20 @@
 import json
 from io import StringIO
 
+from pydantic import SecretStr
+
 from jobagent.core.config import Settings
 from jobagent.core.logging import REDACTED, bind_log_context, configure_logging, get_logger
 
 
 def test_json_logging_includes_context_and_redacts_secrets() -> None:
     output = StringIO()
-    settings = Settings(environment="test", log_level="INFO", timezone="UTC")
+    settings = Settings(
+        environment="test",
+        log_level="INFO",
+        timezone="UTC",
+        database_url=SecretStr("postgresql+psycopg://jobagent:test-only@localhost/jobagent_test"),
+    )
     configure_logging(settings, stream=output)
     logger = get_logger("jobagent.tests")
 
@@ -30,7 +37,12 @@ def test_json_logging_includes_context_and_redacts_secrets() -> None:
 
 def test_log_context_does_not_leak_after_scope() -> None:
     output = StringIO()
-    settings = Settings(environment="test", log_level="INFO", timezone="UTC")
+    settings = Settings(
+        environment="test",
+        log_level="INFO",
+        timezone="UTC",
+        database_url=SecretStr("postgresql+psycopg://jobagent:test-only@localhost/jobagent_test"),
+    )
     configure_logging(settings, stream=output)
     logger = get_logger("jobagent.tests")
 

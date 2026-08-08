@@ -1,7 +1,9 @@
 # JOBAGENT Development Work Log
 
-> Purpose: a concise, continuously updated record of progress, decisions, verification, blockers, and user actions.  
-> Last updated: 2026-08-07  
+> Purpose: a concise, continuously updated record of progress, decisions, verification, blockers, and user actions.
+>
+> Last updated: 2026-08-08
+>
 > Active branch: `feature/jai-003-api-postgres-health`
 
 ## 1. Current status
@@ -11,11 +13,23 @@
 | Project planning | Complete | `main` / `e72f50e` | Development plan and Issue backlog published |
 | JAI-001 Project bootstrap | Complete, awaiting merge | `feature/jai-001-project-bootstrap` / `b965a47` | Python package, `.venv` workflow, Ruff, Mypy, Pytest |
 | JAI-002 Configuration/logging/errors | Complete, awaiting merge | `feature/jai-002-config-logging` / `c6fea0e` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
-| JAI-003 API/PostgreSQL/health | Started | `feature/jai-003-api-postgres-health` | Branch created; implementation not started |
+| JAI-003 API/PostgreSQL/health | Complete, awaiting push/merge | `feature/jai-003-api-postgres-health` | FastAPI, PostgreSQL pool, health checks and Compose verified |
 
-## 2. Current blocker and user action
+## 2. Environment readiness
 
-### Docker is not installed or not available on PATH
+### Docker installation completed
+
+Verified on 2026-08-08:
+
+- WSL 2.7.11
+- Docker Desktop 4.85.0
+- Docker Engine 29.6.2, Linux containers
+- Docker Compose 5.3.1
+- PostgreSQL 16 and the JOBAGENT API run as healthy Compose services
+
+The previous blocker below is resolved and retained for history.
+
+### Resolved: Docker was not installed or available on PATH
 
 Observed on 2026-08-07:
 
@@ -59,7 +73,7 @@ References:
 | Python installation | Existing `F:\py3.11.9\python.exe` |
 | Project environment | `.venv`, created from the existing Python 3.11.9 installation |
 | Git remote | `https://github.com/user9527448/JobAgent-demo.git` |
-| Docker | Not installed or not on PATH as of 2026-08-07 |
+| Docker | Desktop 4.85.0; Engine 29.6.2; Compose 5.3.1; Linux containers |
 
 ## 4. Decisions
 
@@ -109,22 +123,31 @@ Reuse the existing Python installation and maintain dependencies in repository-l
 - Checked local Docker availability and found Docker unavailable.
 - Paused implementation to clarify environment setup and durable work-log requirements.
 
+### 2026-08-08 — JAI-003 completed
+
+- Added a FastAPI application factory with lifecycle-managed infrastructure.
+- Added an asynchronous SQLAlchemy PostgreSQL pool using psycopg 3.
+- Added `/health/live` and database-aware `/health/ready` endpoints.
+- Added a non-root API image, PostgreSQL 16 Compose service, persistent database volume, dependency health checks, and restart policies.
+- Added required database configuration while keeping the URL secret in settings and logs.
+- Replaced the deprecated Starlette `httpx` test path with `httpx2` and removed all test warnings.
+- Verification: Ruff passed; Mypy passed across 18 files; 10 tests passed; coverage 93%.
+- Container verification: both services healthy; live returned 200; ready returned 200 with PostgreSQL available.
+- Failure verification: stopping PostgreSQL caused ready to return 503 with a sanitized response; after restart it returned 200 again.
+- First API image pull failed because Docker Hub authentication timed out; a targeted retry succeeded.
+- Containers were left running for local inspection at `http://localhost:8000`.
+
 ## 6. Next actions
 
 ### Codex
 
-1. Implement FastAPI application factory and lifecycle.
-2. Add PostgreSQL async connection pool.
-3. Add `/health/live` and `/health/ready` with database-aware readiness.
-4. Add Dockerfile, Compose, configuration, tests, and operating instructions.
-5. Run all checks that do not require Docker.
-6. After Docker becomes available, run the real API + PostgreSQL acceptance test and record results here.
+1. Push the completed JAI-003 branch when GitHub is reachable.
+2. Start JAI-004 test and CI baseline after the preceding stacked Pull Requests are merged or explicitly approved for continued stacking.
 
 ### User
 
-1. Install and start Docker Desktop using the checklist above.
-2. Merge the JAI-001 and JAI-002 Pull Requests in order when ready.
-3. Tell Codex when Docker verification succeeds so the JAI-003 container test can run.
+1. Merge the JAI-001, JAI-002, and JAI-003 Pull Requests in order when ready.
+2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
 
