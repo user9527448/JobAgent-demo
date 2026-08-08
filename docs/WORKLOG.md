@@ -14,7 +14,7 @@
 | JAI-001 Project bootstrap | Complete, awaiting merge | `feature/jai-001-project-bootstrap` / `b965a47` | Python package, `.venv` workflow, Ruff, Mypy, Pytest |
 | JAI-002 Configuration/logging/errors | Complete, awaiting merge | `feature/jai-002-config-logging` / `c6fea0e` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
 | JAI-003 API/PostgreSQL/health | Complete, awaiting merge | `feature/jai-003-api-postgres-health` / `ea794e9` | FastAPI, PostgreSQL pool, health checks and Compose verified |
-| JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
+| JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
 
 ## 2. Environment readiness
 
