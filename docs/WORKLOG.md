@@ -2,9 +2,9 @@
 
 > Purpose: a concise, continuously updated record of progress, decisions, verification, blockers, and user actions.
 >
-> Last updated: 2026-08-08
+> Last updated: 2026-08-09
 >
-> Active branch: `feature/jai-004-ci-test-baseline`
+> Active branch: `feature/jai-005-source-spike`
 
 ## 1. Current status
 
@@ -15,6 +15,7 @@
 | JAI-002 Configuration/logging/errors | Complete, awaiting merge | `feature/jai-002-config-logging` / `c6fea0e` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
 | JAI-003 API/PostgreSQL/health | Complete, awaiting merge | `feature/jai-003-api-postgres-health` / `ea794e9` | FastAPI, PostgreSQL pool, health checks and Compose verified |
 | JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
+| JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` / `4d63e02` | Jining public recruitment list/detail/PDF technical validation |
 
 ## 2. Environment readiness
 
@@ -98,6 +99,10 @@ Reuse the existing Python installation and maintain dependencies in repository-l
 
 Local development and GitHub Actions both invoke `python scripts/check.py`. PostgreSQL integration tests require `JOBAGENT_TEST_DATABASE_URL`; CI supplies a dedicated test database and local runs skip only that integration test when the variable is absent.
 
+### D-006 First source for the vertical Spike
+
+Use the Jining Human Resources and Social Security Bureau's public institution recruitment column for JAI-005. It exposes a public HTML list, static announcement detail pages, and direct PDF attachments without login or CAPTCHA. The Spike will use a descriptive User-Agent, low request rate, no parallel requests, and offline fixtures for regression tests.
+
 ## 5. Completed work history
 
 ### 2026-08-07 — Planning and repository setup
@@ -154,15 +159,31 @@ Local development and GitHub Actions both invoke `python scripts/check.py`. Post
 - Repeatability verification without a local database URL: 10 tests passed, one integration test skipped as designed, and coverage remained 92.75%.
 - Gate verification: a temporary deliberately failing test made `python scripts/check.py` exit with status 1 at Pytest; the temporary test was then removed and the full gate returned to green.
 
+### 2026-08-09 — JAI-005 completed
+
+- Created `feature/jai-005-source-spike` from the verified JAI-004 branch after the user approved continuing the next planned Issue.
+- Corrected the task boundary after checking the Issue backlog: JAI-005 is the first real-source HTML/PDF vertical Spike; database models and migrations are JAI-006.
+- Selected the official Jining public institution recruitment column for investigation. Initial web inspection confirmed discoverable announcement pages, publication metadata, body text, and direct PDF attachments.
+- Compliance/access verification: `robots.txt` declared no disallowed paths; public list, detail and PDF resources returned HTTP 200 without login, CAPTCHA or browser automation. Requests were sequential, identified and spaced one second apart.
+- Added deterministic CDATA list parsing, metadata/body/attachment detail parsing and page-numbered PyMuPDF extraction. Added one immutable list/detail/PDF fixture set with SHA-256 provenance and five offline regression tests.
+- Added Git attributes that preserve captured HTML/PDF fixtures byte-for-byte; all three committed fixture hashes match their provenance record.
+- The first static check rejected import ordering and PyMuPDF's untyped constructor boundary. Imports were normalized and the third-party call received a narrow documented Mypy suppression; subsequent checks passed.
+- Offline quality gate: Ruff format/lint passed, Mypy passed across 24 files, 15 tests passed and one unrelated PostgreSQL integration test skipped; coverage was 87.57% against the 85% threshold.
+- Live Spike: discovered 21 list records, extracted the selected title, publication time and 4,815 body characters, found three PDF attachments, and extracted non-empty text from all four selected PDF pages.
+- Docker Desktop was initially unavailable during the first final check; the user started it and requested full verification.
+- Rebuilt the API image with the new HTML/PDF dependencies and started the Compose stack. Both API and PostgreSQL reported healthy; `/health/live` returned `alive` and `/health/ready` reported the database available.
+- Docker-backed final gate: Ruff format/lint passed, Mypy passed across 24 files, all 16 tests passed including the real PostgreSQL integration test, and coverage was 88.95% against the 85% threshold.
+- Final audit found no current container errors and reconfirmed that every committed HTML/PDF fixture SHA-256 matches its provenance record. JAI-005 now has no outstanding verification gaps.
+
 ## 6. Next actions
 
 ### Codex
 
-1. Start JAI-005 SQLAlchemy base and Alembic setup after the stacked Pull Requests are merged or the user approves continued stacking.
+1. Start JAI-006 core database models and first migration after the stacked Pull Requests are merged or the user approves continued stacking.
 
 ### User
 
-1. Merge the JAI-001 through JAI-004 Pull Requests in order when ready.
+1. Merge the JAI-001 through JAI-005 Pull Requests in order when ready.
 2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
