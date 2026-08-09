@@ -122,4 +122,5 @@ python -m uvicorn jobagent.api.app:create_app --factory --reload
 - [详细开发计划](docs/DEVELOPMENT_PLAN.md)
 - [GitHub Issues Backlog](docs/GITHUB_ISSUES.md)
 - [配置、日志与错误约定](docs/CONFIGURATION.md)
+- [JAI-005 首个真实来源技术验证](docs/spikes/JAI-005-JINING-SOURCE.md)
 - [持续开发工作日志](docs/WORKLOG.md)

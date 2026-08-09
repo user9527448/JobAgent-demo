@@ -1,12 +1,3 @@
-* text=auto eol=lf
-
-*.bat text eol=crlf
-*.cmd text eol=crlf
-*.ps1 text eol=crlf
-
-*.pdf binary
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.xlsx binary
-*.xls binary
+# Preserve captured source fixtures byte-for-byte for provenance hashes.
+tests/fixtures/**/*.html -text
+tests/fixtures/**/*.pdf -text
