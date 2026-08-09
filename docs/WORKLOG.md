@@ -17,9 +17,19 @@
 | JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
 | JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` / `4d63e02` | Jining public recruitment list/detail/PDF technical validation |
 | JAI-006 Core models/first migration | Complete, awaiting merge | `feature/jai-006-core-models-migration` / `d8c7c4f` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
-| JAI-007 Source Adapter/orchestrator | Complete locally, push blocked | `feature/jai-007-source-adapter-orchestrator` / `8a3db86` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
+| JAI-007 Source Adapter/orchestrator | Complete, awaiting merge | `feature/jai-007-source-adapter-orchestrator` / `8a3db86` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
 
 ## 2. Environment readiness
+
+### Git for Windows installation completed
+
+Verified on 2026-08-09:
+
+- Git for Windows 2.55.0 is installed at `C:\Program Files\Git\cmd\git.exe`.
+- The HTTPS remote helper is present and Git Credential Manager 2.9.0 is enabled through the system Git configuration.
+- The global Git author name and email are configured; credentials remain outside the repository.
+- Codex may place its bundled Git earlier on `PATH`; use the installed executable above explicitly for remote operations if the bundled runtime lacks an HTTPS helper.
+- Repository discovery, branch inspection and local status checks pass. Earlier `github.com:443` timeouts were transient; the explicitly authorized JAI-007 push later succeeded with Git for Windows.
 
 ### Docker installation completed
 
@@ -76,6 +86,7 @@ References:
 | Project path | `F:\CXG\JOBAGENTV1.0` |
 | Python installation | Existing `F:\py3.11.9\python.exe` |
 | Project environment | `.venv`, created from the existing Python 3.11.9 installation |
+| Git | Git for Windows 2.55.0; Git Credential Manager 2.9.0; installed at `C:\Program Files\Git\cmd\git.exe` |
 | Git remote | `https://github.com/user9527448/JobAgent-demo.git` |
 | Docker | Desktop 4.85.0; Engine 29.6.2; Compose 5.3.1; Linux containers |
 
@@ -218,17 +229,18 @@ JAI-007 returns successful `RawDocumentInput` values from the common batch flow 
 - Production image rebuilt successfully; the recreated API and PostgreSQL containers are healthy, and `/health/ready` reports the database available.
 - No migration was required because JAI-006 already provided the compatible `crawl_runs.status`, `stats`, `error_message` and timestamp columns.
 - The first non-force push and a follow-up read-only `git ls-remote` check both failed because GitHub port 443 was unreachable after 21 seconds. All commits remain safe locally and no remote history changed.
+- After Git for Windows was installed, the database-enabled quality gate was rerun successfully: Ruff format/lint and Mypy passed, all 32 tests passed, and coverage remained 91.77%. The next non-force push was stopped before execution because the environment requires explicit user authorization to export the branch contents to the configured GitHub remote; no remote state changed.
+- After the user explicitly authorized the destination and payload, `feature/jai-007-source-adapter-orchestrator` was pushed successfully with Git for Windows and now tracks its matching origin branch. No history was rewritten.
 
 ## 6. Next actions
 
 ### Codex
 
-1. Retry the non-force JAI-007 branch push when GitHub HTTPS connectivity recovers.
-2. Start JAI-008 HTTP client, rate limiting, retries and cache headers after JAI-007 is merged or the user approves continued branch stacking.
+1. Start JAI-008 HTTP client, rate limiting, retries and cache headers after JAI-007 is merged or the user approves continued branch stacking.
 
 ### User
 
-1. Merge JAI-001 through JAI-007 in order when ready; JAI-007 first needs its local branch pushed after GitHub connectivity recovers.
+1. Merge JAI-001 through JAI-007 in order when ready.
 2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
