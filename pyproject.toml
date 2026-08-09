@@ -37,19 +37,23 @@ packages = ["src/jobagent"]
 [tool.pytest.ini_options]
 addopts = ["--strict-config", "--strict-markers", "-ra"]
 testpaths = ["tests"]
+markers = [
+  "integration: requires an explicitly configured PostgreSQL test database",
+]
 
 [tool.coverage.run]
 branch = true
 source = ["jobagent"]
 
 [tool.coverage.report]
+fail_under = 85
 show_missing = true
 skip_covered = true
 
 [tool.mypy]
 python_version = "3.11"
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "scripts"]
 pretty = true
 show_error_codes = true
 

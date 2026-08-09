@@ -4,7 +4,7 @@
 >
 > Last updated: 2026-08-08
 >
-> Active branch: `feature/jai-003-api-postgres-health`
+> Active branch: `feature/jai-004-ci-test-baseline`
 
 ## 1. Current status
 
@@ -14,6 +14,7 @@
 | JAI-001 Project bootstrap | Complete, awaiting merge | `feature/jai-001-project-bootstrap` / `b965a47` | Python package, `.venv` workflow, Ruff, Mypy, Pytest |
 | JAI-002 Configuration/logging/errors | Complete, awaiting merge | `feature/jai-002-config-logging` / `c6fea0e` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
 | JAI-003 API/PostgreSQL/health | Complete, awaiting merge | `feature/jai-003-api-postgres-health` / `ea794e9` | FastAPI, PostgreSQL pool, health checks and Compose verified |
+| JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
 
 ## 2. Environment readiness
 
@@ -93,6 +94,10 @@ Reuse the existing Python installation and maintain dependencies in repository-l
 
 `docs/WORKLOG.md` is updated at Issue start, meaningful decisions/blockers, verification, and completion. `AGENTS.md` makes this requirement durable for future Codex work in the repository.
 
+### D-005 One quality-gate entry point
+
+Local development and GitHub Actions both invoke `python scripts/check.py`. PostgreSQL integration tests require `JOBAGENT_TEST_DATABASE_URL`; CI supplies a dedicated test database and local runs skip only that integration test when the variable is absent.
+
 ## 5. Completed work history
 
 ### 2026-08-07 — Planning and repository setup
@@ -139,15 +144,25 @@ Reuse the existing Python installation and maintain dependencies in repository-l
 - GitHub connectivity recovered later on 2026-08-08 and the branch was pushed successfully.
 - Containers were left running for local inspection at `http://localhost:8000`.
 
+### 2026-08-08 — JAI-004 completed
+
+- Created `feature/jai-004-ci-test-baseline` from the verified JAI-003 branch after the user explicitly approved continuing to the next stacked Issue.
+- Started a shared local/CI quality-gate command, an isolated PostgreSQL integration test, an 85% coverage threshold, and a GitHub Actions workflow.
+- The workflow uses an ephemeral `jobagent_test` PostgreSQL service; no production or personal data is in scope.
+- The first real database run exposed psycopg's incompatibility with the default Windows Proactor event loop; the integration test now explicitly uses the compatible Selector event loop while remaining portable to Linux CI.
+- Verification with PostgreSQL enabled: Ruff formatting/lint passed, Mypy passed across 20 files, 11 tests passed, and coverage was 95.17% against an 85% threshold.
+- Repeatability verification without a local database URL: 10 tests passed, one integration test skipped as designed, and coverage remained 92.75%.
+- Gate verification: a temporary deliberately failing test made `python scripts/check.py` exit with status 1 at Pytest; the temporary test was then removed and the full gate returned to green.
+
 ## 6. Next actions
 
 ### Codex
 
-1. Start JAI-004 test and CI baseline after the preceding stacked Pull Requests are merged or explicitly approved for continued stacking.
+1. Start JAI-005 SQLAlchemy base and Alembic setup after the stacked Pull Requests are merged or the user approves continued stacking.
 
 ### User
 
-1. Merge the JAI-001, JAI-002, and JAI-003 Pull Requests in order when ready.
+1. Merge the JAI-001 through JAI-004 Pull Requests in order when ready.
 2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template

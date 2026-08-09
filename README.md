@@ -2,14 +2,14 @@
 
 面向个人的招聘情报 Agent：采集、解析、筛选并推送企业校招和公职考试信息。
 
-> 当前状态：工程基线搭建中。业务能力将按 [GitHub Issues Backlog](docs/GITHUB_ISSUES.md) 逐步实现。
+> 当前状态：API、PostgreSQL 与持续集成基线已就绪。业务能力将按 [GitHub Issues Backlog](docs/GITHUB_ISSUES.md) 逐步实现。
 
 ## 环境要求
 
 - Python 3.11 或更高版本
 - Git
 
-后续接入数据库时还会需要 Docker Desktop；当前工程基线无需 Docker 即可运行。
+运行完整开发环境和 PostgreSQL 集成测试需要 Docker Desktop；其余检查无需 Docker。
 
 ## 本地开发
 
@@ -39,11 +39,20 @@ JOBAGENT project bootstrap is ready.
 ## 质量检查
 
 ```powershell
-ruff format --check .
-ruff check .
-mypy src tests
-pytest
+python scripts/check.py
 ```
+
+该入口与 GitHub Actions 使用相同的格式、静态分析、类型、测试和覆盖率检查；任一步失败都会立即返回非零状态。覆盖率下限为 85%。
+
+若本地 PostgreSQL Compose 服务正在运行，可同时启用真实数据库集成测试：
+
+```powershell
+$env:JOBAGENT_TEST_DATABASE_URL = "postgresql+psycopg://jobagent:jobagent-dev-only@localhost:5432/jobagent"
+python scripts/check.py
+Remove-Item Env:JOBAGENT_TEST_DATABASE_URL
+```
+
+未设置该专用变量时，仅跳过 PostgreSQL 集成测试，其余质量检查照常执行。CI 始终使用独立的 `jobagent_test` 数据库运行该测试。
 
 自动修复格式和可安全修复的问题：
 
@@ -58,6 +67,7 @@ ruff check --fix .
 JOBAGENTV1.0/
 ├─ src/jobagent/      # Python 应用包
 ├─ tests/             # 自动化测试
+├─ scripts/check.py   # 本地与 CI 共用的质量门禁
 ├─ docs/              # 产品与开发文档
 ├─ .env.example       # 环境变量示例（不含密钥）
 └─ pyproject.toml     # 依赖、构建和质量工具配置
