@@ -234,22 +234,24 @@ JAI-007 returns successful `RawDocumentInput` values from the common batch flow 
 
 ### 2026-08-09 — JAI-001 through JAI-007 merged locally to develop
 
-- Two pre-merge fetch attempts failed because GitHub port 443 was unreachable. The local `develop` and current `origin/develop` reference both pointed to planning baseline `e72f50e`; local merges proceeded without pushing so any later remote divergence will still be rejected safely.
+- Three fetch attempts around the merge failed because GitHub port 443 was unreachable. The local `develop` and current `origin/develop` reference both pointed to planning baseline `e72f50e`; local merges proceeded without pushing so any later remote divergence will still be rejected safely.
 - Merged JAI-001 through JAI-007 in Issue order with seven non-fast-forward merge commits. Every feature tip is now an ancestor of local `develop`, and `main` remains unchanged.
 - The first combined quality gate stopped at Ruff format because JAI-005 had replaced JAI-001's general `.gitattributes` line-ending policy with only fixture overrides. This made a fresh Windows checkout use CRLF for 22 code/document files.
 - Restored the LF text, CRLF Windows-script and binary rules while preserving byte-exact HTML/PDF fixture overrides; `git add --renormalize .` confirmed no business-content changes were required. Integration fix commit: `b95998f`.
 - Final database-enabled gate: Ruff format/lint passed, Mypy passed across 38 files, all 32 tests passed and coverage was 91.77% against the 85% threshold.
+- A non-force `develop` push was stopped before execution because the environment requires explicit user authorization to export the complete merged history to the GitHub remote. No remote state changed.
 
 ## 6. Next actions
 
 ### Codex
 
-1. Retry fetching `origin/develop`; after confirming no divergence, push the verified local `develop` merge history.
+1. After explicit user authorization, non-force push the verified local `develop` merge history; any unknown remote divergence will be rejected safely.
 2. Start JAI-008 HTTP client, rate limiting, retries and cache headers from the merged `develop` baseline.
 
 ### User
 
-1. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
+1. Explicitly authorize pushing local `develop` to `https://github.com/user9527448/JobAgent-demo.git`.
+2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
 
