@@ -10,6 +10,12 @@ from jobagent.crawlers.contracts import (
     SourceAdapter,
     SourceDefinition,
 )
+from jobagent.crawlers.http import (
+    HttpCacheValidators,
+    HttpFetchResult,
+    HttpSourcePolicy,
+    SourceHttpClient,
+)
 from jobagent.crawlers.orchestrator import CollectionOrchestrator
 from jobagent.crawlers.registry import AdapterRegistry
 from jobagent.crawlers.repository import CrawlRunRepository, SqlAlchemyCrawlRunRepository
@@ -23,8 +29,12 @@ __all__ = [
     "CrawlItemFailure",
     "CrawlRunRepository",
     "DiscoveredItem",
+    "HttpCacheValidators",
+    "HttpFetchResult",
+    "HttpSourcePolicy",
     "RawDocumentInput",
     "SourceAdapter",
     "SourceDefinition",
+    "SourceHttpClient",
     "SqlAlchemyCrawlRunRepository",
 ]

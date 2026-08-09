@@ -141,5 +141,6 @@ docker compose exec api alembic upgrade head
 - [配置、日志与错误约定](docs/CONFIGURATION.md)
 - [数据库模型与迁移](docs/DATABASE.md)
 - [Source Adapter 与采集编排](docs/COLLECTION.md)
+- [来源 HTTP 客户端策略](docs/HTTP_CLIENT.md)
 - [JAI-005 首个真实来源技术验证](docs/spikes/JAI-005-JINING-SOURCE.md)
 - [持续开发工作日志](docs/WORKLOG.md)

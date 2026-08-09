@@ -18,6 +18,7 @@
 | JAI-005 Real-source vertical Spike | Complete, merged to develop | `develop` / `548be94` | Jining public recruitment list/detail/PDF technical validation |
 | JAI-006 Core models/first migration | Complete, merged to develop | `develop` / `1690dd9` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
 | JAI-007 Source Adapter/orchestrator | Complete, merged to develop | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
+| JAI-008 HTTP client policy | Complete, merged locally; remote push blocked | `develop` / merge commit | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
 
 ## 2. Environment readiness
 
@@ -127,6 +128,10 @@ Migration integration tests reset the public schema and therefore refuse to run 
 ### D-009 Collection orchestration stops before raw-document persistence
 
 JAI-007 returns successful `RawDocumentInput` values from the common batch flow and persists only `crawl_runs`. URL normalization, content fingerprinting and immutable/idempotent raw-document writes remain in JAI-009, preventing premature duplication of that policy inside Adapters.
+
+### D-010 HTTP policy is isolated per source client
+
+JAI-008 gives each source its own HTTP client policy, concurrency semaphore and request-spacing clock so timeout, rate and concurrency settings cannot leak between sources. Conditional validators are returned with the response for JAI-009 to persist alongside raw-document state; no database schema was added early.
 
 ## 5. Completed work history
 
@@ -243,11 +248,25 @@ JAI-007 returns successful `RawDocumentInput` values from the common batch flow 
 - The user then explicitly authorized the `develop` push. Two non-force push attempts still timed out on GitHub port 443; DNS resolved `github.com` to `20.205.243.166`, but a direct TCP 443 diagnostic failed. The local merge history remains safe and the remote branch is unchanged.
 - GitHub connectivity later recovered and the authorized non-force push succeeded, advancing remote `develop` from `e72f50e` to `1ebc071`. JAI-001 through JAI-007 are now merged remotely in order; `main` remains unchanged.
 
+### 2026-08-09 — JAI-008 HTTP client policy completed
+
+- Created `feature/jai-008-http-client-policy` from the verified and remotely synchronized `develop` branch.
+- Scope confirmed: asynchronous HTTP client lifecycle, explicit User-Agent, source-level timeout/concurrency/minimum interval, exponential backoff, retry classification and ETag/Last-Modified conditional requests.
+- Boundaries: URL normalization and idempotent raw-document persistence remain JAI-009; attachment validation and storage remain JAI-010.
+- Added `SourceHttpClient`, validated source policy and cache-validator/result contracts. Retryable transport errors, HTTP 429 and 5xx responses use capped exponential backoff; permanent 4xx responses fail once; logs expose attempt counts while sanitizing request URLs.
+- Added seven deterministic unit checks covering transient recovery/exhaustion, permanent 404 behavior, validator round-trips and 304 responses, independent source policy values, concurrency caps and invalid configuration.
+- The first targeted static check found only import ordering/export formatting and an invariant JSON-dictionary annotation; those were corrected without suppressions. The repeated targeted Ruff, Mypy and Pytest checks passed.
+- Final database-enabled quality gate: Ruff format/lint passed, Mypy passed across 40 source files, all 39 tests passed and coverage was 91.08% against the 85% threshold.
+- The production image rebuilt successfully; the recreated API and PostgreSQL containers are healthy, and `/health/ready` reports the database available.
+- No dependency or migration change was required: the project already depends on `httpx`, and persistent URL/cache state remains in JAI-009.
+- Merged `feature/jai-008-http-client-policy` into `develop` with a non-fast-forward merge after confirming both local branches matched their remote counterparts.
+- The database-enabled quality gate was rerun after the merge: Ruff format/lint and Mypy passed, all 39 tests passed, and coverage remained 91.08%. Four non-force `develop` push attempts then failed because GitHub port 443 was unreachable after about 21 seconds each; the merge remains safe locally and remote history did not change.
+
 ## 6. Next actions
 
 ### Codex
 
-1. Start JAI-008 HTTP client, rate limiting, retries and cache headers from the merged `develop` baseline.
+1. Retry the non-force `develop` push; after remote synchronization is verified, create `feature/jai-009-url-fingerprint-idempotency` from `develop`.
 
 ### User
 
