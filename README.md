@@ -78,3 +78,4 @@ JOBAGENTV1.0/
 
 - [详细开发计划](docs/DEVELOPMENT_PLAN.md)
 - [GitHub Issues Backlog](docs/GITHUB_ISSUES.md)
+- [配置、日志与错误约定](docs/CONFIGURATION.md)
