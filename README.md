@@ -117,10 +117,28 @@ docker compose down
 python -m uvicorn jobagent.api.app:create_app --factory --reload
 ```
 
+## 数据库迁移
+
+升级当前配置的数据库：
+
+```powershell
+alembic upgrade head
+alembic current
+```
+
+使用 Compose 镜像执行：
+
+```powershell
+docker compose exec api alembic upgrade head
+```
+
+迁移集成测试只允许操作名称以 `_test` 结尾的数据库，避免误清理开发或生产数据。详细字段、关系、索引和删除策略参见 [数据库模型文档](docs/DATABASE.md)。
+
 ## 文档
 
 - [详细开发计划](docs/DEVELOPMENT_PLAN.md)
 - [GitHub Issues Backlog](docs/GITHUB_ISSUES.md)
 - [配置、日志与错误约定](docs/CONFIGURATION.md)
+- [数据库模型与迁移](docs/DATABASE.md)
 - [JAI-005 首个真实来源技术验证](docs/spikes/JAI-005-JINING-SOURCE.md)
 - [持续开发工作日志](docs/WORKLOG.md)

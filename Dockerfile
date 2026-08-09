@@ -8,8 +8,9 @@ WORKDIR /app
 
 RUN addgroup --system jobagent && adduser --system --ingroup jobagent jobagent
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md alembic.ini ./
 COPY src ./src
+COPY migrations ./migrations
 
 RUN python -m pip install --no-cache-dir .
 

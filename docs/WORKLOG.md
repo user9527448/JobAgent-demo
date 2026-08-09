@@ -4,7 +4,7 @@
 >
 > Last updated: 2026-08-09
 >
-> Active branch: `feature/jai-005-source-spike`
+> Active branch: `feature/jai-006-core-models-migration`
 
 ## 1. Current status
 
@@ -16,6 +16,7 @@
 | JAI-003 API/PostgreSQL/health | Complete, awaiting merge | `feature/jai-003-api-postgres-health` / `ea794e9` | FastAPI, PostgreSQL pool, health checks and Compose verified |
 | JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
 | JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` / `4d63e02` | Jining public recruitment list/detail/PDF technical validation |
+| JAI-006 Core models/first migration | Complete, awaiting merge | `feature/jai-006-core-models-migration` / `d8c7c4f` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
 
 ## 2. Environment readiness
 
@@ -103,6 +104,14 @@ Local development and GitHub Actions both invoke `python scripts/check.py`. Post
 
 Use the Jining Human Resources and Social Security Bureau's public institution recruitment column for JAI-005. It exposes a public HTML list, static announcement detail pages, and direct PDF attachments without login or CAPTCHA. The Spike will use a descriptive User-Agent, low request rate, no parallel requests, and offline fixtures for regression tests.
 
+### D-007 Historical data is deletion-resistant
+
+JAI-006 uses `RESTRICT` foreign keys and no ORM delete cascades for source documents, attachments, structured posts or field evidence. Sources are disabled with `enabled=false`; once historical records reference a source, accidental physical deletion is rejected by PostgreSQL.
+
+### D-008 Destructive database tests require an explicit test database
+
+Migration integration tests reset the public schema and therefore refuse to run unless `JOBAGENT_TEST_DATABASE_URL` names a database ending in `_test`. CI and local verification use `jobagent_test`; development and production database names cannot pass this guard.
+
 ## 5. Completed work history
 
 ### 2026-08-07 — Planning and repository setup
@@ -175,15 +184,31 @@ Use the Jining Human Resources and Social Security Bureau's public institution r
 - Docker-backed final gate: Ruff format/lint passed, Mypy passed across 24 files, all 16 tests passed including the real PostgreSQL integration test, and coverage was 88.95% against the 85% threshold.
 - Final audit found no current container errors and reconfirmed that every committed HTML/PDF fixture SHA-256 matches its provenance record. JAI-005 now has no outstanding verification gaps.
 
+### 2026-08-09 — JAI-006 completed
+
+- Created `feature/jai-006-core-models-migration` from the fully verified JAI-005 branch after the user approved continuing.
+- Scope confirmed: `sources`, `crawl_runs`, `raw_documents`, `attachments`, `job_posts`, `job_positions` and `field_evidence`, plus their first Alembic migration and documentation.
+- Planned invariants: timezone-aware UTC model boundaries, unique `(source_id, canonical_url)`, explicit check/index constraints, and deletion-resistant historical relationships.
+- Added all seven SQLAlchemy 2 models, deterministic naming conventions, UTC-aware datetime normalization, PostgreSQL JSONB fields, relationships, indexes, and validation constraints.
+- Added Alembic configuration and revision `0001_core_models`; credentials remain in normal JOBAGENT settings rather than `alembic.ini`. The API image now carries Alembic and the migration directory.
+- Added model documentation and eight JAI-006 checks: four unit tests plus a PostgreSQL migration acceptance test that upgrades an empty schema, checks model drift, verifies UTC conversion, duplicate URL rejection and deletion resistance, then downgrades to base.
+- The first Alembic drift check exposed double-prefixed check-constraint names and two mismatched unique-constraint names. Migration names were corrected with `op.f(...)`, and `alembic check` now reports no new upgrade operations; this check is retained in CI.
+- A first local test-database creation command mishandled an empty query result; the idempotent command was corrected and `jobagent_test` was created without touching the development database.
+- Quality gate: Ruff format/lint passed, Mypy passed across 29 files, all 21 tests passed with PostgreSQL, and coverage was 91.30% against the 85% threshold.
+- Container verification: the Linux image built successfully; inside it, upgrade/check/current/downgrade passed on `jobagent_test`. A health request made in the first second of API recreation raced startup, then the container became healthy and readiness repeatedly returned 200.
+- The local development database was non-destructively upgraded to `0001_core_models (head)` and both Compose services remain healthy.
+- Three non-force push attempts failed at the GitHub HTTPS transport layer (one connection reset and two port 443 timeouts). Commits remain safe locally; no remote history was rewritten or partially updated.
+- GitHub HTTPS connectivity later recovered and `feature/jai-006-core-models-migration` was pushed successfully without rewriting history.
+
 ## 6. Next actions
 
 ### Codex
 
-1. Start JAI-006 core database models and first migration after the stacked Pull Requests are merged or the user approves continued stacking.
+1. Start JAI-007 Source Adapter protocol and collection orchestrator after preceding stacked Pull Requests are merged or the user approves continued stacking.
 
 ### User
 
-1. Merge the JAI-001 through JAI-005 Pull Requests in order when ready.
+1. Merge JAI-001 through JAI-006 in order when ready.
 2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
