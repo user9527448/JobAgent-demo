@@ -17,7 +17,7 @@
 | JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
 | JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` / `4d63e02` | Jining public recruitment list/detail/PDF technical validation |
 | JAI-006 Core models/first migration | Complete, awaiting merge | `feature/jai-006-core-models-migration` / `d8c7c4f` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
-| JAI-007 Source Adapter/orchestrator | Complete, awaiting merge | `feature/jai-007-source-adapter-orchestrator` / `8a3db86` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
+| JAI-007 Source Adapter/orchestrator | Complete locally, push blocked | `feature/jai-007-source-adapter-orchestrator` / `8a3db86` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
 
 ## 2. Environment readiness
 
@@ -217,16 +217,18 @@ JAI-007 returns successful `RawDocumentInput` values from the common batch flow 
 - Final database-enabled gate: Ruff format/lint passed, Mypy passed across 38 files, all 32 tests passed and coverage was 91.77% against the 85% threshold.
 - Production image rebuilt successfully; the recreated API and PostgreSQL containers are healthy, and `/health/ready` reports the database available.
 - No migration was required because JAI-006 already provided the compatible `crawl_runs.status`, `stats`, `error_message` and timestamp columns.
+- The first non-force push and a follow-up read-only `git ls-remote` check both failed because GitHub port 443 was unreachable after 21 seconds. All commits remain safe locally and no remote history changed.
 
 ## 6. Next actions
 
 ### Codex
 
-1. Start JAI-008 HTTP client, rate limiting, retries and cache headers after JAI-007 is merged or the user approves continued branch stacking.
+1. Retry the non-force JAI-007 branch push when GitHub HTTPS connectivity recovers.
+2. Start JAI-008 HTTP client, rate limiting, retries and cache headers after JAI-007 is merged or the user approves continued branch stacking.
 
 ### User
 
-1. Merge JAI-001 through JAI-007 in order when ready.
+1. Merge JAI-001 through JAI-007 in order when ready; JAI-007 first needs its local branch pushed after GitHub connectivity recovers.
 2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
