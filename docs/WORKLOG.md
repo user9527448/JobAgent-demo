@@ -16,7 +16,7 @@
 | JAI-003 API/PostgreSQL/health | Complete, awaiting merge | `feature/jai-003-api-postgres-health` / `ea794e9` | FastAPI, PostgreSQL pool, health checks and Compose verified |
 | JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
 | JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` / `4d63e02` | Jining public recruitment list/detail/PDF technical validation |
-| JAI-006 Core models/first migration | Complete, awaiting merge | `feature/jai-006-core-models-migration` / `d8c7c4f` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
+| JAI-006 Core models/first migration | Complete locally, push blocked | `feature/jai-006-core-models-migration` / `d8c7c4f` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
 
 ## 2. Environment readiness
 
@@ -197,16 +197,17 @@ Migration integration tests reset the public schema and therefore refuse to run 
 - Quality gate: Ruff format/lint passed, Mypy passed across 29 files, all 21 tests passed with PostgreSQL, and coverage was 91.30% against the 85% threshold.
 - Container verification: the Linux image built successfully; inside it, upgrade/check/current/downgrade passed on `jobagent_test`. A health request made in the first second of API recreation raced startup, then the container became healthy and readiness repeatedly returned 200.
 - The local development database was non-destructively upgraded to `0001_core_models (head)` and both Compose services remain healthy.
+- Three non-force push attempts failed at the GitHub HTTPS transport layer (one connection reset and two port 443 timeouts). Commits remain safe locally; no remote history was rewritten or partially updated.
 
 ## 6. Next actions
 
 ### Codex
 
-1. Start JAI-007 Source Adapter protocol and collection orchestrator after preceding stacked Pull Requests are merged or the user approves continued stacking.
+1. Retry the JAI-006 branch push when GitHub HTTPS connectivity recovers, then start JAI-007 after preceding stacked Pull Requests are merged or the user approves continued stacking.
 
 ### User
 
-1. Merge the JAI-001 through JAI-006 Pull Requests in order when ready.
+1. Merge JAI-001 through JAI-005 in order; JAI-006 can be opened after its completed local branch is pushed.
 2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
