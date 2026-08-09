@@ -2,7 +2,7 @@
 
 面向个人的招聘情报 Agent：采集、解析、筛选并推送企业校招和公职考试信息。
 
-> 当前状态：API、PostgreSQL 与持续集成基线已就绪。业务能力将按 [GitHub Issues Backlog](docs/GITHUB_ISSUES.md) 逐步实现。
+> 当前状态：API、PostgreSQL、核心数据模型及 Source Adapter 采集编排基线已就绪。业务能力将按 [GitHub Issues Backlog](docs/GITHUB_ISSUES.md) 逐步实现。
 
 ## 环境要求
 
@@ -140,5 +140,6 @@ docker compose exec api alembic upgrade head
 - [GitHub Issues Backlog](docs/GITHUB_ISSUES.md)
 - [配置、日志与错误约定](docs/CONFIGURATION.md)
 - [数据库模型与迁移](docs/DATABASE.md)
+- [Source Adapter 与采集编排](docs/COLLECTION.md)
 - [JAI-005 首个真实来源技术验证](docs/spikes/JAI-005-JINING-SOURCE.md)
 - [持续开发工作日志](docs/WORKLOG.md)

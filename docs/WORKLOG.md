@@ -4,7 +4,7 @@
 >
 > Last updated: 2026-08-09
 >
-> Active branch: `feature/jai-006-core-models-migration`
+> Active branch: `feature/jai-007-source-adapter-orchestrator`
 
 ## 1. Current status
 
@@ -17,6 +17,7 @@
 | JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
 | JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` / `4d63e02` | Jining public recruitment list/detail/PDF technical validation |
 | JAI-006 Core models/first migration | Complete, awaiting merge | `feature/jai-006-core-models-migration` / `d8c7c4f` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
+| JAI-007 Source Adapter/orchestrator | In progress | `feature/jai-007-source-adapter-orchestrator` | Adapter registry/protocol, batch orchestration, run statistics and item-level error isolation |
 
 ## 2. Environment readiness
 
@@ -200,11 +201,17 @@ Migration integration tests reset the public schema and therefore refuse to run 
 - Three non-force push attempts failed at the GitHub HTTPS transport layer (one connection reset and two port 443 timeouts). Commits remain safe locally; no remote history was rewritten or partially updated.
 - GitHub HTTPS connectivity later recovered and `feature/jai-006-core-models-migration` was pushed successfully without rewriting history.
 
+### 2026-08-09 — JAI-007 started
+
+- Created `feature/jai-007-source-adapter-orchestrator` from the verified JAI-006 branch because JAI-006 has not been merged into `main` or `develop`.
+- Scope confirmed: Adapter registry, typed `discover`/`fetch_detail` protocol, batch orchestration, persisted step/run status and item-level error isolation.
+- Planned acceptance checks: a fake Adapter completes with persisted statistics, one detail failure does not stop remaining items, and an unknown Adapter fails clearly before a crawl run starts.
+
 ## 6. Next actions
 
 ### Codex
 
-1. Start JAI-007 Source Adapter protocol and collection orchestrator after preceding stacked Pull Requests are merged or the user approves continued stacking.
+1. Implement and verify JAI-007 on `feature/jai-007-source-adapter-orchestrator`.
 
 ### User
 
