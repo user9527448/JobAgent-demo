@@ -1,6 +1,6 @@
 # JOBAGENT core database model
 
-This document describes the JAI-006 PostgreSQL schema. It covers persistence only; collection orchestration and repositories begin in later Issues.
+This document describes the JAI-006 PostgreSQL schema. JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md); raw-document persistence begins in JAI-009.
 
 ## Tables
 

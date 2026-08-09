@@ -4,7 +4,12 @@ from typing import Protocol
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from jobagent.core.config import Settings
 from jobagent.core.exceptions import TransientJobAgentError
@@ -31,6 +36,12 @@ class Database:
             max_overflow=5,
             pool_recycle=1800,
         )
+        self._session_factory = async_sessionmaker(self._engine, expire_on_commit=False)
+
+    @property
+    def session_factory(self) -> async_sessionmaker[AsyncSession]:
+        """Expose short-lived ORM sessions to repository implementations."""
+        return self._session_factory
 
     async def ping(self) -> None:
         """Verify that PostgreSQL accepts a trivial query."""
