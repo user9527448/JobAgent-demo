@@ -11,13 +11,13 @@
 | Issue | Status | Branch / commit | Notes |
 |---|---|---|---|
 | Project planning | Complete | `main` / `e72f50e` | Development plan and Issue backlog published |
-| JAI-001 Project bootstrap | Merged locally; develop push pending | `develop` / `9c8b3ca` | Python package, `.venv` workflow, Ruff, Mypy, Pytest |
-| JAI-002 Configuration/logging/errors | Merged locally; develop push pending | `develop` / `0ffd008` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
-| JAI-003 API/PostgreSQL/health | Merged locally; develop push pending | `develop` / `40821f7` | FastAPI, PostgreSQL pool, health checks and Compose verified |
-| JAI-004 Test/CI baseline | Merged locally; develop push pending | `develop` / `ae6c5a8` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
-| JAI-005 Real-source vertical Spike | Merged locally; develop push pending | `develop` / `548be94` | Jining public recruitment list/detail/PDF technical validation |
-| JAI-006 Core models/first migration | Merged locally; develop push pending | `develop` / `1690dd9` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
-| JAI-007 Source Adapter/orchestrator | Merged locally; develop push pending | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
+| JAI-001 Project bootstrap | Merged locally; develop push network-blocked | `develop` / `9c8b3ca` | Python package, `.venv` workflow, Ruff, Mypy, Pytest |
+| JAI-002 Configuration/logging/errors | Merged locally; develop push network-blocked | `develop` / `0ffd008` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
+| JAI-003 API/PostgreSQL/health | Merged locally; develop push network-blocked | `develop` / `40821f7` | FastAPI, PostgreSQL pool, health checks and Compose verified |
+| JAI-004 Test/CI baseline | Merged locally; develop push network-blocked | `develop` / `ae6c5a8` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
+| JAI-005 Real-source vertical Spike | Merged locally; develop push network-blocked | `develop` / `548be94` | Jining public recruitment list/detail/PDF technical validation |
+| JAI-006 Core models/first migration | Merged locally; develop push network-blocked | `develop` / `1690dd9` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
+| JAI-007 Source Adapter/orchestrator | Merged locally; develop push network-blocked | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
 
 ## 2. Environment readiness
 
@@ -240,17 +240,18 @@ JAI-007 returns successful `RawDocumentInput` values from the common batch flow 
 - Restored the LF text, CRLF Windows-script and binary rules while preserving byte-exact HTML/PDF fixture overrides; `git add --renormalize .` confirmed no business-content changes were required. Integration fix commit: `b95998f`.
 - Final database-enabled gate: Ruff format/lint passed, Mypy passed across 38 files, all 32 tests passed and coverage was 91.77% against the 85% threshold.
 - A non-force `develop` push was stopped before execution because the environment requires explicit user authorization to export the complete merged history to the GitHub remote. No remote state changed.
+- The user then explicitly authorized the `develop` push. Two non-force push attempts still timed out on GitHub port 443; DNS resolved `github.com` to `20.205.243.166`, but a direct TCP 443 diagnostic failed. The local merge history remains safe and the remote branch is unchanged.
 
 ## 6. Next actions
 
 ### Codex
 
-1. After explicit user authorization, non-force push the verified local `develop` merge history; any unknown remote divergence will be rejected safely.
+1. Retry the authorized non-force `develop` push after TCP connectivity to `github.com:443` recovers; any unknown remote divergence will be rejected safely.
 2. Start JAI-008 HTTP client, rate limiting, retries and cache headers from the merged `develop` baseline.
 
 ### User
 
-1. Explicitly authorize pushing local `develop` to `https://github.com/user9527448/JobAgent-demo.git`.
+1. Restore or wait for outbound TCP connectivity to `github.com:443`.
 2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
