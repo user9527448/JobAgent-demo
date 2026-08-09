@@ -74,8 +74,42 @@ JOBAGENTV1.0/
 3. 提交前运行全部质量检查。
 4. 通过 Pull Request 合并到 `develop`；发布时再合并到 `main`。
 
+## API 与数据库
+
+Docker Desktop 启动后，可运行完整开发环境：
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build -d
+docker compose ps
+```
+
+健康检查：
+
+```powershell
+Invoke-RestMethod http://localhost:8000/health/live
+Invoke-RestMethod http://localhost:8000/health/ready
+```
+
+- `/health/live` 只检查 API 进程是否存活。
+- `/health/ready` 会执行 PostgreSQL `SELECT 1`；数据库不可用时返回 HTTP 503。
+- OpenAPI 文档位于 `http://localhost:8000/docs`。
+
+停止服务但保留数据库数据：
+
+```powershell
+docker compose down
+```
+
+本地不使用 Docker 启动 API 时，先配置 `.env`，再运行：
+
+```powershell
+python -m uvicorn jobagent.api.app:create_app --factory --reload
+```
+
 ## 文档
 
 - [详细开发计划](docs/DEVELOPMENT_PLAN.md)
 - [GitHub Issues Backlog](docs/GITHUB_ISSUES.md)
 - [配置、日志与错误约定](docs/CONFIGURATION.md)
+- [持续开发工作日志](docs/WORKLOG.md)

@@ -16,6 +16,7 @@ Copy-Item .env.example .env
 | `JOBAGENT_LOG_LEVEL` | 否 | `INFO` | Python 标准日志级别 |
 | `JOBAGENT_TIMEZONE` | 否 | `Asia/Shanghai` | 有效的 IANA 时区 |
 | `JOBAGENT_APP_NAME` | 否 | `jobagent` | 日志和服务标识 |
+| `JOBAGENT_DATABASE_URL` | 是 | 无 | SQLAlchemy PostgreSQL URL，推荐 `postgresql+psycopg://...` |
 
 配置在进程内缓存。测试或明确需要重新载入时，调用 `clear_settings_cache()`。
 

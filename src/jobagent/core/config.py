@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import ValidationError, field_validator
+from pydantic import SecretStr, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from jobagent.core.exceptions import ConfigurationError, JsonValue
@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     timezone: str = "Asia/Shanghai"
     app_name: str = "jobagent"
+    database_url: SecretStr
 
     @field_validator("timezone")
     @classmethod
