@@ -17,7 +17,7 @@
 | JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
 | JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` / `4d63e02` | Jining public recruitment list/detail/PDF technical validation |
 | JAI-006 Core models/first migration | Complete, awaiting merge | `feature/jai-006-core-models-migration` / `d8c7c4f` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
-| JAI-007 Source Adapter/orchestrator | In progress | `feature/jai-007-source-adapter-orchestrator` | Adapter registry/protocol, batch orchestration, run statistics and item-level error isolation |
+| JAI-007 Source Adapter/orchestrator | Complete, awaiting merge | `feature/jai-007-source-adapter-orchestrator` / `8a3db86` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
 
 ## 2. Environment readiness
 
@@ -113,6 +113,10 @@ JAI-006 uses `RESTRICT` foreign keys and no ORM delete cascades for source docum
 
 Migration integration tests reset the public schema and therefore refuse to run unless `JOBAGENT_TEST_DATABASE_URL` names a database ending in `_test`. CI and local verification use `jobagent_test`; development and production database names cannot pass this guard.
 
+### D-009 Collection orchestration stops before raw-document persistence
+
+JAI-007 returns successful `RawDocumentInput` values from the common batch flow and persists only `crawl_runs`. URL normalization, content fingerprinting and immutable/idempotent raw-document writes remain in JAI-009, preventing premature duplication of that policy inside Adapters.
+
 ## 5. Completed work history
 
 ### 2026-08-07 — Planning and repository setup
@@ -206,16 +210,23 @@ Migration integration tests reset the public schema and therefore refuse to run 
 - Created `feature/jai-007-source-adapter-orchestrator` from the verified JAI-006 branch because JAI-006 has not been merged into `main` or `develop`.
 - Scope confirmed: Adapter registry, typed `discover`/`fetch_detail` protocol, batch orchestration, persisted step/run status and item-level error isolation.
 - Planned acceptance checks: a fake Adapter completes with persisted statistics, one detail failure does not stop remaining items, and an unknown Adapter fails clearly before a crawl run starts.
+- Added explicit Adapter factories, typed source/discovery/raw-document contracts, the common collection orchestrator and a SQLAlchemy crawl-run repository backed by reusable async sessions.
+- Unknown/disabled/missing sources fail before a run is created; discovery failures mark the run failed and re-raise; detail failures are sanitized, persisted in statistics and isolated from later items; cancellation is persisted then propagated.
+- Added ten unit acceptance checks plus a PostgreSQL repository test, and documented the batch flow, statistics schema and JAI-008 through JAI-010 boundaries.
+- The first full quality gate stopped because Ruff reformats Python examples inside Markdown; `docs/COLLECTION.md` was formatted and the repeat gate passed.
+- Final database-enabled gate: Ruff format/lint passed, Mypy passed across 38 files, all 32 tests passed and coverage was 91.77% against the 85% threshold.
+- Production image rebuilt successfully; the recreated API and PostgreSQL containers are healthy, and `/health/ready` reports the database available.
+- No migration was required because JAI-006 already provided the compatible `crawl_runs.status`, `stats`, `error_message` and timestamp columns.
 
 ## 6. Next actions
 
 ### Codex
 
-1. Implement and verify JAI-007 on `feature/jai-007-source-adapter-orchestrator`.
+1. Start JAI-008 HTTP client, rate limiting, retries and cache headers after JAI-007 is merged or the user approves continued branch stacking.
 
 ### User
 
-1. Merge JAI-001 through JAI-006 in order when ready.
+1. Merge JAI-001 through JAI-007 in order when ready.
 2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
