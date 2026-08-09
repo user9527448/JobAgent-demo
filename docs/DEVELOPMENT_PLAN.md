@@ -75,7 +75,7 @@
 
 | 模块 | V1 选型 | 说明 |
 |---|---|---|
-| 语言 | Python 3.12 | 单语言降低个人维护成本 |
+| 语言 | Python 3.11+ | 复用现有 Python 环境，单语言降低个人维护成本 |
 | Web/API | FastAPI + Pydantic v2 | 提供健康检查、配置和查询 API |
 | ORM/迁移 | SQLAlchemy 2 + Alembic | 明确模型与迁移历史 |
 | 数据库 | PostgreSQL 16 | 结构化数据、JSONB 和后续 pgvector 均可承载 |
