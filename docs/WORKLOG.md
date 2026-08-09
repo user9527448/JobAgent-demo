@@ -15,7 +15,7 @@
 | JAI-002 Configuration/logging/errors | Complete, awaiting merge | `feature/jai-002-config-logging` / `c6fea0e` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
 | JAI-003 API/PostgreSQL/health | Complete, awaiting merge | `feature/jai-003-api-postgres-health` / `ea794e9` | FastAPI, PostgreSQL pool, health checks and Compose verified |
 | JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
-| JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` | Jining public recruitment list/detail/PDF technical validation |
+| JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` / `4d63e02` | Jining public recruitment list/detail/PDF technical validation |
 
 ## 2. Environment readiness
 
@@ -166,6 +166,7 @@ Use the Jining Human Resources and Social Security Bureau's public institution r
 - Selected the official Jining public institution recruitment column for investigation. Initial web inspection confirmed discoverable announcement pages, publication metadata, body text, and direct PDF attachments.
 - Compliance/access verification: `robots.txt` declared no disallowed paths; public list, detail and PDF resources returned HTTP 200 without login, CAPTCHA or browser automation. Requests were sequential, identified and spaced one second apart.
 - Added deterministic CDATA list parsing, metadata/body/attachment detail parsing and page-numbered PyMuPDF extraction. Added one immutable list/detail/PDF fixture set with SHA-256 provenance and five offline regression tests.
+- Added Git attributes that preserve captured HTML/PDF fixtures byte-for-byte; all three committed fixture hashes match their provenance record.
 - The first static check rejected import ordering and PyMuPDF's untyped constructor boundary. Imports were normalized and the third-party call received a narrow documented Mypy suppression; subsequent checks passed.
 - Offline quality gate: Ruff format/lint passed, Mypy passed across 24 files, 15 tests passed and one unrelated PostgreSQL integration test skipped; coverage was 87.57% against the 85% threshold.
 - Live Spike: discovered 21 list records, extracted the selected title, publication time and 4,815 body characters, found three PDF attachments, and extracted non-empty text from all four selected PDF pages.
