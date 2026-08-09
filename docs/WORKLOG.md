@@ -4,20 +4,20 @@
 >
 > Last updated: 2026-08-09
 >
-> Active branch: `feature/jai-007-source-adapter-orchestrator`
+> Active branch: `develop`
 
 ## 1. Current status
 
 | Issue | Status | Branch / commit | Notes |
 |---|---|---|---|
 | Project planning | Complete | `main` / `e72f50e` | Development plan and Issue backlog published |
-| JAI-001 Project bootstrap | Complete, awaiting merge | `feature/jai-001-project-bootstrap` / `b965a47` | Python package, `.venv` workflow, Ruff, Mypy, Pytest |
-| JAI-002 Configuration/logging/errors | Complete, awaiting merge | `feature/jai-002-config-logging` / `c6fea0e` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
-| JAI-003 API/PostgreSQL/health | Complete, awaiting merge | `feature/jai-003-api-postgres-health` / `ea794e9` | FastAPI, PostgreSQL pool, health checks and Compose verified |
-| JAI-004 Test/CI baseline | Complete, awaiting merge | `feature/jai-004-ci-test-baseline` / `4de39a0` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
-| JAI-005 Real-source vertical Spike | Complete, awaiting merge | `feature/jai-005-source-spike` / `4d63e02` | Jining public recruitment list/detail/PDF technical validation |
-| JAI-006 Core models/first migration | Complete, awaiting merge | `feature/jai-006-core-models-migration` / `d8c7c4f` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
-| JAI-007 Source Adapter/orchestrator | Complete, awaiting merge | `feature/jai-007-source-adapter-orchestrator` / `8a3db86` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
+| JAI-001 Project bootstrap | Merged locally; develop push pending | `develop` / `9c8b3ca` | Python package, `.venv` workflow, Ruff, Mypy, Pytest |
+| JAI-002 Configuration/logging/errors | Merged locally; develop push pending | `develop` / `0ffd008` | Typed settings, JSON logs, redaction, error taxonomy; 7 tests passed, 95% coverage |
+| JAI-003 API/PostgreSQL/health | Merged locally; develop push pending | `develop` / `40821f7` | FastAPI, PostgreSQL pool, health checks and Compose verified |
+| JAI-004 Test/CI baseline | Merged locally; develop push pending | `develop` / `ae6c5a8` | Unified quality gate, isolated PostgreSQL integration test, GitHub Actions |
+| JAI-005 Real-source vertical Spike | Merged locally; develop push pending | `develop` / `548be94` | Jining public recruitment list/detail/PDF technical validation |
+| JAI-006 Core models/first migration | Merged locally; develop push pending | `develop` / `1690dd9` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
+| JAI-007 Source Adapter/orchestrator | Merged locally; develop push pending | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
 
 ## 2. Environment readiness
 
@@ -232,16 +232,24 @@ JAI-007 returns successful `RawDocumentInput` values from the common batch flow 
 - After Git for Windows was installed, the database-enabled quality gate was rerun successfully: Ruff format/lint and Mypy passed, all 32 tests passed, and coverage remained 91.77%. The next non-force push was stopped before execution because the environment requires explicit user authorization to export the branch contents to the configured GitHub remote; no remote state changed.
 - After the user explicitly authorized the destination and payload, `feature/jai-007-source-adapter-orchestrator` was pushed successfully with Git for Windows and now tracks its matching origin branch. No history was rewritten.
 
+### 2026-08-09 — JAI-001 through JAI-007 merged locally to develop
+
+- Two pre-merge fetch attempts failed because GitHub port 443 was unreachable. The local `develop` and current `origin/develop` reference both pointed to planning baseline `e72f50e`; local merges proceeded without pushing so any later remote divergence will still be rejected safely.
+- Merged JAI-001 through JAI-007 in Issue order with seven non-fast-forward merge commits. Every feature tip is now an ancestor of local `develop`, and `main` remains unchanged.
+- The first combined quality gate stopped at Ruff format because JAI-005 had replaced JAI-001's general `.gitattributes` line-ending policy with only fixture overrides. This made a fresh Windows checkout use CRLF for 22 code/document files.
+- Restored the LF text, CRLF Windows-script and binary rules while preserving byte-exact HTML/PDF fixture overrides; `git add --renormalize .` confirmed no business-content changes were required. Integration fix commit: `b95998f`.
+- Final database-enabled gate: Ruff format/lint passed, Mypy passed across 38 files, all 32 tests passed and coverage was 91.77% against the 85% threshold.
+
 ## 6. Next actions
 
 ### Codex
 
-1. Start JAI-008 HTTP client, rate limiting, retries and cache headers after JAI-007 is merged or the user approves continued branch stacking.
+1. Retry fetching `origin/develop`; after confirming no divergence, push the verified local `develop` merge history.
+2. Start JAI-008 HTTP client, rate limiting, retries and cache headers from the merged `develop` baseline.
 
 ### User
 
-1. Merge JAI-001 through JAI-007 in order when ready.
-2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
+1. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
 
