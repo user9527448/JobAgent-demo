@@ -4,7 +4,7 @@
 >
 > Last updated: 2026-08-09
 >
-> Active branch: `develop`
+> Active branch: `feature/jai-008-http-client-policy`
 
 ## 1. Current status
 
@@ -18,6 +18,7 @@
 | JAI-005 Real-source vertical Spike | Complete, merged to develop | `develop` / `548be94` | Jining public recruitment list/detail/PDF technical validation |
 | JAI-006 Core models/first migration | Complete, merged to develop | `develop` / `1690dd9` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
 | JAI-007 Source Adapter/orchestrator | Complete, merged to develop | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
+| JAI-008 HTTP client policy | In progress | `feature/jai-008-http-client-policy` | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
 
 ## 2. Environment readiness
 
@@ -243,11 +244,18 @@ JAI-007 returns successful `RawDocumentInput` values from the common batch flow 
 - The user then explicitly authorized the `develop` push. Two non-force push attempts still timed out on GitHub port 443; DNS resolved `github.com` to `20.205.243.166`, but a direct TCP 443 diagnostic failed. The local merge history remains safe and the remote branch is unchanged.
 - GitHub connectivity later recovered and the authorized non-force push succeeded, advancing remote `develop` from `e72f50e` to `1ebc071`. JAI-001 through JAI-007 are now merged remotely in order; `main` remains unchanged.
 
+### 2026-08-09 — JAI-008 started
+
+- Created `feature/jai-008-http-client-policy` from the verified and remotely synchronized `develop` branch.
+- Scope confirmed: asynchronous HTTP client lifecycle, explicit User-Agent, source-level timeout/concurrency/minimum interval, exponential backoff, retry classification and ETag/Last-Modified conditional requests.
+- Boundaries: URL normalization and idempotent raw-document persistence remain JAI-009; attachment validation and storage remain JAI-010.
+- Planned acceptance checks: 429/5xx and transport errors retry with observable attempt counts, permanent 4xx fails once, conditional validators round-trip, and independent source policies enforce their own rate/concurrency/timeout values.
+
 ## 6. Next actions
 
 ### Codex
 
-1. Start JAI-008 HTTP client, rate limiting, retries and cache headers from the merged `develop` baseline.
+1. Implement and verify JAI-008 on `feature/jai-008-http-client-policy`.
 
 ### User
 

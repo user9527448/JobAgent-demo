@@ -1,6 +1,6 @@
 # Source Adapter and collection orchestration
 
-JAI-007 establishes the source plug-in boundary and the common batch flow. It deliberately does not implement HTTP policy, raw-document idempotency or attachment storage; those belong to JAI-008 through JAI-010.
+JAI-007 establishes the source plug-in boundary and the common batch flow. HTTP behavior is supplied separately by the JAI-008 [source HTTP client policy](HTTP_CLIENT.md); raw-document idempotency and attachment storage remain JAI-009 and JAI-010.
 
 ## Adapter contract
 
