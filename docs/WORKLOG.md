@@ -19,7 +19,7 @@
 | JAI-006 Core models/first migration | Complete, merged to develop | `develop` / `1690dd9` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
 | JAI-007 Source Adapter/orchestrator | Complete, merged to develop | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
 | JAI-008 HTTP client policy | Complete, merged to develop | `develop` / `9016fb3` | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
-| JAI-009 URL/fingerprint/idempotency | In progress | `feature/jai-009-url-fingerprint-idempotency` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
+| JAI-009 URL/fingerprint/idempotency | Complete, awaiting merge | `feature/jai-009-url-fingerprint-idempotency` / `d3db133` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
 
 ## 2. Environment readiness
 
@@ -133,6 +133,10 @@ JAI-007 returns successful `RawDocumentInput` values from the common batch flow 
 ### D-010 HTTP policy is isolated per source client
 
 JAI-008 gives each source its own HTTP client policy, concurrency semaphore and request-spacing clock so timeout, rate and concurrency settings cannot leak between sources. Conditional validators are returned with the response for JAI-009 to persist alongside raw-document state; no database schema was added early.
+
+### D-011 Content updates create immutable raw-document versions
+
+Each `raw_documents` row is one source-evidence version. A partial unique index exposes exactly one current row per source/canonical URL, while positive version numbers and `supersedes_id` preserve the prior chain. A transaction-scoped PostgreSQL advisory lock serializes concurrent first writes for the same source URL; identical content reuses the current row and changed content inserts a new version.
 
 ## 5. Completed work history
 
@@ -264,22 +268,30 @@ JAI-008 gives each source its own HTTP client policy, concurrency semaphore and 
 - The database-enabled quality gate was rerun after the merge: Ruff format/lint and Mypy passed, all 39 tests passed, and coverage remained 91.08%. Four non-force `develop` push attempts then failed because GitHub port 443 was unreachable after about 21 seconds each; the merge remains safe locally and remote history did not change.
 - GitHub connectivity later recovered and the non-force push advanced remote `develop` to merge commit `9016fb3`; local and remote `develop` were verified identical before JAI-009 started.
 
-### 2026-08-10 — JAI-009 started
+### 2026-08-10 — JAI-009 URL/fingerprint/idempotency completed
 
 - Created `feature/jai-009-url-fingerprint-idempotency` from the verified and remotely synchronized `develop` branch.
 - Scope confirmed: tracking-parameter removal, relative-link resolution, deterministic canonical URLs, normalized-body SHA-256 fingerprints, update detection and idempotent raw-document persistence.
 - Evidence boundary: a changed page must preserve the prior raw source evidence rather than overwrite it; attachment discovery/download/storage remains JAI-010.
-- Planned acceptance checks: identical input written twice yields one current record, content changes create a traceable new version/update event, and URL/content edge cases have deterministic unit coverage.
+- Added deterministic HTTP(S) URL canonicalization with relative resolution, IDNA/default-port/path normalization, explicit tracking-parameter removal and preservation of unknown business parameters.
+- Added visible-body normalization and SHA-256 fingerprints while retaining untouched HTML/text. Empty visible content and invalid URLs fail with safe permanent error codes.
+- Added migration `0002_raw_document_versions`, immutable version chains, one-current-row enforcement, ETag/Last-Modified persistence and a PostgreSQL repository with advisory-lock concurrency protection.
+- Added fourteen URL/content unit checks plus a PostgreSQL acceptance check proving concurrent duplicates resolve to one version, changed content creates a linked version, old evidence remains intact and cache validators round-trip.
+- The first database test attempt timed out because the PostgreSQL container was stopped. After starting it, the migration test exposed an incorrect assumed predecessor revision ID; `down_revision` was corrected to the actual `0001_core_models`. A concurrency assertion was also corrected to allow either equivalent request to acquire the lock first.
+- Final database-enabled quality gate: Ruff format/lint passed, Mypy passed across 43 source files, all 54 tests passed and coverage was 91.35% against the 85% threshold.
+- Docker Desktop restarted during the first image build attempt, causing a 184-second timeout and temporarily invalidating the old API image reference. After the engine recovered, the production image built successfully.
+- The local development database upgraded non-destructively to `0002_raw_document_versions (head)`; `alembic check` found no schema drift. The recreated API and PostgreSQL containers are healthy, and `/health/ready` reports the database available.
 
 ## 6. Next actions
 
 ### Codex
 
-1. Implement and verify JAI-009 on `feature/jai-009-url-fingerprint-idempotency`.
+1. After JAI-009 is merged into `develop`, verify local/remote synchronization and start JAI-010 from the updated `develop` branch.
 
 ### User
 
-1. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
+1. Review and merge `feature/jai-009-url-fingerprint-idempotency` into `develop` before JAI-010 starts.
+2. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
 
 ## 7. Update template
 
