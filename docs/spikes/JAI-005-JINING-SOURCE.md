@@ -1,5 +1,7 @@
 # JAI-005 — Jining public recruitment source Spike
 
+> 简体中文：[JAI-005 — 济宁公开招聘来源技术验证](../zh-CN/spikes/JAI-005-JINING-SOURCE.md)
+
 ## Outcome
 
 The source can support a future JOBAGENT Adapter: a list page exposes detail links and dates, the selected detail page exposes stable metadata, body text and PDF attachment links, and the selected four-page PDF yields non-empty page-level text.

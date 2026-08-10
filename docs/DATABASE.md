@@ -1,5 +1,7 @@
 # JOBAGENT core database model
 
+> 简体中文：[JOBAGENT 核心数据库模型](zh-CN/DATABASE.md)
+
 This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md) and JAI-010 [attachment storage policy](ATTACHMENTS.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
 
 ## Tables

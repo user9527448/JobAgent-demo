@@ -1,5 +1,7 @@
 # Source Adapter and collection orchestration
 
+> 简体中文：[Source Adapter 与采集编排](zh-CN/COLLECTION.md)
+
 JAI-007 establishes the source plug-in boundary and the common batch flow. HTTP behavior is supplied separately by the JAI-008 [source HTTP client policy](HTTP_CLIENT.md), JAI-009 supplies [canonical raw-document persistence](RAW_DOCUMENTS.md), and JAI-010 adds downstream [attachment discovery and storage](ATTACHMENTS.md).
 
 ## Adapter contract

@@ -1,5 +1,7 @@
 # Source HTTP client policy
 
+> 简体中文：[来源 HTTP 客户端策略](zh-CN/HTTP_CLIENT.md)
+
 JAI-008 provides the shared asynchronous HTTP behavior used by source Adapters. Adapters remain responsible for source-specific URLs and parsing; they do not implement their own retry, pacing or cache-header loops.
 
 ## Per-source policy

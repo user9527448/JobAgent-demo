@@ -4,7 +4,7 @@
 >
 > Last updated: 2026-08-10
 >
-> Active branch: `feature/jai-010-attachment-storage`
+> Active branch: `feature/jai-036-zh-cn-docs`
 
 ## 1. Current status
 
@@ -21,6 +21,7 @@
 | JAI-008 HTTP client policy | Complete, merged to develop | `develop` / `9016fb3` | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
 | JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / `020e0b7` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
 | JAI-010 Attachment storage | Complete, awaiting merge | `feature/jai-010-attachment-storage` / `4176187` | PDF/XLS/XLSX discovery, streamed validation, SHA-256 content addressing and atomic idempotent storage |
+| JAI-036 Simplified Chinese documentation | In progress | `feature/jai-036-zh-cn-docs` | Chinese mirrors, navigation and durable synchronization rules, based on JAI-010 |
 
 ## 2. Environment readiness
 
@@ -142,6 +143,10 @@ Each `raw_documents` row is one source-evidence version. A partial unique index 
 ### D-012 Attachment download and parsing states remain separate
 
 JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object store and records `download_status` independently from `parse_status`. A file is published only after the complete streamed body is size-checked, synchronized and signature/MIME-validated; parsing, OCR and spreadsheet interpretation cannot be implied by download success and remain in JAI-013 through JAI-016.
+
+### D-013 中文文档采用显式镜像，不重复已经是中文的文档
+
+从 JAI-036 起，纯英文技术文档在 `docs/zh-CN/` 下维护简体中文镜像，并由中文索引提供中英文双向导航；根 README、开发计划、Issue 清单和配置说明等原本已经是中文的文档继续只维护一份。修改英文原文时必须在同一提交中同步对应中文镜像。历史 WORKLOG 不整篇回译，本 Issue 及后续新增日志改用中文。
 
 ## 5. Completed work history
 
@@ -305,16 +310,23 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - Implementation commit: `4176187` (`feat: add atomic attachment storage`). No known blocker remains; the feature branch is ready for review and merge.
 - The first non-force feature-branch push timed out on GitHub HTTPS port 443 after 21 seconds and changed no remote state. An immediate retry succeeded; the local branch now tracks `origin/feature/jai-010-attachment-storage`.
 
+### 2026-08-10 — JAI-036 简体中文文档同步开始
+
+- 用户明确将简体中文文档同步提升为当前优先事项；因此在 JAI-011 之前先执行这个独立文档 Issue。
+- 从尚未合并的 JAI-010 完成提交创建 `feature/jai-036-zh-cn-docs`，使中文基线包含当前附件存储版本，同时不把新范围追加到已完成的 JAI-010 分支。
+- 范围确认：为纯英文的仓库说明、采集、HTTP、数据库、原始公告、附件、来源 Spike、迁移和固定样本说明建立中文镜像；已有中文文档不重复复制，历史 WORKLOG 不回译。
+- 计划检查：中英文导航与相对链接、镜像清单完整性、Markdown 格式、全仓质量门禁和工作区状态。
+
 ## 6. Next actions
 
 ### Codex
 
-1. Wait for JAI-010 review/merge before starting JAI-011.
+1. 完成并验证 JAI-036 中文文档镜像与同步规范，然后推送该分支。
 
 ### User
 
-1. Review and merge `feature/jai-010-attachment-storage` into `develop` when ready.
-2. Use `docker compose down` when the local services are no longer needed; PostgreSQL and attachment volumes are retained.
+1. JAI-036 完成后，按依赖顺序先合并 JAI-010，再合并 JAI-036。
+2. 不再需要本地服务时可运行 `docker compose down`；PostgreSQL 和附件卷会保留。
 
 ## 7. Update template
 

@@ -1,5 +1,7 @@
 # JAI-005 Jining source fixtures
 
+> 简体中文：[JAI-005 济宁来源固定样本](../../../docs/zh-CN/fixtures/JINING.md)
+
 Captured on 2026-08-09 from the public Jining Human Resources and Social Security Bureau website using one sequential request per resource and a descriptive JOBAGENT User-Agent.
 
 | Fixture | Original URL | SHA-256 |

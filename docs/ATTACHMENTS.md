@@ -1,5 +1,7 @@
 # Attachment discovery and storage
 
+> 简体中文：[附件发现与存储](zh-CN/ATTACHMENTS.md)
+
 JAI-010 adds bounded, traceable storage for PDF, XLS and XLSX files linked by an immutable raw-document version. File interpretation remains a later pipeline stage; storing a file never marks it parsed.
 
 ## Discovery
