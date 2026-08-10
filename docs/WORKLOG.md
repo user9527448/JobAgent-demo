@@ -345,12 +345,13 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - 同步更新 `DEVELOPMENT_PLAN.md`、`GITHUB_ISSUES.md`、中英文 `COLLECTION.md`、中文网站库说明和中文文档索引；JAI-011 继续保持进行中，来源 2、3、完整持久化幂等验收和国资委线上冒烟尚未完成。
 - 第一轮全仓门禁中，Ruff format/lint、Mypy 和 68 项非数据库测试通过，但因未设置 `JOBAGENT_TEST_DATABASE_URL` 跳过 5 项 PostgreSQL 测试，覆盖率 82.37% 未达到 85%；这是测试环境缺项，不是产品断言失败。
 - Docker Desktop 原本未运行，且默认安装路径与预期不同；在授权范围内定位并后台启动实际安装程序，启动仓库 PostgreSQL 容器，确认隔离数据库 `jobagent_test` 已存在后重跑。最终门禁：81 个文件格式检查、Ruff lint、51 个源文件 Mypy 均通过，74 项测试（含 5 项 PostgreSQL 集成测试）全部通过，覆盖率 88.69%。文档相对链接检查和 `git diff --check` 通过。
+- 第一阶段提交：`d693680`（`feat: add maintainable source catalog and SASAC adapter`）。提交保持在 `feature/jai-011-source-catalog-sasac`，不提前合并未完成的 JAI-011。
 
 ## 6. Next actions
 
 ### Codex
 
-1. 将 JAI-011 第一阶段作为独立子任务提交并非强制推送当前 feature 分支。
+1. 非强制推送当前 JAI-011 feature 分支。
 2. 网络可用时对国资委公开列表执行一次低频只读冒烟，再按网站库优先级继续来源 2、3 及持久化幂等验收。
 
 ### User
