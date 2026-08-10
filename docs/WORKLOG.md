@@ -347,13 +347,14 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - Docker Desktop 原本未运行，且默认安装路径与预期不同；在授权范围内定位并后台启动实际安装程序，启动仓库 PostgreSQL 容器，确认隔离数据库 `jobagent_test` 已存在后重跑。最终门禁：81 个文件格式检查、Ruff lint、51 个源文件 Mypy 均通过，74 项测试（含 5 项 PostgreSQL 集成测试）全部通过，覆盖率 88.69%。文档相对链接检查和 `git diff --check` 通过。
 - 第一阶段提交：`d693680`（`feat: add maintainable source catalog and SASAC adapter`）。提交保持在 `feature/jai-011-source-catalog-sasac`，不提前合并未完成的 JAI-011。
 - WORKLOG 检查点提交：`02167f1`（`docs: record JAI-011 first source checkpoint`）。普通推送最初因安全审查要求再次确认具体远程与提交载荷而暂停；用户随后明确允许推送到 `https://github.com/user9527448/JobAgent-demo.git`。授权后的两次非强制 HTTPS 推送均在约 21 秒后无法连接 GitHub 443，远程未发生变更；未改写历史，也未切换传输方式绕过。
+- 用户要求继续重试后，下一次普通 HTTPS 推送成功；`feature/jai-011-source-catalog-sasac` 已创建在远程并跟踪 `origin/feature/jai-011-source-catalog-sasac`，远程包含截至 `b0a4eb6` 的四个本地提交。
 
 ## 6. Next actions
 
 ### Codex
 
-1. GitHub HTTPS 网络恢复后，非强制重试推送当前 JAI-011 feature 分支。
-2. 网络可用时对国资委公开列表执行一次低频只读冒烟，再按网站库优先级继续来源 2、3 及持久化幂等验收。
+1. 继续 JAI-011 来源 2：接入江苏省人事考试网公开公告，保持报名系统与交互功能在范围外。
+2. 网络可用时对国资委公开列表执行一次低频只读冒烟，再继续来源 3 及持久化幂等验收。
 
 ### User
 
