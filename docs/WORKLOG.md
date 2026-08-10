@@ -21,7 +21,7 @@
 | JAI-008 HTTP client policy | Complete, merged to develop | `develop` / `9016fb3` | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
 | JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / `020e0b7` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
 | JAI-010 Attachment storage | Complete, awaiting merge | `feature/jai-010-attachment-storage` / `4176187` | PDF/XLS/XLSX discovery, streamed validation, SHA-256 content addressing and atomic idempotent storage |
-| JAI-036 Simplified Chinese documentation | In progress | `feature/jai-036-zh-cn-docs` | Chinese mirrors, navigation and durable synchronization rules, based on JAI-010 |
+| JAI-036 Simplified Chinese documentation | Complete, awaiting merge | `feature/jai-036-zh-cn-docs` / `2b745f9` | Nine Chinese mirrors, bilingual navigation and durable synchronization rules, based on JAI-010 |
 
 ## 2. Environment readiness
 
@@ -316,12 +316,18 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - 从尚未合并的 JAI-010 完成提交创建 `feature/jai-036-zh-cn-docs`，使中文基线包含当前附件存储版本，同时不把新范围追加到已完成的 JAI-010 分支。
 - 范围确认：为纯英文的仓库说明、采集、HTTP、数据库、原始公告、附件、来源 Spike、迁移和固定样本说明建立中文镜像；已有中文文档不重复复制，历史 WORKLOG 不回译。
 - 计划检查：中英文导航与相对链接、镜像清单完整性、Markdown 格式、全仓质量门禁和工作区状态。
+- 已在 `docs/zh-CN/` 建立中文索引及九组镜像，保持英文原文的章节结构、代码标识符、环境变量、错误码、URL 和命令不变；每组文档提供双向链接。
+- 已把同步要求写入根 `AGENTS.md` 及其中文镜像：修改英文技术文档时必须在同一提交更新中文版本；已有中文文档继续只维护一份，新增 WORKLOG 使用中文。
+- 第一次相对链接检查发现中文索引指向固定样本英文说明时多返回了一层目录；修正后检查了 24 份 Markdown，所有相对链接均可解析，10 份中文文档均包含中文内容。
+- 九组中英文镜像的标题层级数量逐组一致：仓库规范 7/7、采集 5/5、数据库 6/6、HTTP 4/4、原始公告 5/5、附件 6/6、来源验证 10/10、迁移 1/1、固定样本 1/1。
+- 最终质量门禁：Ruff format 检查 74 个文件、Ruff lint 和 Mypy 均通过；包含 PostgreSQL 集成测试的 64 项测试全部通过，覆盖率 89.34%。
+- 文档基线提交：`2b745f9`（`docs: add Simplified Chinese mirrors`）。无已知阻塞，分支可按依赖顺序在 JAI-010 之后合并。
 
 ## 6. Next actions
 
 ### Codex
 
-1. 完成并验证 JAI-036 中文文档镜像与同步规范，然后推送该分支。
+1. 推送 `feature/jai-036-zh-cn-docs`，然后等待 JAI-010、JAI-036 按顺序合并。
 
 ### User
 
