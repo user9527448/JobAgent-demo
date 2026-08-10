@@ -1,6 +1,6 @@
 # Source Adapter and collection orchestration
 
-JAI-007 establishes the source plug-in boundary and the common batch flow. HTTP behavior is supplied separately by the JAI-008 [source HTTP client policy](HTTP_CLIENT.md); raw-document idempotency and attachment storage remain JAI-009 and JAI-010.
+JAI-007 establishes the source plug-in boundary and the common batch flow. HTTP behavior is supplied separately by the JAI-008 [source HTTP client policy](HTTP_CLIENT.md), and JAI-009 supplies [canonical raw-document persistence](RAW_DOCUMENTS.md). Attachment storage remains JAI-010.
 
 ## Adapter contract
 
@@ -60,6 +60,8 @@ Cancellation is not swallowed: the run is marked `cancelled`, then the cancellat
 
 Unexpected exception messages are not persisted because they may contain upstream response data or credentials. Domain errors retain their explicitly safe code, message and retryability.
 
-## Downstream boundary
+## Downstream persistence boundary
 
-A completed `CrawlBatchResult` carries successful `RawDocumentInput` objects to the future idempotent storage stage. JAI-009 will add URL normalization, content fingerprints and immutable raw-document write behavior without changing individual adapters.
+A completed `CrawlBatchResult` carries successful `RawDocumentInput` objects to `SqlAlchemyRawDocumentRepository`. The repository resolves canonical URLs, computes normalized-content SHA-256 values and atomically creates/reuses/versions immutable `raw_documents` rows without changing individual Adapters. HTTP cache validators are retained for later conditional requests.
+
+Attachment discovery and file persistence do not occur at this boundary; JAI-010 adds those operations after a raw-document version is known.

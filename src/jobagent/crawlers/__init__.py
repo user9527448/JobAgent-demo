@@ -10,6 +10,17 @@ from jobagent.crawlers.contracts import (
     SourceAdapter,
     SourceDefinition,
 )
+from jobagent.crawlers.documents import (
+    PreparedRawDocument,
+    RawDocumentRepository,
+    RawDocumentWriteResult,
+    RawDocumentWriteStatus,
+    SqlAlchemyRawDocumentRepository,
+    canonicalize_url,
+    content_fingerprint,
+    normalize_document_content,
+    prepare_raw_document,
+)
 from jobagent.crawlers.http import (
     HttpCacheValidators,
     HttpFetchResult,
@@ -32,9 +43,18 @@ __all__ = [
     "HttpCacheValidators",
     "HttpFetchResult",
     "HttpSourcePolicy",
+    "PreparedRawDocument",
     "RawDocumentInput",
+    "RawDocumentRepository",
+    "RawDocumentWriteResult",
+    "RawDocumentWriteStatus",
     "SourceAdapter",
     "SourceDefinition",
     "SourceHttpClient",
     "SqlAlchemyCrawlRunRepository",
+    "SqlAlchemyRawDocumentRepository",
+    "canonicalize_url",
+    "content_fingerprint",
+    "normalize_document_content",
+    "prepare_raw_document",
 ]
