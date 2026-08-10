@@ -4,6 +4,10 @@
 
 JAI-007 建立来源插件边界和通用批处理流程。HTTP 行为由 JAI-008 的[来源 HTTP 客户端策略](HTTP_CLIENT.md)单独提供，JAI-009 提供[原始公告规范化持久化](RAW_DOCUMENTS.md)，JAI-010 在下游增加[附件发现与存储](ATTACHMENTS.md)。
 
+JAI-011 增加可手工维护的 `config/source_catalog.toml`。中文的[目标网站库与维护说明](../SOURCE_CATALOG.md)登记校招、江浙沪公职考试、央国企官方来源。只有标记为 `active` 且 `enabled`、并已有显式 Adapter 实现的条目才可运行。
+
+标题过滤属于来源级配置：候选标题命中任一 `exclude_keywords` 时优先排除；存在 `include_keywords` 时，至少命中其中一项才保留。关键词只影响发现阶段，绝不修改所保存的来源 HTML。
+
 ## Adapter 契约
 
 每个来源使用 `sources.adapter` 中保存的名称显式注册工厂。工厂接收 `SourceDefinition`，并返回实现以下接口的对象：
@@ -67,3 +71,9 @@ class SourceAdapter(Protocol):
 完成的 `CrawlBatchResult` 会把成功的 `RawDocumentInput` 对象交给 `SqlAlchemyRawDocumentRepository`。仓库解析规范 URL、计算规范化内容的 SHA-256，并以原子方式创建、复用或版本化不可变 `raw_documents` 记录，无需改变各来源 Adapter。HTTP 缓存校验值会保留给后续条件请求。
 
 附件发现和文件持久化不发生在 Adapter 或批处理循环内部。确定原始公告版本后，JAI-010 附件服务从该版本 HTML 中发现支持的链接，并以公告文档 ID 为归属原子存储已验证文件。
+
+## JAI-011 首个来源
+
+`SasacRecruitmentAdapter` 通过 `SourceHttpClient` 读取国务院国资委央企公开招聘列表和详情。它按稳定的公开 URL 语义识别详情链接，移除查询串/片段和重复 URL，应用网站库关键词，并保留完整详情 HTML、可读文本和发布时间来源信息。`scripts/run_source_preview.py` 可列出网站库，或执行不写数据库的低频只读预览。
+
+契约测试只使用最小化离线样本。当前 Windows 环境无法完成到 `sasac.gov.cn` 的 TLS 访问，浏览器检查又被安全策略拒绝，因此在进入定时任务前仍必须补做线上冒烟。
