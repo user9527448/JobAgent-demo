@@ -41,6 +41,8 @@ class RawDocumentInput:
     raw_html: str | None = None
     raw_text: str | None = None
     published_at: datetime | None = None
+    etag: str | None = None
+    last_modified: str | None = None
     metadata: dict[str, JsonValue] = field(default_factory=dict)
 
     def __post_init__(self) -> None:

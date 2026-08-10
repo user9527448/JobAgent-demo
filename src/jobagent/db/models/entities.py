@@ -117,7 +117,8 @@ class RawDocument(Base):
         UniqueConstraint(
             "source_id",
             "canonical_url",
-            name="uq_raw_documents_source_canonical_url",
+            "version",
+            name="uq_raw_documents_source_canonical_url_version",
         ),
         CheckConstraint(
             "raw_html IS NOT NULL OR raw_text IS NOT NULL",
@@ -127,8 +128,21 @@ class RawDocument(Base):
             "content_hash ~ '^[0-9a-f]{64}$'",
             name="content_hash_sha256",
         ),
+        CheckConstraint("version > 0", name="version_positive"),
+        CheckConstraint(
+            "supersedes_id IS NULL OR supersedes_id <> id",
+            name="supersedes_other_version",
+        ),
+        Index(
+            "uq_raw_documents_source_current_url",
+            "source_id",
+            "canonical_url",
+            unique=True,
+            postgresql_where=text("is_current"),
+        ),
         Index("ix_raw_documents_source_published", "source_id", "published_at"),
         Index("ix_raw_documents_content_hash", "content_hash"),
+        Index("ix_raw_documents_supersedes_id", "supersedes_id"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
@@ -147,8 +161,29 @@ class RawDocument(Base):
         server_default=func.now(),
     )
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    etag: Mapped[str | None] = mapped_column(Text)
+    last_modified: Mapped[str | None] = mapped_column(Text)
+    version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default=text("1"),
+    )
+    is_current: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=text("true"),
+    )
+    supersedes_id: Mapped[int | None] = mapped_column(
+        ForeignKey("raw_documents.id", ondelete="RESTRICT"),
+    )
 
     source: Mapped[Source] = relationship(back_populates="raw_documents")
+    supersedes: Mapped[RawDocument | None] = relationship(
+        remote_side="RawDocument.id",
+        foreign_keys=[supersedes_id],
+    )
     attachments: Mapped[list[Attachment]] = relationship(
         back_populates="document",
         passive_deletes=True,

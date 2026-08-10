@@ -55,4 +55,4 @@ async with SourceHttpClient(policy) as client:
         ...
 ```
 
-Validator persistence and raw-document update policy belong to JAI-009. Attachment MIME validation, limits and atomic file storage belong to JAI-010.
+JAI-009 persists these validators through the [raw-document repository](RAW_DOCUMENTS.md) and reloads them by canonical URL for later conditional requests. Attachment MIME validation, limits and atomic file storage belong to JAI-010.

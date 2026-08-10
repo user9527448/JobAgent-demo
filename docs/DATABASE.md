@@ -1,6 +1,6 @@
 # JOBAGENT core database model
 
-This document describes the JAI-006 PostgreSQL schema. JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md); raw-document persistence begins in JAI-009.
+This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
 
 ## Tables
 
@@ -8,7 +8,7 @@ This document describes the JAI-006 PostgreSQL schema. JAI-007 adds the crawl-ru
 |---|---|---|
 | `sources` | Public recruitment source configuration | Unique `name`; positive `crawl_interval_minutes`; disable with `enabled=false` |
 | `crawl_runs` | One source execution | Restricted status values; `finished_at` cannot precede `started_at`; JSONB statistics |
-| `raw_documents` | Immutable source announcement | Unique `(source_id, canonical_url)`; SHA-256 content hash; HTML or text must be present |
+| `raw_documents` | Immutable source announcement version | Unique `(source_id, canonical_url, version)`; one current version per source URL; SHA-256 content hash; optional ETag/Last-Modified; HTML or text must be present |
 | `attachments` | Files discovered from an announcement | Unique `(document_id, url)`; SHA-256 and parse-status validation |
 | `job_posts` | Announcement-level structured result | At most one current post per document; deadline cannot precede start |
 | `job_positions` | Optional position rows below a post | Positive headcount when known; a post may have zero positions |
@@ -20,6 +20,7 @@ This document describes the JAI-006 PostgreSQL schema. JAI-007 adds the crawl-ru
 sources
 ├── crawl_runs
 └── raw_documents
+    ├── supersedes → prior raw_documents version
     ├── attachments
     │   └── field_evidence (attachment source)
     ├── job_posts
@@ -42,6 +43,7 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 ## Constraints and indexes
 
 - SHA-256 values are lowercase 64-character hexadecimal strings.
+- Raw-document versions are positive and form a deletion-resistant self-referencing chain; a partial unique index permits only one `is_current=true` row per source/canonical URL.
 - Status and evidence type fields have explicit check constraints rather than unconstrained free text.
 - Common source/date, status, deadline, location/education and evidence lookup paths are indexed.
 - Incomplete structured fields remain nullable so raw evidence is retained and can enter later review workflows.
