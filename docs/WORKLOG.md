@@ -322,12 +322,13 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - 九组中英文镜像的标题层级数量逐组一致：仓库规范 7/7、采集 5/5、数据库 6/6、HTTP 4/4、原始公告 5/5、附件 6/6、来源验证 10/10、迁移 1/1、固定样本 1/1。
 - 最终质量门禁：Ruff format 检查 74 个文件、Ruff lint 和 Mypy 均通过；包含 PostgreSQL 集成测试的 64 项测试全部通过，覆盖率 89.34%。
 - 文档基线提交：`2b745f9`（`docs: add Simplified Chinese mirrors`）。无已知阻塞，分支可按依赖顺序在 JAI-010 之后合并。
+- `feature/jai-036-zh-cn-docs` 已非强制推送并跟踪同名远程分支；远程未改写任何已有历史。
 
 ## 6. Next actions
 
 ### Codex
 
-1. 推送 `feature/jai-036-zh-cn-docs`，然后等待 JAI-010、JAI-036 按顺序合并。
+1. 等待 JAI-010、JAI-036 按顺序合并，再继续 JAI-011。
 
 ### User
 
