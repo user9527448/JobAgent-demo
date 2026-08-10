@@ -55,4 +55,6 @@ async with SourceHttpClient(policy) as client:
         ...
 ```
 
-JAI-009 persists these validators through the [raw-document repository](RAW_DOCUMENTS.md) and reloads them by canonical URL for later conditional requests. Attachment MIME validation, limits and atomic file storage belong to JAI-010.
+JAI-009 persists these validators through the [raw-document repository](RAW_DOCUMENTS.md) and reloads them by canonical URL for later conditional requests.
+
+For bounded downloads, `SourceHttpClient.stream()` exposes the successful response body while retaining the same semaphore, pacing, retry and safe-error behavior for the full consumer context. JAI-010 uses it for [attachment MIME/signature validation, size limits and atomic storage](ATTACHMENTS.md); an interrupted response body is recorded as a retryable attachment failure and cannot publish a partial object.

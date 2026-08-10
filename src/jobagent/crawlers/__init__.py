@@ -1,5 +1,16 @@
 """Public collection interfaces for source adapters and orchestration."""
 
+from jobagent.crawlers.attachments import (
+    AttachmentCandidate,
+    AttachmentRecord,
+    AttachmentRepository,
+    AttachmentStoragePolicy,
+    AttachmentStorageService,
+    AttachmentStoreResult,
+    AttachmentStoreStatus,
+    SqlAlchemyAttachmentRepository,
+    discover_attachment_links,
+)
 from jobagent.crawlers.contracts import (
     AdapterFactory,
     CrawlBatchResult,
@@ -34,6 +45,13 @@ from jobagent.crawlers.repository import CrawlRunRepository, SqlAlchemyCrawlRunR
 __all__ = [
     "AdapterFactory",
     "AdapterRegistry",
+    "AttachmentCandidate",
+    "AttachmentRecord",
+    "AttachmentRepository",
+    "AttachmentStoragePolicy",
+    "AttachmentStorageService",
+    "AttachmentStoreResult",
+    "AttachmentStoreStatus",
     "CollectionOrchestrator",
     "CrawlBatchResult",
     "CrawlCursor",
@@ -51,10 +69,12 @@ __all__ = [
     "SourceAdapter",
     "SourceDefinition",
     "SourceHttpClient",
+    "SqlAlchemyAttachmentRepository",
     "SqlAlchemyCrawlRunRepository",
     "SqlAlchemyRawDocumentRepository",
     "canonicalize_url",
     "content_fingerprint",
+    "discover_attachment_links",
     "normalize_document_content",
     "prepare_raw_document",
 ]

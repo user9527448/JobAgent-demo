@@ -1,5 +1,7 @@
 """Tests for typed environment configuration."""
 
+from pathlib import Path
+
 import pytest
 
 from jobagent.core.config import clear_settings_cache, get_settings
@@ -20,12 +22,18 @@ def test_settings_load_from_prefixed_environment(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setenv("JOBAGENT_ENVIRONMENT", "test")
     monkeypatch.setenv("JOBAGENT_LOG_LEVEL", "DEBUG")
     monkeypatch.setenv("JOBAGENT_TIMEZONE", "UTC")
+    monkeypatch.setenv("JOBAGENT_ATTACHMENT_STORAGE_PATH", "data/test-attachments")
+    monkeypatch.setenv("JOBAGENT_ATTACHMENT_MAX_BYTES", "4096")
+    monkeypatch.setenv("JOBAGENT_ATTACHMENT_CHUNK_BYTES", "512")
 
     settings = get_settings()
 
     assert settings.environment == "test"
     assert settings.log_level == "DEBUG"
     assert settings.timezone == "UTC"
+    assert settings.attachment_storage_path == Path("data/test-attachments")
+    assert settings.attachment_max_bytes == 4096
+    assert settings.attachment_chunk_bytes == 512
 
 
 def test_missing_required_environment_fails_clearly(monkeypatch: pytest.MonkeyPatch) -> None:

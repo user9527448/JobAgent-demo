@@ -213,7 +213,23 @@ class Attachment(Base):
             "sha256 IS NULL OR sha256 ~ '^[0-9a-f]{64}$'",
             name="sha256_valid",
         ),
+        CheckConstraint(
+            "download_status IN ('pending', 'stored', 'failed')",
+            name="download_status_valid",
+        ),
+        CheckConstraint(
+            "size_bytes IS NULL OR size_bytes >= 0",
+            name="size_bytes_nonnegative",
+        ),
+        CheckConstraint(
+            "download_status <> 'stored' OR "
+            "(mime_type IS NOT NULL AND sha256 IS NOT NULL "
+            "AND local_path IS NOT NULL AND size_bytes IS NOT NULL "
+            "AND downloaded_at IS NOT NULL)",
+            name="stored_metadata_present",
+        ),
         Index("ix_attachments_document_status", "document_id", "parse_status"),
+        Index("ix_attachments_download_status", "download_status"),
         Index("ix_attachments_sha256", "sha256"),
     )
 
@@ -227,6 +243,15 @@ class Attachment(Base):
     mime_type: Mapped[str | None] = mapped_column(String(127))
     sha256: Mapped[str | None] = mapped_column(String(64))
     local_path: Mapped[str | None] = mapped_column(Text)
+    size_bytes: Mapped[int | None] = mapped_column(BigInteger)
+    download_status: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="pending",
+        server_default=text("'pending'"),
+    )
+    error_message: Mapped[str | None] = mapped_column(Text)
+    downloaded_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     parse_status: Mapped[str] = mapped_column(
         String(32),
         nullable=False,

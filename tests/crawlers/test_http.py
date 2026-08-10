@@ -183,6 +183,36 @@ def test_etag_and_last_modified_round_trip_through_a_304() -> None:
     assert calls == 2
 
 
+def test_stream_retries_headers_and_closes_the_response_after_consumption() -> None:
+    fake_time = FakeTime()
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return httpx.Response(503, request=request)
+        return httpx.Response(200, content=b"streamed-content", request=request)
+
+    async def scenario() -> None:
+        async with SourceHttpClient(
+            _policy(max_attempts=2),
+            transport=httpx.MockTransport(handler),
+            sleep=fake_time.sleep,
+            clock=fake_time.monotonic,
+        ) as client:
+            async with client.stream("https://example.invalid/attachment.pdf") as result:
+                body = b"".join([chunk async for chunk in result.response.aiter_bytes(4)])
+                assert result.attempts == 2
+            assert result.response.is_closed is True
+
+        assert body == b"streamed-content"
+
+    asyncio.run(scenario())
+    assert calls == 2
+    assert fake_time.sleeps == [0.25]
+
+
 def test_source_instances_enforce_independent_timeout_and_rate_policy() -> None:
     slow_time = FakeTime()
     fast_time = FakeTime()

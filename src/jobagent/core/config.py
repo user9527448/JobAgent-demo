@@ -1,10 +1,11 @@
 """Typed application configuration loaded from environment variables."""
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import SecretStr, ValidationError, field_validator
+from pydantic import Field, SecretStr, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from jobagent.core.exceptions import ConfigurationError, JsonValue
@@ -27,6 +28,9 @@ class Settings(BaseSettings):
     timezone: str = "Asia/Shanghai"
     app_name: str = "jobagent"
     database_url: SecretStr
+    attachment_storage_path: Path = Path("data/attachments")
+    attachment_max_bytes: int = Field(default=25 * 1024 * 1024, gt=0)
+    attachment_chunk_bytes: int = Field(default=64 * 1024, gt=0)
 
     @field_validator("timezone")
     @classmethod

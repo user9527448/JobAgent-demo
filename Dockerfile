@@ -14,6 +14,8 @@ COPY migrations ./migrations
 
 RUN python -m pip install --no-cache-dir .
 
+RUN mkdir -p /app/data/attachments && chown -R jobagent:jobagent /app/data
+
 USER jobagent
 
 EXPOSE 8000
