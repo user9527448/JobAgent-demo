@@ -90,4 +90,10 @@ The source covers public civil-service, public-institution and graduate service-
 
 `ShanghaiFirstjobAdapter` queries the Shanghai Student Affairs Center's public graduate job-fair list. The official single-page application exposes the list through a form-encoded POST whose semantics are read-only; the Adapter therefore uses the narrowly scoped shared `post_form_query()` policy and never calls account, resume, application or registration functions. Discovery applies catalog keywords and a start-date cursor, then creates a stable public evidence URL from each fair UUID.
 
-The list record is already the complete public schedule record, so detail materialization does not issue a second request. It preserves the UUID, title, start/end dates and public poster URL as raw JSON text and provenance metadata. Three minimized offline contract fixtures cover distinct 2026 graduate-fair schedules; poster URLs are retained for the later attachment-persistence acceptance pass.
+The list record is already the complete public schedule record, so detail materialization does not issue a second request. It preserves the UUID, title, start/end dates and public poster URL as raw JSON text and provenance metadata. Three minimized offline contract fixtures cover distinct 2026 graduate-fair schedules; poster URLs remain provenance because their image format is outside the current attachment-storage boundary.
+
+### Three-source persistence acceptance
+
+The JAI-011 PostgreSQL acceptance runs three fixed documents from each active source through the raw-document repository twice. The first pass creates nine immutable version-1 rows; the second pass returns the same nine IDs as `unchanged`, without new rows or versions. A SASAC PDF and Jiangsu XLSX then pass through attachment discovery and atomic storage twice, producing `stored` followed by `reused` with one database row, object and download per URL.
+
+Firstjob's public record exposes a poster image rather than a JAI-010-supported PDF/XLS/XLSX attachment. The adapter retains its validated official-domain URL as provenance but does not expand the current attachment-type boundary. This is treated as an explicit unsupported format, not as a missing or fabricated source attachment.

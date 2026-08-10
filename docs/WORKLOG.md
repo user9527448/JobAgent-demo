@@ -22,7 +22,7 @@
 | JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / `020e0b7` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
 | JAI-010 Attachment storage | Complete, merged to develop | `develop` / `e0ea5d9` | PDF/XLS/XLSX discovery, streamed validation, SHA-256 content addressing and atomic idempotent storage |
 | JAI-036 Simplified Chinese documentation | Complete, merged to develop | `develop` / `82adb73` | Nine Chinese mirrors, bilingual navigation and durable synchronization rules, based on JAI-010 |
-| JAI-011 来源网站库与首批 Adapter | 进行中 | `feature/jai-011-source-catalog-sasac` | 三个来源 Adapter 与固定样本已完成，继续做持久化、附件和幂等验收 |
+| JAI-011 来源网站库与首批 Adapter | 完成，待合并 | `feature/jai-011-source-catalog-sasac` | 三来源 Adapter、固定样本、公告/支持格式附件持久化和两次幂等验收完成 |
 
 ## 2. Environment readiness
 
@@ -382,12 +382,21 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - 来源 3 独立提交：`58fd893`（`feat: add Shanghai Firstjob fair adapter`）。提交后的 3 次普通非强制 HTTPS 推送分别因连接重置或 GitHub 443 不可达失败；未强推、未改写历史，也未切换远程或协议。保留自动心跳继续低频重试，成功后再推进持久化幂等验收。
 - 后续心跳前两次普通推送仍因 GitHub 443 不可达失败，第三次恢复并成功将远程从 `1df6c8e` 推进到 `3298a98`；`git rev-parse` 与 `git ls-remote --heads` 均确认本地 HEAD、远程跟踪引用和 GitHub 分支一致。来源 3 推送阻塞解除，自动心跳可停用。
 
+### 2026-08-11 — JAI-011 三来源持久化与幂等验收完成
+
+- 新增 PostgreSQL/文件系统端到端验收：国资委、江苏人事考试、Firstjob 各取 3 份固定公告，首轮写入创建 9 条版本 1 原始记录，第二轮全部返回 `unchanged` 且复用相同文档 ID；数据库最终仍为 9 条记录、无新增版本。
+- 国资委 PDF 与江苏 XLSX 分别执行两次附件发现和原子存储，结果均为首轮 `stored`、第二轮 `reused`；最终只有 2 条附件记录、2 个对象和 2 次下载。Firstjob 仅提供公开海报图片，超出 JAI-010 的 PDF/XLS/XLSX 范围，因此保留经官方域名校验的海报 URL，不提前扩展图片下载。
+- 国资委线上只读冒烟再次在 3 次重试后以连接池超时失败；未更换入口、绕过 TLS 或访问控制。江苏与 Firstjob 线上冒烟已通过，国资委检查保留为进入定时运行前的环境门槛，不阻断固定样本和持久化验收结论。
+- 第一轮全仓门禁中，Ruff format/lint 通过，但新增验收测试对 `JsonValue` 直接调用 `endswith` 导致 Mypy 失败；改为精确 URL 断言后重跑。最终门禁：88 个文件格式检查、Ruff lint、56 个源文件 Mypy 均通过，89 项测试（含 6 项 PostgreSQL 集成测试）全部通过，覆盖率 88.30%。
+- JAI-011 的 Issue 验收项全部满足，feature 分支可按一个 Issue 一个分支的流程合并到 `develop`；国资委线上冒烟限制继续保留在网站库说明和采集文档中。
+
 ## 6. Next actions
 
 ### Codex
 
-1. 完成三个来源的公告与附件持久化、连续两次幂等验收。
-2. 重试国资委公开招聘栏目低频线上冒烟；不得绕过 TLS 或访问控制。
+1. 将完成的 JAI-011 feature 分支按顺序合并到 `develop`，确认远程同步。
+2. 从已合并的 `develop` 创建 `feature/jai-012-...`，实现运行统计、手动触发与失败重跑。
+3. 网络环境允许时补做国资委公开招聘栏目低频线上冒烟；不得绕过 TLS 或访问控制。
 
 ### User
 
