@@ -2,9 +2,9 @@
 
 > Purpose: a concise, continuously updated record of progress, decisions, verification, blockers, and user actions.
 >
-> Last updated: 2026-08-09
+> Last updated: 2026-08-10
 >
-> Active branch: `develop`
+> Active branch: `feature/jai-009-url-fingerprint-idempotency`
 
 ## 1. Current status
 
@@ -18,7 +18,8 @@
 | JAI-005 Real-source vertical Spike | Complete, merged to develop | `develop` / `548be94` | Jining public recruitment list/detail/PDF technical validation |
 | JAI-006 Core models/first migration | Complete, merged to develop | `develop` / `1690dd9` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
 | JAI-007 Source Adapter/orchestrator | Complete, merged to develop | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
-| JAI-008 HTTP client policy | Complete, merged locally; remote push blocked | `develop` / merge commit | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
+| JAI-008 HTTP client policy | Complete, merged to develop | `develop` / `9016fb3` | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
+| JAI-009 URL/fingerprint/idempotency | In progress | `feature/jai-009-url-fingerprint-idempotency` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
 
 ## 2. Environment readiness
 
@@ -261,12 +262,20 @@ JAI-008 gives each source its own HTTP client policy, concurrency semaphore and 
 - No dependency or migration change was required: the project already depends on `httpx`, and persistent URL/cache state remains in JAI-009.
 - Merged `feature/jai-008-http-client-policy` into `develop` with a non-fast-forward merge after confirming both local branches matched their remote counterparts.
 - The database-enabled quality gate was rerun after the merge: Ruff format/lint and Mypy passed, all 39 tests passed, and coverage remained 91.08%. Four non-force `develop` push attempts then failed because GitHub port 443 was unreachable after about 21 seconds each; the merge remains safe locally and remote history did not change.
+- GitHub connectivity later recovered and the non-force push advanced remote `develop` to merge commit `9016fb3`; local and remote `develop` were verified identical before JAI-009 started.
+
+### 2026-08-10 — JAI-009 started
+
+- Created `feature/jai-009-url-fingerprint-idempotency` from the verified and remotely synchronized `develop` branch.
+- Scope confirmed: tracking-parameter removal, relative-link resolution, deterministic canonical URLs, normalized-body SHA-256 fingerprints, update detection and idempotent raw-document persistence.
+- Evidence boundary: a changed page must preserve the prior raw source evidence rather than overwrite it; attachment discovery/download/storage remains JAI-010.
+- Planned acceptance checks: identical input written twice yields one current record, content changes create a traceable new version/update event, and URL/content edge cases have deterministic unit coverage.
 
 ## 6. Next actions
 
 ### Codex
 
-1. Retry the non-force `develop` push; after remote synchronization is verified, create `feature/jai-009-url-fingerprint-idempotency` from `develop`.
+1. Implement and verify JAI-009 on `feature/jai-009-url-fingerprint-idempotency`.
 
 ### User
 
