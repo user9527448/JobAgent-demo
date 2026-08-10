@@ -4,7 +4,7 @@
 >
 > Last updated: 2026-08-10
 >
-> Active branch: `develop`
+> Active branch: `feature/jai-010-attachment-storage`
 
 ## 1. Current status
 
@@ -19,7 +19,8 @@
 | JAI-006 Core models/first migration | Complete, merged to develop | `develop` / `1690dd9` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
 | JAI-007 Source Adapter/orchestrator | Complete, merged to develop | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
 | JAI-008 HTTP client policy | Complete, merged to develop | `develop` / `9016fb3` | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
-| JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / merge commit | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
+| JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / `020e0b7` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
+| JAI-010 Attachment storage | Complete, awaiting merge | `feature/jai-010-attachment-storage` / `4176187` | PDF/XLS/XLSX discovery, streamed validation, SHA-256 content addressing and atomic idempotent storage |
 
 ## 2. Environment readiness
 
@@ -137,6 +138,10 @@ JAI-008 gives each source its own HTTP client policy, concurrency semaphore and 
 ### D-011 Content updates create immutable raw-document versions
 
 Each `raw_documents` row is one source-evidence version. A partial unique index exposes exactly one current row per source/canonical URL, while positive version numbers and `supersedes_id` preserve the prior chain. A transaction-scoped PostgreSQL advisory lock serializes concurrent first writes for the same source URL; identical content reuses the current row and changed content inserts a new version.
+
+### D-012 Attachment download and parsing states remain separate
+
+JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object store and records `download_status` independently from `parse_status`. A file is published only after the complete streamed body is size-checked, synchronized and signature/MIME-validated; parsing, OCR and spreadsheet interpretation cannot be implied by download success and remain in JAI-013 through JAI-016.
 
 ## 5. Completed work history
 
@@ -282,16 +287,34 @@ Each `raw_documents` row is one source-evidence version. A partial unique index 
 - Docker Desktop restarted during the first image build attempt, causing a 184-second timeout and temporarily invalidating the old API image reference. After the engine recovered, the production image built successfully.
 - The local development database upgraded non-destructively to `0002_raw_document_versions (head)`; `alembic check` found no schema drift. The recreated API and PostgreSQL containers are healthy, and `/health/ready` reports the database available.
 - Merged `feature/jai-009-url-fingerprint-idempotency` into `develop` with a non-fast-forward merge after confirming both local branches matched their remote counterparts.
+- The non-force push advanced remote `develop` to merge commit `020e0b7`; local and remote `develop` were verified identical before JAI-010 started.
+
+### 2026-08-10 — JAI-010 attachment storage completed
+
+- Created `feature/jai-010-attachment-storage` from the verified and remotely synchronized `develop` branch.
+- Scope confirmed: discover PDF/XLS/XLSX links from announcement HTML, validate URL/extension/MIME/signature, enforce a configured byte limit, compute SHA-256, persist attachment metadata and atomically place content in the local object store.
+- Boundaries: document parsing, OCR, spreadsheet interpretation and golden parsing samples remain JAI-013 through JAI-016; JAI-010 stores source bytes only.
+- Added canonical PDF/XLS/XLSX link discovery, safe filename handling, shared-policy streaming HTTP responses, configured header/actual-byte limits, file-signature and MIME validation, SHA-256 hashing and same-volume atomic object publication.
+- Added an idempotent PostgreSQL attachment repository and migration `0003_attachment_storage`. Download state, safe failure information, byte count and timestamp are stored separately from parsing state; an advisory lock and the existing unique key prevent duplicate metadata rows.
+- Added the named Compose attachment volume and verified that the non-root API user owns its configured path. Completed files use relative content-addressed paths; failed or interrupted transfers remove their temporary `.part` file.
+- Added unit and PostgreSQL acceptance coverage for canonical de-duplication, invalid links, PDF/XLSX validation, generic MIME handling, both declared and streamed size overflow, HTML masquerades, interrupted bodies and repeated storage reuse.
+- The first targeted static run found export ordering, a platform-safe path replacement rule and one invariant dictionary type; all were corrected without suppressions. One initial HTTP test incorrectly assumed an in-memory response remained open after its body was fully consumed; the assertion was removed and the repeated test passed.
+- The first Docker inspection inside the restricted sandbox could not access the Docker named pipe. Re-running the required checks with authorized Docker access succeeded; no product change was needed.
+- Final database-enabled quality gate: Ruff format/lint passed, Mypy passed across 46 source files, all 64 tests passed and coverage was 89.34% against the 85% threshold.
+- Final container verification: the production image built from the completed source, the development database is at `0003_attachment_storage (head)`, API user `uid=100` can write and clean up `/app/data/attachments`, both services are healthy and `/health/ready` reports the database available.
+- Implementation commit: `4176187` (`feat: add atomic attachment storage`). No known blocker remains; the feature branch is ready for review and merge.
+- The first non-force feature-branch push timed out on GitHub HTTPS port 443 after 21 seconds and changed no remote state. An immediate retry succeeded; the local branch now tracks `origin/feature/jai-010-attachment-storage`.
 
 ## 6. Next actions
 
 ### Codex
 
-1. After the merged `develop` branch is verified and pushed, create the JAI-010 feature branch from synchronized `develop`.
+1. Wait for JAI-010 review/merge before starting JAI-011.
 
 ### User
 
-1. Use `docker compose down` when the local services are no longer needed; the PostgreSQL volume is retained.
+1. Review and merge `feature/jai-010-attachment-storage` into `develop` when ready.
+2. Use `docker compose down` when the local services are no longer needed; PostgreSQL and attachment volumes are retained.
 
 ## 7. Update template
 

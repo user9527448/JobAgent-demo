@@ -1,6 +1,6 @@
 # Source Adapter and collection orchestration
 
-JAI-007 establishes the source plug-in boundary and the common batch flow. HTTP behavior is supplied separately by the JAI-008 [source HTTP client policy](HTTP_CLIENT.md), and JAI-009 supplies [canonical raw-document persistence](RAW_DOCUMENTS.md). Attachment storage remains JAI-010.
+JAI-007 establishes the source plug-in boundary and the common batch flow. HTTP behavior is supplied separately by the JAI-008 [source HTTP client policy](HTTP_CLIENT.md), JAI-009 supplies [canonical raw-document persistence](RAW_DOCUMENTS.md), and JAI-010 adds downstream [attachment discovery and storage](ATTACHMENTS.md).
 
 ## Adapter contract
 
@@ -64,4 +64,4 @@ Unexpected exception messages are not persisted because they may contain upstrea
 
 A completed `CrawlBatchResult` carries successful `RawDocumentInput` objects to `SqlAlchemyRawDocumentRepository`. The repository resolves canonical URLs, computes normalized-content SHA-256 values and atomically creates/reuses/versions immutable `raw_documents` rows without changing individual Adapters. HTTP cache validators are retained for later conditional requests.
 
-Attachment discovery and file persistence do not occur at this boundary; JAI-010 adds those operations after a raw-document version is known.
+Attachment discovery and file persistence do not occur inside the Adapter or batch loop. After a raw-document version is known, the JAI-010 attachment service discovers supported links from that version's HTML and atomically stores validated files against its document ID.

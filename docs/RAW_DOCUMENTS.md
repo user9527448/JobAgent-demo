@@ -52,7 +52,7 @@ The HTTP `ETag` and `Last-Modified` values associated with the current version a
 ## Boundaries
 
 - The repository prepares and persists individual successful Adapter outputs; collection-run orchestration remains responsible for item-level failure isolation.
-- Attachment URL discovery, MIME checks, downloads, hashes and atomic file storage begin in JAI-010.
+- JAI-010 performs [attachment URL discovery, MIME/signature validation, hashing and atomic file storage](ATTACHMENTS.md) after a raw-document version is known.
 - Structured extraction and field evidence continue to reference the exact immutable raw-document version that supplied them.
 
 The `0002_raw_document_versions` migration upgrades existing rows to version 1/current. Downgrading to the original one-row-per-URL schema is safe only when no URL has accumulated multiple versions; otherwise PostgreSQL rejects the old uniqueness constraint rather than discard evidence.

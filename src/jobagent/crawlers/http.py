@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from types import TracebackType
 from urllib.parse import urlsplit, urlunsplit
@@ -235,6 +236,115 @@ class SourceHttpClient:
             )
 
         raise AssertionError("HTTP retry loop exited without a result.")
+
+    @asynccontextmanager
+    async def stream(
+        self,
+        url: str,
+        *,
+        validators: HttpCacheValidators | None = None,
+    ) -> AsyncIterator[HttpFetchResult]:
+        """Stream one successful response while retaining source policy controls."""
+        safe_url = _safe_url(url)
+        request_validators = validators or HttpCacheValidators()
+        headers = request_validators.request_headers()
+
+        for attempt in range(1, self.policy.max_attempts + 1):
+            logger.info(
+                "http.request.attempt",
+                extra={
+                    "source_id": self.policy.source_id,
+                    "url": safe_url,
+                    "attempt": attempt,
+                    "max_attempts": self.policy.max_attempts,
+                    "stream": True,
+                },
+            )
+            transport_error: httpx.TransportError | None = None
+            status_code: int | None = None
+
+            async with self._semaphore:
+                await self._wait_for_rate_slot()
+                try:
+                    request = self._client.build_request("GET", url, headers=headers)
+                    response = await self._client.send(request, stream=True)
+                except httpx.InvalidURL as error:
+                    raise PermanentJobAgentError(
+                        "Source URL is invalid.",
+                        code="crawler.http_invalid_url",
+                        details={"source_id": self.policy.source_id, "url": safe_url},
+                    ) from error
+                except httpx.TransportError as error:
+                    transport_error = error
+                else:
+                    status_code = response.status_code
+                    if response.is_success or status_code == httpx.codes.NOT_MODIFIED:
+                        logger.info(
+                            "http.request.completed",
+                            extra={
+                                "source_id": self.policy.source_id,
+                                "url": safe_url,
+                                "attempts": attempt,
+                                "status_code": status_code,
+                                "stream": True,
+                            },
+                        )
+                        try:
+                            yield HttpFetchResult(
+                                response=response,
+                                attempts=attempt,
+                                validators=request_validators.updated(response.headers),
+                            )
+                        finally:
+                            await response.aclose()
+                        return
+                    await response.aclose()
+
+            if transport_error is not None:
+                if attempt == self.policy.max_attempts:
+                    raise _retry_exhausted(
+                        self.policy,
+                        safe_url,
+                        attempts=attempt,
+                        error_type=type(transport_error).__name__,
+                    ) from transport_error
+                await self._wait_before_retry(
+                    attempt,
+                    safe_url,
+                    reason=type(transport_error).__name__,
+                )
+                continue
+
+            if status_code == httpx.codes.TOO_MANY_REQUESTS or (
+                status_code is not None and status_code >= 500
+            ):
+                if attempt == self.policy.max_attempts:
+                    raise _retry_exhausted(
+                        self.policy,
+                        safe_url,
+                        attempts=attempt,
+                        status_code=status_code,
+                    )
+                await self._wait_before_retry(
+                    attempt,
+                    safe_url,
+                    reason=f"http_{status_code}",
+                    status_code=status_code,
+                )
+                continue
+
+            raise PermanentJobAgentError(
+                "Source returned a non-retryable HTTP response.",
+                code="crawler.http_permanent_response",
+                details={
+                    "source_id": self.policy.source_id,
+                    "url": safe_url,
+                    "attempts": attempt,
+                    "status_code": status_code,
+                },
+            )
+
+        raise AssertionError("HTTP stream retry loop exited without a result.")
 
     async def _wait_for_rate_slot(self) -> None:
         async with self._rate_lock:

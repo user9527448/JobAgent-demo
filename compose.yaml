@@ -27,11 +27,16 @@ services:
       JOBAGENT_LOG_LEVEL: ${JOBAGENT_LOG_LEVEL:-INFO}
       JOBAGENT_TIMEZONE: ${JOBAGENT_TIMEZONE:-Asia/Shanghai}
       JOBAGENT_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-jobagent}:${POSTGRES_PASSWORD:-jobagent-dev-only}@db:5432/${POSTGRES_DB:-jobagent}
+      JOBAGENT_ATTACHMENT_STORAGE_PATH: /app/data/attachments
+      JOBAGENT_ATTACHMENT_MAX_BYTES: ${JOBAGENT_ATTACHMENT_MAX_BYTES:-26214400}
+      JOBAGENT_ATTACHMENT_CHUNK_BYTES: ${JOBAGENT_ATTACHMENT_CHUNK_BYTES:-65536}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - attachment-data:/app/data/attachments
     healthcheck:
       test:
         - CMD
@@ -47,3 +52,4 @@ services:
 
 volumes:
   postgres-data:
+  attachment-data:
