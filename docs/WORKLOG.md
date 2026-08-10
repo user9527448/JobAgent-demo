@@ -2,7 +2,7 @@
 
 > Purpose: a concise, continuously updated record of progress, decisions, verification, blockers, and user actions.
 >
-> Last updated: 2026-08-10
+> Last updated: 2026-08-11
 >
 > Active branch: `feature/jai-011-source-catalog-sasac`
 
@@ -349,12 +349,28 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - WORKLOG 检查点提交：`02167f1`（`docs: record JAI-011 first source checkpoint`）。普通推送最初因安全审查要求再次确认具体远程与提交载荷而暂停；用户随后明确允许推送到 `https://github.com/user9527448/JobAgent-demo.git`。授权后的两次非强制 HTTPS 推送均在约 21 秒后无法连接 GitHub 443，远程未发生变更；未改写历史，也未切换传输方式绕过。
 - 用户要求继续重试后，下一次普通 HTTPS 推送成功；`feature/jai-011-source-catalog-sasac` 已创建在远程并跟踪 `origin/feature/jai-011-source-catalog-sasac`，远程包含截至 `b0a4eb6` 的四个本地提交。
 
+### 2026-08-10 — JAI-011 来源 2 江苏省人事考试网开始
+
+- 按网站库稳定性优先级选择江苏省人事考试网作为来源 2，继续使用同一个 JAI-011 feature 分支，但代码、样本和文档形成独立提交。
+- 官方公开页面核验：人事考试首页集中展示公务员、事业单位、“三支一扶”等专题与公告日期；公开详情使用同域 `/art/YYYY/M/D/art_<栏目>_<文章>.html` 路径，并展示标题、发布日期、正文及附件。报名网站只保留为公告证据，不访问登录、报名、缴费、成绩查询等交互功能。
+- 来源 2 计划：启用网站库条目，增加同域/路径约束、关键词过滤、游标发现和三组离线详情契约样本；扩展只读预览入口并同步中英文采集文档。
+
+### 2026-08-11 — JAI-011 来源 2 江苏省人事考试网完成
+
+- 将 `jiangsu-personnel-exam` 标记为 `active`/启用，并新增 `JiangsuPersonnelExamAdapter`。发现阶段只接受配置同域的公开文章 `/art/...` 和年度专题 `/col/col<id>/index.html`，排除配置首页自身和外域链接；同域旧式 HTTP 专题链接只升级为 HTTPS，不允许其他明文或跨域目标。
+- 来源级包含/排除关键词聚焦公务员、事业单位、“三支一扶”的报名与考试安排，排除成绩查询、合格分数线、拟录用、递补和体检类结果。列表链接优先使用完整 `title` 属性，避免可见文本被省略号截断后绕过过滤；同时清理真实页面中的 `U+FEFF`。
+- 详情解析同时支持文章页 `ArticleTitle`/`PubDate` 与专题页 `ColumnName`/`Maketime`，保留完整 HTML、可读文本、上海时区日期、江苏地区和官方主体。预览命令新增 UTF-8 控制台输出和可选 `--fetch-first-detail`，不写数据库。
+- 增加 1 个列表和 4 个详情离线样本，覆盖公务员公告、事业单位公告、“三支一扶”公告和年度专题页；测试覆盖同域约束、HTTP 到 HTTPS 定向升级、首页排除、完整标题去噪、关键词、日期游标、三种标题来源、共享 HTTP 客户端和详情抓取。
+- 线上冒烟的首次沙箱请求按重试策略失败；沙箱外列表请求成功，但先后暴露 Windows GBK 无法打印 BOM、结果类噪声、专题链接使用同域 HTTP、专题详情以 `ColumnName`/`Maketime` 提供元数据等真实差异，均补充为代码规则和离线回归样本。一次权限审批超时未执行网络请求，按规则重试后继续。
+- 最终线上端到端只读冒烟通过：列表发现 `江苏省2026年度考试录用公务员专题` 和 `江苏省2026年省属事业单位统一公开招聘人员考试专题` 两个 HTTPS 候选；首个专题详情解析标题、`2025-12-04T00:00:00+08:00` 页面日期、8,986 个 HTML 字符和 2,130 个文本字符。只访问公开首页与专题详情，未进入报名、缴费、登录或成绩系统。
+- 同步更新网站库说明及中英文 `COLLECTION.md`。最终数据库启用门禁：84 个文件格式检查、Ruff lint、53 个源文件 Mypy 均通过，81 项测试（含 5 项 PostgreSQL 集成测试）全部通过，覆盖率 88.77%。
+
 ## 6. Next actions
 
 ### Codex
 
-1. 继续 JAI-011 来源 2：接入江苏省人事考试网公开公告，保持报名系统与交互功能在范围外。
-2. 网络可用时对国资委公开列表执行一次低频只读冒烟，再继续来源 3 及持久化幂等验收。
+1. 将来源 2 作为独立实现提交并非强制推送当前 JAI-011 feature 分支。
+2. 选择并接入来源 3，再完成三个来源的持久化幂等验收；国资委线上冒烟仍待网络环境允许。
 
 ### User
 

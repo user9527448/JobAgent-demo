@@ -60,12 +60,12 @@ regions = ["jiangsu"]
 base_url = "https://jshrss.jiangsu.gov.cn/"
 list_url = "https://jshrss.jiangsu.gov.cn/col/col57253/index.html"
 adapter = "jiangsu_personnel_exam"
-implementation_status = "planned"
-enabled = false
+implementation_status = "active"
+enabled = true
 crawl_interval_minutes = 180
 include_keywords = ["公务员", "事业单位", "报名", "笔试", "资格审查"]
-exclude_keywords = ["成绩合格线", "录用公示"]
-notes = "候选公考来源；采集公开公告和时间安排，不进入报名系统。"
+exclude_keywords = ["成绩查询", "合格分数线", "拟录用", "录用公示", "递补人选", "体检人选"]
+notes = "JAI-011 来源 2；采集公开公告和时间安排，不进入报名系统。"
 
 [[sources]]
 key = "zhejiang-civil-service"

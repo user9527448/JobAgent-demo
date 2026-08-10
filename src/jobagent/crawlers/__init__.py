@@ -39,6 +39,7 @@ from jobagent.crawlers.http import (
     HttpSourcePolicy,
     SourceHttpClient,
 )
+from jobagent.crawlers.jiangsu import JiangsuPersonnelExamAdapter
 from jobagent.crawlers.orchestrator import CollectionOrchestrator
 from jobagent.crawlers.registry import AdapterRegistry
 from jobagent.crawlers.repository import CrawlRunRepository, SqlAlchemyCrawlRunRepository
@@ -63,6 +64,7 @@ __all__ = [
     "HttpCacheValidators",
     "HttpFetchResult",
     "HttpSourcePolicy",
+    "JiangsuPersonnelExamAdapter",
     "PreparedRawDocument",
     "RawDocumentInput",
     "RawDocumentRepository",

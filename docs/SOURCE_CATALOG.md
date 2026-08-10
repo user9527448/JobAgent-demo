@@ -15,7 +15,7 @@
 |---|---|---|---|---|---|
 | 校招 | 全国 | 国家大学生就业服务平台 | [职位信息](https://www.ncss.cn/student/jobs/index.html) | 待接入 | 教育部学生服务与素质发展中心公共平台；先验证无登录列表稳定性 |
 | 校招 | 上海/长三角 | 上海学生就业创业服务网 | [首页](https://www.firstjob.shec.edu.cn/) | 待接入 | 上海市学生事务中心公开招聘会与长三角就业信息 |
-| 公职考试 | 江苏 | 江苏省人事考试网 | [考试专题列表](https://jshrss.jiangsu.gov.cn/col/col57253/index.html) | 待接入 | 省级公务员报名入口由官方招录公告指向该站；只采集公开公告和时间安排 |
+| 公职考试 | 江苏 | 江苏省人事考试网 | [考试专题列表](https://jshrss.jiangsu.gov.cn/col/col57253/index.html) | 已启用 | 来源 2；采集公务员、事业单位、“三支一扶”等公开公告和时间安排，不进入报名系统 |
 | 公职考试 | 浙江 | 浙江省公务员考试录用网 | [首页](https://gwy.zjks.gov.cn/) | 待接入 | 招考公告、报名统计和考试安排 |
 | 公职考试 | 上海 | 上海市公务员局 | [首页](https://www.shacs.gov.cn/) | 待接入 | 只采集公开招录公告；不访问报名表单 |
 | 公职考试 | 上海 | 上海市人力资源和社会保障局 | [通知公告](https://rsj.sh.gov.cn/tgsgg_17341/) | 待接入 | 事业单位公开招聘、报名确认与考试时间 |
@@ -48,10 +48,11 @@
 .\.venv\Scripts\python.exe -m pytest tests/crawlers/test_catalog.py -q
 ```
 
-预览当前已启用的国资委来源（会真实访问公开网站，不写数据库）：
+预览当前已启用来源（会真实访问公开网站，不写数据库）：
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source sasac-recruitment --limit 10
+.\.venv\Scripts\python.exe scripts/run_source_preview.py --source jiangsu-personnel-exam --limit 10 --fetch-first-detail
 ```
 
 ## 4. 新来源上线检查

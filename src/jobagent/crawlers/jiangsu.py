@@ -1,4 +1,4 @@
-"""Adapter for the public SASAC central-SOE recruitment announcement column."""
+"""Adapter for public Jiangsu personnel-exam announcements and schedules."""
 
 from __future__ import annotations
 
@@ -21,12 +21,16 @@ from jobagent.crawlers.contracts import (
 from jobagent.crawlers.http import SourceHttpClient
 
 _DATE_PATTERN = re.compile(r"(?P<year>20\d{2})[年./-](?P<month>\d{1,2})[月./-](?P<day>\d{1,2})日?")
-_DETAIL_PATH_PATTERN = re.compile(r"/n2588350/(?:[^?#]*/)*c\d+/content\.html$", re.IGNORECASE)
+_ARTICLE_PATH_PATTERN = re.compile(
+    r"/art/20\d{2}/\d{1,2}/\d{1,2}/art_\d+_\d+\.html$",
+    re.IGNORECASE,
+)
+_TOPIC_PATH_PATTERN = re.compile(r"/col/col\d+/index\.html$", re.IGNORECASE)
 _SHANGHAI = ZoneInfo("Asia/Shanghai")
 
 
-class SasacRecruitmentAdapter:
-    """Discover and retain public recruitment announcements without form access."""
+class JiangsuPersonnelExamAdapter:
+    """Collect public notices without entering registration or query systems."""
 
     def __init__(
         self,
@@ -37,20 +41,19 @@ class SasacRecruitmentAdapter:
         if catalog_entry.adapter != source.adapter:
             raise PermanentJobAgentError(
                 "Catalog adapter does not match the database source definition.",
-                code="crawler.sasac_adapter_mismatch",
+                code="crawler.jiangsu_adapter_mismatch",
                 details={
                     "source_adapter": source.adapter,
                     "catalog_adapter": catalog_entry.adapter,
                 },
             )
-        self._source = source
         self._catalog_entry = catalog_entry
         self._http_client = http_client
 
     async def discover(self, cursor: CrawlCursor | None) -> Sequence[DiscoveredItem]:
-        """Fetch the public list and apply source-maintained title keywords."""
+        """Fetch the official public index and filter announcement titles."""
         response = await self._http_client.get(self._catalog_entry.list_url)
-        items = parse_sasac_list(
+        items = parse_jiangsu_list(
             response.response.content,
             list_url=self._catalog_entry.list_url,
             include_keywords=self._catalog_entry.include_keywords,
@@ -59,28 +62,29 @@ class SasacRecruitmentAdapter:
         return _after_cursor(items, cursor)
 
     async def fetch_detail(self, item: DiscoveredItem) -> RawDocumentInput:
-        """Fetch one detail page while preserving its original HTML and text."""
+        """Fetch one same-origin public article and retain its source content."""
         if not _is_allowed_detail_url(item.url, self._catalog_entry.list_url):
             raise PermanentJobAgentError(
-                "SASAC detail URL is outside the configured public source.",
-                code="crawler.sasac_detail_url_rejected",
+                "Jiangsu detail URL is outside the configured public source.",
+                code="crawler.jiangsu_detail_url_rejected",
                 details={"detail_url": item.url},
             )
         response = await self._http_client.get(item.url)
-        return parse_sasac_detail(response.response.content, detail_url=item.url)
+        return parse_jiangsu_detail(response.response.content, detail_url=item.url)
 
 
-def parse_sasac_list(
+def parse_jiangsu_list(
     html: bytes,
     *,
     list_url: str,
     include_keywords: Sequence[str] = (),
     exclude_keywords: Sequence[str] = (),
 ) -> tuple[DiscoveredItem, ...]:
-    """Parse detail candidates from resilient link semantics, then filter titles."""
+    """Discover same-origin public article links using stable URL semantics."""
     soup = BeautifulSoup(html, "html.parser")
     candidates: list[DiscoveredItem] = []
     seen_urls: set[str] = set()
+    recognized_links = False
 
     for anchor in soup.find_all("a", href=True):
         if not isinstance(anchor, Tag):
@@ -91,6 +95,7 @@ def parse_sasac_list(
         url = _normalize_discovered_url(urljoin(list_url, href), list_url)
         if not _is_allowed_detail_url(url, list_url):
             continue
+        recognized_links = True
 
         title_attribute = anchor.get("title")
         raw_title = (
@@ -109,59 +114,61 @@ def parse_sasac_list(
         match = _DATE_PATTERN.search(surrounding_text)
         metadata: dict[str, JsonValue] = {
             "title": title,
-            "source_kind": "sasac_recruitment",
+            "source_kind": "jiangsu_personnel_exam",
+            "region": "jiangsu",
         }
         if match is not None:
             metadata["published_on"] = _match_date(match).date().isoformat()
         candidates.append(DiscoveredItem(url=url, metadata=metadata))
 
-    recognized_links = any(
-        isinstance(anchor, Tag)
-        and isinstance(anchor.get("href"), str)
-        and _is_allowed_detail_url(urljoin(list_url, str(anchor.get("href"))), list_url)
-        for anchor in soup.find_all("a", href=True)
-    )
     if not recognized_links:
         raise PermanentJobAgentError(
-            "SASAC recruitment list structure was not recognized.",
-            code="crawler.sasac_list_unrecognized",
+            "Jiangsu personnel-exam list structure was not recognized.",
+            code="crawler.jiangsu_list_unrecognized",
             details={"list_url": list_url},
         )
     return tuple(candidates)
 
 
-def parse_sasac_detail(html: bytes, *, detail_url: str) -> RawDocumentInput:
-    """Extract stable provenance fields while retaining the full source response."""
+def parse_jiangsu_detail(html: bytes, *, detail_url: str) -> RawDocumentInput:
+    """Extract stable article provenance while preserving the original page."""
     soup = BeautifulSoup(html, "html.parser")
-    title = _first_meta(soup, "ArticleTitle", "og:title") or _first_text(
-        soup, "h1", ".title", ".article-title"
+    title = _first_meta(soup, "ArticleTitle", "og:title", "ColumnName", "channel") or _first_text(
+        soup,
+        "h1",
+        "h2",
+        ".title",
+        ".article-title",
     )
     if title is None:
         raise PermanentJobAgentError(
-            "SASAC recruitment detail has no recognizable title.",
-            code="crawler.sasac_detail_title_missing",
+            "Jiangsu personnel-exam detail has no recognizable title.",
+            code="crawler.jiangsu_detail_title_missing",
             details={"detail_url": detail_url},
         )
 
     text = "\n".join(part.strip() for part in soup.stripped_strings if part.strip())
     if not text:
         raise PermanentJobAgentError(
-            "SASAC recruitment detail has no readable text.",
-            code="crawler.sasac_detail_body_missing",
+            "Jiangsu personnel-exam detail has no readable text.",
+            code="crawler.jiangsu_detail_body_missing",
             details={"detail_url": detail_url},
         )
     normalized_title = _normalize_title(title)
     if normalized_title not in text:
         text = f"{normalized_title}\n{text}"
 
-    published_at = _parse_published_at(soup, text)
     return RawDocumentInput(
         url=_canonical_url(detail_url),
         title=normalized_title,
         raw_html=html.decode(soup.original_encoding or "utf-8", errors="replace"),
         raw_text=text,
-        published_at=published_at,
-        metadata={"source_kind": "sasac_recruitment", "official_owner": "国务院国资委"},
+        published_at=_parse_published_at(soup, text),
+        metadata={
+            "source_kind": "jiangsu_personnel_exam",
+            "official_owner": "江苏省人力资源和社会保障厅",
+            "region": "jiangsu",
+        },
     )
 
 
@@ -186,7 +193,7 @@ def _first_text(soup: BeautifulSoup, *selectors: str) -> str | None:
 
 
 def _parse_published_at(soup: BeautifulSoup, text: str) -> datetime | None:
-    meta_value = _first_meta(soup, "PubDate", "publishdate", "date")
+    meta_value = _first_meta(soup, "PubDate", "publishdate", "date", "Maketime")
     match = _DATE_PATTERN.search(meta_value or "") or _DATE_PATTERN.search(text)
     return _match_date(match) if match is not None else None
 
@@ -201,7 +208,9 @@ def _match_date(match: re.Match[str]) -> datetime:
 
 
 def _keyword_match(
-    title: str, include_keywords: Sequence[str], exclude_keywords: Sequence[str]
+    title: str,
+    include_keywords: Sequence[str],
+    exclude_keywords: Sequence[str],
 ) -> bool:
     normalized = title.casefold()
     if any(keyword.casefold() in normalized for keyword in exclude_keywords):
@@ -240,12 +249,16 @@ def _is_allowed_detail_url(url: str, list_url: str) -> bool:
         parsed.scheme.lower() == "https"
         and parsed.hostname is not None
         and parsed.hostname.lower() == (configured.hostname or "").lower()
-        and bool(_DETAIL_PATH_PATTERN.search(parsed.path))
+        and parsed.path != configured.path
+        and bool(
+            _ARTICLE_PATH_PATTERN.search(parsed.path) or _TOPIC_PATH_PATTERN.search(parsed.path)
+        )
     )
 
 
 def _after_cursor(
-    items: Sequence[DiscoveredItem], cursor: CrawlCursor | None
+    items: Sequence[DiscoveredItem],
+    cursor: CrawlCursor | None,
 ) -> tuple[DiscoveredItem, ...]:
     if not cursor:
         return tuple(items)

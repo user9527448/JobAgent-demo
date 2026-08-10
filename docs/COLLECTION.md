@@ -72,8 +72,16 @@ A completed `CrawlBatchResult` carries successful `RawDocumentInput` objects to 
 
 Attachment discovery and file persistence do not occur inside the Adapter or batch loop. After a raw-document version is known, the JAI-010 attachment service discovers supported links from that version's HTML and atomically stores validated files against its document ID.
 
-## First JAI-011 source
+## JAI-011 sources
+
+### Source 1: SASAC recruitment
 
 `SasacRecruitmentAdapter` reads the public SASAC central-SOE recruitment list and detail pages through `SourceHttpClient`. It recognizes detail links by stable public URL semantics, removes query strings/fragments and duplicate URLs, applies catalog keywords, and preserves the complete detail HTML plus readable text and publication provenance. `scripts/run_source_preview.py` can list the catalog or perform a low-frequency, read-only preview without database writes.
 
 Contract tests run exclusively against minimized offline fixtures. A live smoke check is still required before scheduling because the current Windows environment could not complete TLS access to `sasac.gov.cn`, and browser inspection was denied by the safety policy.
+
+### Source 2: Jiangsu personnel exams
+
+`JiangsuPersonnelExamAdapter` reads the Jiangsu Department of Human Resources and Social Security personnel-exam index, annual topic pages and public articles. Discovery accepts only same-origin HTTPS paths matching `/art/YYYY/M/D/art_<column>_<article>.html` or `/col/col<id>/index.html` (excluding the configured index itself), then applies catalog keywords and a publication-date cursor. Detail pages retain their complete HTML, readable text, publication date, region and official owner.
+
+The source covers public civil-service, public-institution and graduate service-program notices and schedules. Registration, payment, login and result-query systems are outside the Adapter boundary; links mentioned in an announcement remain source evidence but are not followed by the Adapter. Four minimized offline detail fixtures cover annual topics, distinct title/date structures and attachment-bearing notices.
