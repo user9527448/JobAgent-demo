@@ -4,7 +4,7 @@
 >
 > Last updated: 2026-08-10
 >
-> Active branch: `develop`
+> Active branch: `feature/jai-010-attachment-storage`
 
 ## 1. Current status
 
@@ -19,7 +19,8 @@
 | JAI-006 Core models/first migration | Complete, merged to develop | `develop` / `1690dd9` | Seven core tables, constraints, relationships, UTC persistence and Alembic |
 | JAI-007 Source Adapter/orchestrator | Complete, merged to develop | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
 | JAI-008 HTTP client policy | Complete, merged to develop | `develop` / `9016fb3` | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
-| JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / merge commit | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
+| JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / `020e0b7` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
+| JAI-010 Attachment storage | In progress | `feature/jai-010-attachment-storage` | PDF/XLS/XLSX discovery, validation, size limits, SHA-256 and atomic idempotent storage |
 
 ## 2. Environment readiness
 
@@ -282,12 +283,20 @@ Each `raw_documents` row is one source-evidence version. A partial unique index 
 - Docker Desktop restarted during the first image build attempt, causing a 184-second timeout and temporarily invalidating the old API image reference. After the engine recovered, the production image built successfully.
 - The local development database upgraded non-destructively to `0002_raw_document_versions (head)`; `alembic check` found no schema drift. The recreated API and PostgreSQL containers are healthy, and `/health/ready` reports the database available.
 - Merged `feature/jai-009-url-fingerprint-idempotency` into `develop` with a non-fast-forward merge after confirming both local branches matched their remote counterparts.
+- The non-force push advanced remote `develop` to merge commit `020e0b7`; local and remote `develop` were verified identical before JAI-010 started.
+
+### 2026-08-10 — JAI-010 started
+
+- Created `feature/jai-010-attachment-storage` from the verified and remotely synchronized `develop` branch.
+- Scope confirmed: discover PDF/XLS/XLSX links from announcement HTML, validate URL/extension/MIME/signature, enforce a configured byte limit, compute SHA-256, persist attachment metadata and atomically place content in the local object store.
+- Boundaries: document parsing, OCR, spreadsheet interpretation and golden parsing samples remain JAI-013 through JAI-016; JAI-010 stores source bytes only.
+- Planned acceptance checks: repeated discovery reuses one database/file object, HTML error pages disguised as files fail with a safe recorded status, and interrupted/oversized downloads leave neither a successful database record nor a partial final file.
 
 ## 6. Next actions
 
 ### Codex
 
-1. After the merged `develop` branch is verified and pushed, create the JAI-010 feature branch from synchronized `develop`.
+1. Implement and verify JAI-010 on `feature/jai-010-attachment-storage`.
 
 ### User
 
