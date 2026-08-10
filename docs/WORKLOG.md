@@ -380,6 +380,7 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - 首次沙箱内线上预览连续 3 次连接失败并按 `crawler.http_retry_exhausted` 退出；获准的沙箱外低频只读重试成功。真实列表发现临港新片区、艺术与应用技能、高端制造业等 3 场招聘会，首条记录物化为 `2026-04-28T00:00:00+08:00`、479 个原始文本字符，并保留公开海报 URL。
 - 同步更新网站库、开发计划、Issue 验收状态及中英文 `HTTP_CLIENT.md`/`COLLECTION.md`。最终数据库启用门禁：87 个文件格式检查、Ruff lint、55 个源文件 Mypy 均通过，88 项测试（含 5 项 PostgreSQL 集成测试）全部通过，覆盖率 88.26%。JAI-011 仍需完成三个来源公告/附件持久化、连续两次幂等验收和国资委线上冒烟。
 - 来源 3 独立提交：`58fd893`（`feat: add Shanghai Firstjob fair adapter`）。提交后的 3 次普通非强制 HTTPS 推送分别因连接重置或 GitHub 443 不可达失败；未强推、未改写历史，也未切换远程或协议。保留自动心跳继续低频重试，成功后再推进持久化幂等验收。
+- 后续心跳前两次普通推送仍因 GitHub 443 不可达失败，第三次恢复并成功将远程从 `1df6c8e` 推进到 `3298a98`；`git rev-parse` 与 `git ls-remote --heads` 均确认本地 HEAD、远程跟踪引用和 GitHub 分支一致。来源 3 推送阻塞解除，自动心跳可停用。
 
 ## 6. Next actions
 
