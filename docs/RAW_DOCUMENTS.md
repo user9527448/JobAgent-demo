@@ -1,5 +1,7 @@
 # Raw-document canonicalization and versioning
 
+> 简体中文：[原始公告 URL 规范化与版本化](zh-CN/RAW_DOCUMENTS.md)
+
 JAI-009 turns Adapter output into canonical, immutable source-document versions. Adapters still return untouched HTML/text through `RawDocumentInput`; shared code owns URL normalization, fingerprints and PostgreSQL idempotency.
 
 ## URL canonicalization

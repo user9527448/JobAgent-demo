@@ -2,6 +2,8 @@
 
 These instructions apply to the entire repository.
 
+Simplified Chinese mirror: [`docs/zh-CN/AGENTS.md`](docs/zh-CN/AGENTS.md). Keep both versions synchronized.
+
 ## Required context
 
 Before changing code or project configuration, read:
@@ -23,6 +25,15 @@ Keep `docs/WORKLOG.md` current throughout development:
 - Update the current-status and next-action sections before handing work back.
 
 Do not use the work log as a raw command transcript. Keep it concise, factual, and useful for resuming work.
+
+## Documentation language synchronization
+
+- Keep documents that are already written in Chinese as a single source; do not create duplicate mirrors.
+- Pure-English technical documents listed in `docs/zh-CN/README.md` must have a Simplified Chinese mirror.
+- Update an English source document and its Chinese mirror in the same commit.
+- When adding a pure-English technical document, add its Chinese mirror and index entry at the same time.
+- Do not translate code identifiers, environment variables, error codes, URLs, or commands.
+- Starting with JAI-036, write new WORKLOG entries in Simplified Chinese; retain earlier history as-is.
 
 ## Git workflow
 

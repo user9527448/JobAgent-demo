@@ -136,6 +136,7 @@ docker compose exec api alembic upgrade head
 
 ## 文档
 
+- [简体中文文档索引与双语同步规则](docs/zh-CN/README.md)
 - [详细开发计划](docs/DEVELOPMENT_PLAN.md)
 - [GitHub Issues Backlog](docs/GITHUB_ISSUES.md)
 - [配置、日志与错误约定](docs/CONFIGURATION.md)
