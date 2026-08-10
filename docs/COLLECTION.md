@@ -85,3 +85,9 @@ Contract tests run exclusively against minimized offline fixtures. A live smoke 
 `JiangsuPersonnelExamAdapter` reads the Jiangsu Department of Human Resources and Social Security personnel-exam index, annual topic pages and public articles. Discovery accepts only same-origin HTTPS paths matching `/art/YYYY/M/D/art_<column>_<article>.html` or `/col/col<id>/index.html` (excluding the configured index itself), then applies catalog keywords and a publication-date cursor. Detail pages retain their complete HTML, readable text, publication date, region and official owner.
 
 The source covers public civil-service, public-institution and graduate service-program notices and schedules. Registration, payment, login and result-query systems are outside the Adapter boundary; links mentioned in an announcement remain source evidence but are not followed by the Adapter. Four minimized offline detail fixtures cover annual topics, distinct title/date structures and attachment-bearing notices.
+
+### Source 3: Shanghai Firstjob graduate fairs
+
+`ShanghaiFirstjobAdapter` queries the Shanghai Student Affairs Center's public graduate job-fair list. The official single-page application exposes the list through a form-encoded POST whose semantics are read-only; the Adapter therefore uses the narrowly scoped shared `post_form_query()` policy and never calls account, resume, application or registration functions. Discovery applies catalog keywords and a start-date cursor, then creates a stable public evidence URL from each fair UUID.
+
+The list record is already the complete public schedule record, so detail materialization does not issue a second request. It preserves the UUID, title, start/end dates and public poster URL as raw JSON text and provenance metadata. Three minimized offline contract fixtures cover distinct 2026 graduate-fair schedules; poster URLs are retained for the later attachment-persistence acceptance pass.

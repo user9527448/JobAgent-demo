@@ -33,6 +33,7 @@ from jobagent.crawlers.documents import (
     normalize_document_content,
     prepare_raw_document,
 )
+from jobagent.crawlers.firstjob import ShanghaiFirstjobAdapter
 from jobagent.crawlers.http import (
     HttpCacheValidators,
     HttpFetchResult,
@@ -71,6 +72,7 @@ __all__ = [
     "RawDocumentWriteResult",
     "RawDocumentWriteStatus",
     "SasacRecruitmentAdapter",
+    "ShanghaiFirstjobAdapter",
     "SourceAdapter",
     "SourceCatalog",
     "SourceCatalogEntry",

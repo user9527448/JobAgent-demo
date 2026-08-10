@@ -1,0 +1,12 @@
+{
+  "result": "200",
+  "data": {
+    "resultList": [{
+      "ID": "abbd86bb-ea40-48cb-8efe-fee160fce670",
+      "ZPHMC": "2026年上海高职高专院校毕业生网络招聘会",
+      "ZPSJ": "2026-05-18",
+      "ZPJSSJ": "2026-06-14",
+      "MHWZT": "https://www.firstjob.shec.edu.cn/stu_backend/api/public/posters/vocational.png"
+    }]
+  }
+}

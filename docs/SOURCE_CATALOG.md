@@ -14,7 +14,7 @@
 | 类别 | 地区 | 官方来源 | 公开入口 | 状态 | 说明 |
 |---|---|---|---|---|---|
 | 校招 | 全国 | 国家大学生就业服务平台 | [职位信息](https://www.ncss.cn/student/jobs/index.html) | 待接入 | 教育部学生服务与素质发展中心公共平台；先验证无登录列表稳定性 |
-| 校招 | 上海/长三角 | 上海学生就业创业服务网 | [首页](https://www.firstjob.shec.edu.cn/) | 待接入 | 上海市学生事务中心公开招聘会与长三角就业信息 |
+| 校招 | 上海/长三角 | 上海学生就业创业服务网 | [招聘会](https://www.firstjob.shec.edu.cn/jobfair) | 已启用 | 来源 3；上海市学生事务中心公开招聘会和时间安排，仅调用官网公开只读查询 |
 | 公职考试 | 江苏 | 江苏省人事考试网 | [考试专题列表](https://jshrss.jiangsu.gov.cn/col/col57253/index.html) | 已启用 | 来源 2；采集公务员、事业单位、“三支一扶”等公开公告和时间安排，不进入报名系统 |
 | 公职考试 | 浙江 | 浙江省公务员考试录用网 | [首页](https://gwy.zjks.gov.cn/) | 待接入 | 招考公告、报名统计和考试安排 |
 | 公职考试 | 上海 | 上海市公务员局 | [首页](https://www.shacs.gov.cn/) | 待接入 | 只采集公开招录公告；不访问报名表单 |
@@ -53,6 +53,7 @@
 ```powershell
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source sasac-recruitment --limit 10
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source jiangsu-personnel-exam --limit 10 --fetch-first-detail
+.\.venv\Scripts\python.exe scripts/run_source_preview.py --source shanghai-firstjob --limit 10 --fetch-first-detail
 ```
 
 ## 4. 新来源上线检查

@@ -10,6 +10,7 @@ from pathlib import Path
 
 from jobagent.crawlers.catalog import SourceCatalogEntry, load_source_catalog
 from jobagent.crawlers.contracts import SourceAdapter, SourceDefinition
+from jobagent.crawlers.firstjob import ShanghaiFirstjobAdapter
 from jobagent.crawlers.http import HttpSourcePolicy, SourceHttpClient
 from jobagent.crawlers.jiangsu import JiangsuPersonnelExamAdapter
 from jobagent.crawlers.sasac import SasacRecruitmentAdapter
@@ -87,6 +88,8 @@ async def _preview(
             adapter = SasacRecruitmentAdapter(source, entry, client)
         elif entry.adapter == "jiangsu_personnel_exam":
             adapter = JiangsuPersonnelExamAdapter(source, entry, client)
+        elif entry.adapter == "shanghai_firstjob":
+            adapter = ShanghaiFirstjobAdapter(source, entry, client)
         else:
             raise RuntimeError(f"No preview runner is registered for '{entry.adapter}'.")
         items = tuple(await adapter.discover(None))[:limit]
