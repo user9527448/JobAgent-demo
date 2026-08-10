@@ -4,7 +4,7 @@
 >
 > Last updated: 2026-08-10
 >
-> Active branch: `feature/jai-036-zh-cn-docs`
+> Active branch: `develop`
 
 ## 1. Current status
 
@@ -20,8 +20,8 @@
 | JAI-007 Source Adapter/orchestrator | Complete, merged to develop | `develop` / `33241fd` | Adapter registry/protocol, batch orchestration, persisted run statistics and item-level error isolation |
 | JAI-008 HTTP client policy | Complete, merged to develop | `develop` / `9016fb3` | Source-level timeout, concurrency/rate limiting, retries, User-Agent and conditional cache headers |
 | JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / `020e0b7` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
-| JAI-010 Attachment storage | Complete, awaiting merge | `feature/jai-010-attachment-storage` / `4176187` | PDF/XLS/XLSX discovery, streamed validation, SHA-256 content addressing and atomic idempotent storage |
-| JAI-036 Simplified Chinese documentation | Complete, awaiting merge | `feature/jai-036-zh-cn-docs` / `2b745f9` | Nine Chinese mirrors, bilingual navigation and durable synchronization rules, based on JAI-010 |
+| JAI-010 Attachment storage | Complete, merged to develop | `develop` / `e0ea5d9` | PDF/XLS/XLSX discovery, streamed validation, SHA-256 content addressing and atomic idempotent storage |
+| JAI-036 Simplified Chinese documentation | Complete, merged to develop | `develop` / `82adb73` | Nine Chinese mirrors, bilingual navigation and durable synchronization rules, based on JAI-010 |
 
 ## 2. Environment readiness
 
@@ -323,17 +323,19 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - 最终质量门禁：Ruff format 检查 74 个文件、Ruff lint 和 Mypy 均通过；包含 PostgreSQL 集成测试的 64 项测试全部通过，覆盖率 89.34%。
 - 文档基线提交：`2b745f9`（`docs: add Simplified Chinese mirrors`）。无已知阻塞，分支可按依赖顺序在 JAI-010 之后合并。
 - `feature/jai-036-zh-cn-docs` 已非强制推送并跟踪同名远程分支；远程未改写任何已有历史。
+- 按用户要求先将 JAI-010 以非快进方式合并到本地 `develop`（`e0ea5d9`），再合并 JAI-036（`82adb73`）；两次合并均无冲突，两个 feature tip 均已验证为 `develop` 的祖先。
+- 合并前两次 `git fetch origin` 和一次精确 `git ls-remote` 均因 GitHub HTTPS 443 在约 21 秒后超时，缓存的 `origin/develop` 仍为 `020e0b7`。最终只允许普通非强制推送，因此任何未获取到的远程分歧都会由 Git 拒绝，而不会覆盖远程历史。
+- 合并后质量门禁再次通过：Ruff format 检查 74 个文件、Ruff lint 和 Mypy 通过，包含 PostgreSQL 集成测试的 64 项测试全部通过，覆盖率 89.34%。
 
 ## 6. Next actions
 
 ### Codex
 
-1. 等待 JAI-010、JAI-036 按顺序合并，再继续 JAI-011。
+1. 开始 JAI-011 前确认远程 `develop` 包含 JAI-010 和 JAI-036 的有序合并历史。
 
 ### User
 
-1. JAI-036 完成后，按依赖顺序先合并 JAI-010，再合并 JAI-036。
-2. 不再需要本地服务时可运行 `docker compose down`；PostgreSQL 和附件卷会保留。
+1. 不再需要本地服务时可运行 `docker compose down`；PostgreSQL 和附件卷会保留。
 
 ## 7. Update template
 
