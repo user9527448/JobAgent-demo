@@ -1,0 +1,180 @@
+catalog_version = 1
+updated_on = "2026-08-11"
+
+# 手工维护说明见 docs/SOURCE_CATALOG.md。planned 来源不得 enabled = true。
+
+[[sources]]
+key = "sasac-recruitment"
+name = "国务院国资委公开招聘"
+official_owner = "国务院国有资产监督管理委员会"
+category = "state_owned"
+regions = ["national"]
+base_url = "https://www.sasac.gov.cn/"
+list_url = "https://www.sasac.gov.cn/n2588035/n2588325/n2588350/index.html"
+adapter = "sasac_recruitment"
+implementation_status = "active"
+enabled = true
+crawl_interval_minutes = 360
+include_keywords = ["招聘", "校园招聘", "应届毕业生"]
+exclude_keywords = ["公示", "结果公告"]
+notes = "JAI-011 首个 Adapter；仅访问公开列表与公开详情。"
+
+[[sources]]
+key = "ncss-jobs"
+name = "国家大学生就业服务平台职位"
+official_owner = "教育部学生服务与素质发展中心"
+category = "campus"
+regions = ["national"]
+base_url = "https://www.ncss.cn/"
+list_url = "https://www.ncss.cn/student/jobs/index.html"
+adapter = "ncss_jobs"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["校招", "校园招聘", "应届", "毕业生"]
+exclude_keywords = ["实习"]
+notes = "候选来源；先验证公开列表是否可在无登录状态稳定获取。"
+
+[[sources]]
+key = "shanghai-firstjob"
+name = "上海学生就业创业服务网"
+official_owner = "上海市学生事务中心"
+category = "campus"
+regions = ["shanghai", "jiangsu", "zhejiang"]
+base_url = "https://www.firstjob.shec.edu.cn/"
+list_url = "https://www.firstjob.shec.edu.cn/stu_backend/api/proxy/r/jd?cmd=com.awspaas.user.apps.app202406129280.mhcxzph"
+adapter = "shanghai_firstjob"
+implementation_status = "active"
+enabled = true
+crawl_interval_minutes = 360
+include_keywords = ["招聘会", "校园招聘", "应届毕业生", "长三角"]
+exclude_keywords = ["实习"]
+notes = "JAI-011 来源 3；只读公开招聘会与时间安排，不访问登录、简历、求职或报名功能。"
+
+[[sources]]
+key = "jiangsu-personnel-exam"
+name = "江苏省人事考试网"
+official_owner = "江苏省人力资源和社会保障厅"
+category = "public_exam"
+regions = ["jiangsu"]
+base_url = "https://jshrss.jiangsu.gov.cn/"
+list_url = "https://jshrss.jiangsu.gov.cn/col/col57253/index.html"
+adapter = "jiangsu_personnel_exam"
+implementation_status = "active"
+enabled = true
+crawl_interval_minutes = 180
+include_keywords = ["公务员", "事业单位", "报名", "笔试", "资格审查"]
+exclude_keywords = ["成绩查询", "合格分数线", "拟录用", "录用公示", "递补人选", "体检人选"]
+notes = "JAI-011 来源 2；采集公开公告和时间安排，不进入报名系统。"
+
+[[sources]]
+key = "zhejiang-civil-service"
+name = "浙江省公务员考试录用网"
+official_owner = "浙江省公务员局"
+category = "public_exam"
+regions = ["zhejiang"]
+base_url = "https://gwy.zjks.gov.cn/"
+list_url = "https://gwy.zjks.gov.cn/"
+adapter = "zhejiang_civil_service"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 180
+include_keywords = ["招考公告", "报名", "资格审查", "笔试", "面试"]
+exclude_keywords = ["拟录用", "体检结果"]
+notes = "候选公考来源；仅公开公告和统计信息。"
+
+[[sources]]
+key = "shanghai-civil-service"
+name = "上海市公务员局"
+official_owner = "上海市公务员局"
+category = "public_exam"
+regions = ["shanghai"]
+base_url = "https://www.shacs.gov.cn/"
+list_url = "https://www.shacs.gov.cn/"
+adapter = "shanghai_civil_service"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 180
+include_keywords = ["招录", "报名", "笔试", "面试", "职位"]
+exclude_keywords = ["拟录用", "体检结果"]
+notes = "候选公考来源；不访问 bm.shacs.gov.cn 报名表单。"
+
+[[sources]]
+key = "shanghai-public-institution"
+name = "上海市人社局事业单位公开招聘"
+official_owner = "上海市人力资源和社会保障局"
+category = "public_exam"
+regions = ["shanghai"]
+base_url = "https://rsj.sh.gov.cn/"
+list_url = "https://rsj.sh.gov.cn/tgsgg_17341/"
+adapter = "shanghai_public_institution"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 180
+include_keywords = ["事业单位", "公开招聘", "报名", "考试"]
+exclude_keywords = ["拟聘", "录用公示"]
+notes = "候选事业单位来源；跟踪公开招聘公告和考试时间。"
+
+[[sources]]
+key = "state-grid-recruitment"
+name = "国家电网招聘平台"
+official_owner = "国家电网有限公司"
+category = "state_owned"
+regions = ["national", "jiangsu", "zhejiang", "shanghai"]
+base_url = "https://zhaopin.sgcc.com.cn/"
+list_url = "https://zhaopin.sgcc.com.cn/"
+adapter = "state_grid_recruitment"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["校园招聘", "高校毕业生", "招聘公告"]
+exclude_keywords = ["录用公示"]
+notes = "候选央企来源；动态门户需先做公开接口和条款验证。"
+
+[[sources]]
+key = "china-mobile-recruitment"
+name = "中国移动招聘"
+official_owner = "中国移动通信集团有限公司"
+category = "state_owned"
+regions = ["national", "jiangsu", "zhejiang", "shanghai"]
+base_url = "https://job.10086.cn/"
+list_url = "https://job.10086.cn/"
+adapter = "china_mobile_recruitment"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["校园招聘", "应届毕业生", "春季招聘", "秋季招聘"]
+exclude_keywords = ["实习"]
+notes = "候选央企来源；只采集无需登录的公告。"
+
+[[sources]]
+key = "china-telecom-recruitment"
+name = "中国电信招聘"
+official_owner = "中国电信集团有限公司"
+category = "state_owned"
+regions = ["national", "jiangsu", "zhejiang", "shanghai"]
+base_url = "https://www.chinatelecom.com.cn/"
+list_url = "https://www.chinatelecom.com.cn/ct/zp/"
+adapter = "china_telecom_recruitment"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["校园招聘", "应届毕业生", "招聘公告"]
+exclude_keywords = ["实习"]
+notes = "候选央企来源；优先集团公开招聘栏目。"
+
+[[sources]]
+key = "cnpc-recruitment"
+name = "中国石油高校毕业生招聘"
+official_owner = "中国石油天然气集团有限公司"
+category = "state_owned"
+regions = ["national", "jiangsu", "zhejiang", "shanghai"]
+base_url = "https://zhaopin.cnpc.com.cn/"
+list_url = "https://zhaopin.cnpc.com.cn/"
+adapter = "cnpc_recruitment"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["高校毕业生", "校园招聘", "招聘公告"]
+exclude_keywords = ["录用公示"]
+notes = "候选央企来源；动态门户需先验证公开列表稳定性。"

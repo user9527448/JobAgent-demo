@@ -183,6 +183,39 @@ def test_etag_and_last_modified_round_trip_through_a_304() -> None:
     assert calls == 2
 
 
+def test_read_only_form_query_uses_post_and_shared_retry_policy() -> None:
+    fake_time = FakeTime()
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if len(requests) == 1:
+            return httpx.Response(503, request=request)
+        return httpx.Response(200, json={"result": "200"}, request=request)
+
+    async def scenario() -> None:
+        async with SourceHttpClient(
+            _policy(max_attempts=2),
+            transport=httpx.MockTransport(handler),
+            sleep=fake_time.sleep,
+            clock=fake_time.monotonic,
+        ) as client:
+            result = await client.post_form_query(
+                "https://example.invalid/public-search?cmd=list",
+                data={"region": "shanghai"},
+            )
+
+        assert result.response.json() == {"result": "200"}
+        assert result.attempts == 2
+
+    asyncio.run(scenario())
+
+    assert fake_time.sleeps == [0.25]
+    assert [request.method for request in requests] == ["POST", "POST"]
+    assert requests[-1].headers["content-type"].startswith("application/x-www-form-urlencoded")
+    assert requests[-1].content == b"region=shanghai"
+
+
 def test_stream_retries_headers_and_closes_the_response_after_consumption() -> None:
     fake_time = FakeTime()
     calls = 0

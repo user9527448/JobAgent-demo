@@ -1,0 +1,12 @@
+{
+  "result": "200",
+  "data": {
+    "resultList": [{
+      "ID": "970ce87b-8fbf-420e-9b5a-bf0e92745acc",
+      "ZPHMC": "2026年长三角高校毕业生文科类网络招聘会",
+      "ZPSJ": "2026-04-27",
+      "ZPJSSJ": "2026-05-24",
+      "MHWZT": "https://www.firstjob.shec.edu.cn/stu_backend/api/public/posters/liberal-arts.png"
+    }]
+  }
+}

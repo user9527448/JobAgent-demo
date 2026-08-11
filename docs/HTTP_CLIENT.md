@@ -4,6 +4,8 @@
 
 JAI-008 provides the shared asynchronous HTTP behavior used by source Adapters. Adapters remain responsible for source-specific URLs and parsing; they do not implement their own retry, pacing or cache-header loops.
 
+`post_form_query()` extends the same controls to a verified public read-only endpoint whose HTTP contract happens to use form-encoded POST. It is intentionally not a general POST client: adapters must never use it for login, registration, application or other state changes. Read-only form queries receive the same pacing, retry classification and safe logging as GET requests, but do not use conditional cache validators.
+
 ## Per-source policy
 
 Each source client is created with an independent `HttpSourcePolicy`:

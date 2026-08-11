@@ -1,0 +1,35 @@
+{
+  "result": "200",
+  "data": {
+    "resultList": [
+      {
+        "ID": "29e6dc34-1f14-47d5-8c94-7700037029f0",
+        "ZPHMC": "2026年上海高校毕业生信息技术与软件服务行业网络招聘会",
+        "ZPSJ": "2026-06-01",
+        "ZPJSSJ": "2026-06-30",
+        "MHWZT": "https://www.firstjob.shec.edu.cn/stu_backend/api/public/posters/information.png"
+      },
+      {
+        "ID": "abbd86bb-ea40-48cb-8efe-fee160fce670",
+        "ZPHMC": "2026年上海高职高专院校毕业生网络招聘会",
+        "ZPSJ": "2026-05-18",
+        "ZPJSSJ": "2026-06-14",
+        "MHWZT": "https://www.firstjob.shec.edu.cn/stu_backend/api/public/posters/vocational.png"
+      },
+      {
+        "ID": "970ce87b-8fbf-420e-9b5a-bf0e92745acc",
+        "ZPHMC": "2026年长三角高校毕业生文科类网络招聘会",
+        "ZPSJ": "2026-04-27",
+        "ZPJSSJ": "2026-05-24",
+        "MHWZT": "https://www.firstjob.shec.edu.cn/stu_backend/api/public/posters/liberal-arts.png"
+      },
+      {
+        "ID": "f80279db-e895-42d4-9070-51699836f27c",
+        "ZPHMC": "2026年暑期实习双选会",
+        "ZPSJ": "2026-04-01",
+        "ZPJSSJ": "2026-04-15",
+        "MHWZT": "https://www.firstjob.shec.edu.cn/stu_backend/api/public/posters/internship.png"
+      }
+    ]
+  }
+}

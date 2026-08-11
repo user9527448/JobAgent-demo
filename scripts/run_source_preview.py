@@ -1,0 +1,132 @@
+"""Preview one manually configured source without database writes."""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+import sys
+from pathlib import Path
+
+from jobagent.crawlers.catalog import SourceCatalogEntry, load_source_catalog
+from jobagent.crawlers.contracts import SourceAdapter, SourceDefinition
+from jobagent.crawlers.firstjob import ShanghaiFirstjobAdapter
+from jobagent.crawlers.http import HttpSourcePolicy, SourceHttpClient
+from jobagent.crawlers.jiangsu import JiangsuPersonnelExamAdapter
+from jobagent.crawlers.sasac import SasacRecruitmentAdapter
+
+DEFAULT_CATALOG = Path("config/source_catalog.toml")
+USER_AGENT = "JOBAGENT/0.1 (+personal recruitment intelligence; low-frequency preview)"
+
+
+def main() -> int:
+    """List configured sources or preview the selected active source."""
+    _configure_stdout()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
+    parser.add_argument("--source")
+    parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--fetch-first-detail", action="store_true")
+    parser.add_argument("--list", action="store_true", dest="list_sources")
+    args = parser.parse_args()
+    if args.limit <= 0:
+        parser.error("--limit must be positive")
+
+    catalog = load_source_catalog(args.catalog)
+    if args.list_sources:
+        print(
+            json.dumps(
+                [
+                    {
+                        "key": entry.key,
+                        "name": entry.name,
+                        "category": entry.category,
+                        "status": entry.implementation_status,
+                        "enabled": entry.enabled,
+                    }
+                    for entry in catalog.entries
+                ],
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+    if not args.source:
+        parser.error("--source is required unless --list is used")
+
+    entry = catalog.get(args.source)
+    if not entry.runnable:
+        parser.error(f"source '{entry.key}' is not active and enabled")
+    return asyncio.run(
+        _preview(entry, limit=args.limit, fetch_first_detail=args.fetch_first_detail)
+    )
+
+
+async def _preview(
+    entry: SourceCatalogEntry,
+    *,
+    limit: int,
+    fetch_first_detail: bool,
+) -> int:
+    source = SourceDefinition(
+        id=1,
+        name=entry.name,
+        base_url=entry.base_url,
+        category=entry.category,
+        adapter=entry.adapter,
+        enabled=entry.enabled,
+    )
+    policy = HttpSourcePolicy(
+        source_id=source.id,
+        user_agent=USER_AGENT,
+        min_interval_seconds=1.0,
+        max_concurrency=1,
+    )
+    async with SourceHttpClient(policy) as client:
+        adapter: SourceAdapter
+        if entry.adapter == "sasac_recruitment":
+            adapter = SasacRecruitmentAdapter(source, entry, client)
+        elif entry.adapter == "jiangsu_personnel_exam":
+            adapter = JiangsuPersonnelExamAdapter(source, entry, client)
+        elif entry.adapter == "shanghai_firstjob":
+            adapter = ShanghaiFirstjobAdapter(source, entry, client)
+        else:
+            raise RuntimeError(f"No preview runner is registered for '{entry.adapter}'.")
+        items = tuple(await adapter.discover(None))[:limit]
+        first_detail = None
+        if fetch_first_detail and items:
+            document = await adapter.fetch_detail(items[0])
+            first_detail = {
+                "url": document.url,
+                "title": document.title,
+                "published_at": (
+                    document.published_at.isoformat() if document.published_at else None
+                ),
+                "html_characters": len(document.raw_html or ""),
+                "text_characters": len(document.raw_text or ""),
+            }
+
+    print(
+        json.dumps(
+            {
+                "source": entry.key,
+                "list_url": entry.list_url,
+                "matched": len(items),
+                "items": [{"url": item.url, **item.metadata} for item in items],
+                "first_detail": first_detail,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+    return 0
+
+
+def _configure_stdout() -> None:
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if callable(reconfigure):
+        reconfigure(encoding="utf-8")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

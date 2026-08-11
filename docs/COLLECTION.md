@@ -4,6 +4,10 @@
 
 JAI-007 establishes the source plug-in boundary and the common batch flow. HTTP behavior is supplied separately by the JAI-008 [source HTTP client policy](HTTP_CLIENT.md), JAI-009 supplies [canonical raw-document persistence](RAW_DOCUMENTS.md), and JAI-010 adds downstream [attachment discovery and storage](ATTACHMENTS.md).
 
+JAI-011 adds the manually maintained `config/source_catalog.toml`. The Chinese [target-source catalog and maintenance guide](SOURCE_CATALOG.md) records official campus, Jiangsu/Zhejiang/Shanghai public-exam, and central/state-owned enterprise sources. Only entries marked `active` and `enabled`, with an implemented explicit Adapter, are runnable.
+
+Title filtering is source-level configuration: an item matching any `exclude_keywords` value is rejected first; otherwise it must match at least one `include_keywords` value when that list is present. Keywords affect discovery only and never alter retained source HTML.
+
 ## Adapter contract
 
 Each source registers an explicit factory under the name stored in `sources.adapter`. A factory receives a `SourceDefinition` and returns an object implementing:
@@ -67,3 +71,29 @@ Unexpected exception messages are not persisted because they may contain upstrea
 A completed `CrawlBatchResult` carries successful `RawDocumentInput` objects to `SqlAlchemyRawDocumentRepository`. The repository resolves canonical URLs, computes normalized-content SHA-256 values and atomically creates/reuses/versions immutable `raw_documents` rows without changing individual Adapters. HTTP cache validators are retained for later conditional requests.
 
 Attachment discovery and file persistence do not occur inside the Adapter or batch loop. After a raw-document version is known, the JAI-010 attachment service discovers supported links from that version's HTML and atomically stores validated files against its document ID.
+
+## JAI-011 sources
+
+### Source 1: SASAC recruitment
+
+`SasacRecruitmentAdapter` reads the public SASAC central-SOE recruitment list and detail pages through `SourceHttpClient`. It recognizes detail links by stable public URL semantics, removes query strings/fragments and duplicate URLs, applies catalog keywords, and preserves the complete detail HTML plus readable text and publication provenance. `scripts/run_source_preview.py` can list the catalog or perform a low-frequency, read-only preview without database writes.
+
+Contract tests run exclusively against minimized offline fixtures. A live smoke check is still required before scheduling because the current Windows environment could not complete TLS access to `sasac.gov.cn`, and browser inspection was denied by the safety policy.
+
+### Source 2: Jiangsu personnel exams
+
+`JiangsuPersonnelExamAdapter` reads the Jiangsu Department of Human Resources and Social Security personnel-exam index, annual topic pages and public articles. Discovery accepts only same-origin HTTPS paths matching `/art/YYYY/M/D/art_<column>_<article>.html` or `/col/col<id>/index.html` (excluding the configured index itself), then applies catalog keywords and a publication-date cursor. Detail pages retain their complete HTML, readable text, publication date, region and official owner.
+
+The source covers public civil-service, public-institution and graduate service-program notices and schedules. Registration, payment, login and result-query systems are outside the Adapter boundary; links mentioned in an announcement remain source evidence but are not followed by the Adapter. Four minimized offline detail fixtures cover annual topics, distinct title/date structures and attachment-bearing notices.
+
+### Source 3: Shanghai Firstjob graduate fairs
+
+`ShanghaiFirstjobAdapter` queries the Shanghai Student Affairs Center's public graduate job-fair list. The official single-page application exposes the list through a form-encoded POST whose semantics are read-only; the Adapter therefore uses the narrowly scoped shared `post_form_query()` policy and never calls account, resume, application or registration functions. Discovery applies catalog keywords and a start-date cursor, then creates a stable public evidence URL from each fair UUID.
+
+The list record is already the complete public schedule record, so detail materialization does not issue a second request. It preserves the UUID, title, start/end dates and public poster URL as raw JSON text and provenance metadata. Three minimized offline contract fixtures cover distinct 2026 graduate-fair schedules; poster URLs remain provenance because their image format is outside the current attachment-storage boundary.
+
+### Three-source persistence acceptance
+
+The JAI-011 PostgreSQL acceptance runs three fixed documents from each active source through the raw-document repository twice. The first pass creates nine immutable version-1 rows; the second pass returns the same nine IDs as `unchanged`, without new rows or versions. A SASAC PDF and Jiangsu XLSX then pass through attachment discovery and atomic storage twice, producing `stored` followed by `reused` with one database row, object and download per URL.
+
+Firstjob's public record exposes a poster image rather than a JAI-010-supported PDF/XLS/XLSX attachment. The adapter retains its validated official-domain URL as provenance but does not expand the current attachment-type boundary. This is treated as an explicit unsupported format, not as a missing or fabricated source attachment.

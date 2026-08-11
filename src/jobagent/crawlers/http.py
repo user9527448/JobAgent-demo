@@ -104,7 +104,7 @@ class HttpFetchResult:
 
 
 class SourceHttpClient:
-    """Apply one source's access policy to all asynchronous GET requests."""
+    """Apply one source's access policy to asynchronous read requests."""
 
     def __init__(
         self,
@@ -153,9 +153,44 @@ class SourceHttpClient:
         validators: HttpCacheValidators | None = None,
     ) -> HttpFetchResult:
         """GET a URL with source-level pacing, retry and cache validation."""
-        safe_url = _safe_url(url)
         request_validators = validators or HttpCacheValidators()
-        headers = request_validators.request_headers()
+        return await self._request(
+            "GET",
+            url,
+            headers=request_validators.request_headers(),
+            validators=request_validators,
+        )
+
+    async def post_form_query(
+        self,
+        url: str,
+        *,
+        data: Mapping[str, str] | None = None,
+    ) -> HttpFetchResult:
+        """POST a form-encoded, verified read-only query under source policy.
+
+        This deliberately narrow method is for public search/list APIs whose
+        HTTP interface uses POST without changing server state. Adapters must
+        not use it for login, registration, application or other mutations.
+        """
+        return await self._request(
+            "POST",
+            url,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data=data or {},
+            validators=HttpCacheValidators(),
+        )
+
+    async def _request(
+        self,
+        method: str,
+        url: str,
+        *,
+        headers: Mapping[str, str],
+        validators: HttpCacheValidators,
+        data: Mapping[str, str] | None = None,
+    ) -> HttpFetchResult:
+        safe_url = _safe_url(url)
 
         for attempt in range(1, self.policy.max_attempts + 1):
             logger.info(
@@ -163,6 +198,7 @@ class SourceHttpClient:
                 extra={
                     "source_id": self.policy.source_id,
                     "url": safe_url,
+                    "method": method,
                     "attempt": attempt,
                     "max_attempts": self.policy.max_attempts,
                 },
@@ -170,7 +206,12 @@ class SourceHttpClient:
             try:
                 async with self._semaphore:
                     await self._wait_for_rate_slot()
-                    response = await self._client.get(url, headers=headers)
+                    response = await self._client.request(
+                        method,
+                        url,
+                        headers=headers,
+                        data=data,
+                    )
             except httpx.InvalidURL as error:
                 raise PermanentJobAgentError(
                     "Source URL is invalid.",
@@ -198,6 +239,7 @@ class SourceHttpClient:
                     extra={
                         "source_id": self.policy.source_id,
                         "url": safe_url,
+                        "method": method,
                         "attempts": attempt,
                         "status_code": response.status_code,
                     },
@@ -205,7 +247,7 @@ class SourceHttpClient:
                 return HttpFetchResult(
                     response=response,
                     attempts=attempt,
-                    validators=request_validators.updated(response.headers),
+                    validators=validators.updated(response.headers),
                 )
 
             if response.status_code == httpx.codes.TOO_MANY_REQUESTS or response.is_server_error:

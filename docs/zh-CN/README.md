@@ -11,6 +11,7 @@
 - [GitHub Issues Backlog](../GITHUB_ISSUES.md)
 - [配置、日志与错误约定](../CONFIGURATION.md)
 - [持续开发工作日志](../WORKLOG.md)（JAI-036 之前的历史记录保留原语言，后续新增记录使用中文）
+- [招聘信息目标网站库与维护说明](../SOURCE_CATALOG.md)
 
 ## 英文文档的中文镜像
 

@@ -1,0 +1,12 @@
+{
+  "result": "200",
+  "data": {
+    "resultList": [{
+      "ID": "29e6dc34-1f14-47d5-8c94-7700037029f0",
+      "ZPHMC": "2026年上海高校毕业生信息技术与软件服务行业网络招聘会",
+      "ZPSJ": "2026-06-01",
+      "ZPJSSJ": "2026-06-30",
+      "MHWZT": "https://www.firstjob.shec.edu.cn/stu_backend/api/public/posters/information.png"
+    }]
+  }
+}

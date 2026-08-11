@@ -2,9 +2,9 @@
 
 > Purpose: a concise, continuously updated record of progress, decisions, verification, blockers, and user actions.
 >
-> Last updated: 2026-08-10
+> Last updated: 2026-08-11
 >
-> Active branch: `develop`
+> Active branch: `feature/jai-011-source-catalog-sasac`
 
 ## 1. Current status
 
@@ -22,6 +22,7 @@
 | JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / `020e0b7` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
 | JAI-010 Attachment storage | Complete, merged to develop | `develop` / `e0ea5d9` | PDF/XLS/XLSX discovery, streamed validation, SHA-256 content addressing and atomic idempotent storage |
 | JAI-036 Simplified Chinese documentation | Complete, merged to develop | `develop` / `82adb73` | Nine Chinese mirrors, bilingual navigation and durable synchronization rules, based on JAI-010 |
+| JAI-011 来源网站库与首批 Adapter | 完成，待合并 | `feature/jai-011-source-catalog-sasac` | 三来源 Adapter、固定样本、公告/支持格式附件持久化和两次幂等验收完成 |
 
 ## 2. Environment readiness
 
@@ -147,6 +148,10 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 ### D-013 中文文档采用显式镜像，不重复已经是中文的文档
 
 从 JAI-036 起，纯英文技术文档在 `docs/zh-CN/` 下维护简体中文镜像，并由中文索引提供中英文双向导航；根 README、开发计划、Issue 清单和配置说明等原本已经是中文的文档继续只维护一份。修改英文原文时必须在同一提交中同步对应中文镜像。历史 WORKLOG 不整篇回译，本 Issue 及后续新增日志改用中文。
+
+### D-014 网站库是版本化人工配置，不是自动发现器
+
+`config/source_catalog.toml` 记录经核验的官方候选来源、地区、接入状态和关键词；只有已有显式 Adapter 的 `active`/`enabled` 来源可运行。系统不自动发现或执行任意网站配置，报名系统和未验证动态门户默认停用。
 
 ## 5. Completed work history
 
@@ -327,11 +332,71 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - 合并前两次 `git fetch origin` 和一次精确 `git ls-remote` 均因 GitHub HTTPS 443 在约 21 秒后超时，缓存的 `origin/develop` 仍为 `020e0b7`。最终只允许普通非强制推送，因此任何未获取到的远程分歧都会由 Git 拒绝，而不会覆盖远程历史。
 - 合并后质量门禁再次通过：Ruff format 检查 74 个文件、Ruff lint 和 Mypy 通过，包含 PostgreSQL 集成测试的 64 项测试全部通过，覆盖率 89.34%。
 
+### 2026-08-10 — JAI-011 来源网站库与首批 Adapter 开始
+
+- 已确认本地 `develop`、缓存的 `origin/develop` 与当前 feature 分支均从 `ab4ad13` 开始；该提交包含 JAI-010、JAI-036 的有序合并，不从未合并的前序分支继续开发。
+- 用户调整 JAI-011 的首阶段范围：先维护校招、江浙沪公职考试、央国企招聘官方目标网站名单，再实现可手工更新的网站库、来源级关键词过滤和初步爬虫；开发计划与 Issue 文档必须同步更新。
+- 已创建 `feature/jai-011-source-catalog-sasac`。首个启用来源选用国务院国资委公开招聘栏目；动态招聘门户与报名系统只登记为待接入来源，不进行登录、表单提交、验证码处理或访问控制绕过。
+- 官方来源核验覆盖全国大学生就业公共服务平台、上海学生就业创业服务网、江苏/浙江/上海人事考试与公务员主管部门、国务院国资委及代表性央企招聘门户。
+- 环境限制：PowerShell 访问国资委页面时遇到 Windows TLS 连接错误；授权的 `curl.exe` 尝试未在审批窗口内完成；只读浏览器 DOM 检查被安全策略自动拒绝。不得绕过限制，改用官方公开链接、保守语义解析和可替换的离线契约样本，待网络环境可用后再执行低频线上冒烟。
+- 新增 `config/source_catalog.toml`，登记 11 个官方候选来源，覆盖全国校招、江苏/浙江/上海公职考试和央国企招聘；配置加载器校验唯一标识、HTTPS、分类、地区、状态、启停关系、间隔和关键词。当前只有 `sasac-recruitment` 为 `active`/启用。
+- 新增 `SasacRecruitmentAdapter`：使用公共 `SourceHttpClient`，限制详情链接为配置域名与公开招聘路径，规范化并去重 URL，按来源配置执行包含/排除关键词，支持发布时间游标，保留详情 HTML、可读文本和来源信息。`scripts/run_source_preview.py` 提供不写数据库的网站库列表与低频预览入口。
+- 新增 1 个最小列表样本和 3 个详情样本；契约测试覆盖关键词优先级、URL 去重、跨域伪装链接拒绝、三种标题/日期结构、游标发现、共享 HTTP 客户端和详情获取。样本说明明确记录无法逐字节抓取的环境原因。
+- 同步更新 `DEVELOPMENT_PLAN.md`、`GITHUB_ISSUES.md`、中英文 `COLLECTION.md`、中文网站库说明和中文文档索引；JAI-011 继续保持进行中，来源 2、3、完整持久化幂等验收和国资委线上冒烟尚未完成。
+- 第一轮全仓门禁中，Ruff format/lint、Mypy 和 68 项非数据库测试通过，但因未设置 `JOBAGENT_TEST_DATABASE_URL` 跳过 5 项 PostgreSQL 测试，覆盖率 82.37% 未达到 85%；这是测试环境缺项，不是产品断言失败。
+- Docker Desktop 原本未运行，且默认安装路径与预期不同；在授权范围内定位并后台启动实际安装程序，启动仓库 PostgreSQL 容器，确认隔离数据库 `jobagent_test` 已存在后重跑。最终门禁：81 个文件格式检查、Ruff lint、51 个源文件 Mypy 均通过，74 项测试（含 5 项 PostgreSQL 集成测试）全部通过，覆盖率 88.69%。文档相对链接检查和 `git diff --check` 通过。
+- 第一阶段提交：`d693680`（`feat: add maintainable source catalog and SASAC adapter`）。提交保持在 `feature/jai-011-source-catalog-sasac`，不提前合并未完成的 JAI-011。
+- WORKLOG 检查点提交：`02167f1`（`docs: record JAI-011 first source checkpoint`）。普通推送最初因安全审查要求再次确认具体远程与提交载荷而暂停；用户随后明确允许推送到 `https://github.com/user9527448/JobAgent-demo.git`。授权后的两次非强制 HTTPS 推送均在约 21 秒后无法连接 GitHub 443，远程未发生变更；未改写历史，也未切换传输方式绕过。
+- 用户要求继续重试后，下一次普通 HTTPS 推送成功；`feature/jai-011-source-catalog-sasac` 已创建在远程并跟踪 `origin/feature/jai-011-source-catalog-sasac`，远程包含截至 `b0a4eb6` 的四个本地提交。
+
+### 2026-08-10 — JAI-011 来源 2 江苏省人事考试网开始
+
+- 按网站库稳定性优先级选择江苏省人事考试网作为来源 2，继续使用同一个 JAI-011 feature 分支，但代码、样本和文档形成独立提交。
+- 官方公开页面核验：人事考试首页集中展示公务员、事业单位、“三支一扶”等专题与公告日期；公开详情使用同域 `/art/YYYY/M/D/art_<栏目>_<文章>.html` 路径，并展示标题、发布日期、正文及附件。报名网站只保留为公告证据，不访问登录、报名、缴费、成绩查询等交互功能。
+- 来源 2 计划：启用网站库条目，增加同域/路径约束、关键词过滤、游标发现和三组离线详情契约样本；扩展只读预览入口并同步中英文采集文档。
+
+### 2026-08-11 — JAI-011 来源 2 江苏省人事考试网完成
+
+- 将 `jiangsu-personnel-exam` 标记为 `active`/启用，并新增 `JiangsuPersonnelExamAdapter`。发现阶段只接受配置同域的公开文章 `/art/...` 和年度专题 `/col/col<id>/index.html`，排除配置首页自身和外域链接；同域旧式 HTTP 专题链接只升级为 HTTPS，不允许其他明文或跨域目标。
+- 来源级包含/排除关键词聚焦公务员、事业单位、“三支一扶”的报名与考试安排，排除成绩查询、合格分数线、拟录用、递补和体检类结果。列表链接优先使用完整 `title` 属性，避免可见文本被省略号截断后绕过过滤；同时清理真实页面中的 `U+FEFF`。
+- 详情解析同时支持文章页 `ArticleTitle`/`PubDate` 与专题页 `ColumnName`/`Maketime`，保留完整 HTML、可读文本、上海时区日期、江苏地区和官方主体。预览命令新增 UTF-8 控制台输出和可选 `--fetch-first-detail`，不写数据库。
+- 增加 1 个列表和 4 个详情离线样本，覆盖公务员公告、事业单位公告、“三支一扶”公告和年度专题页；测试覆盖同域约束、HTTP 到 HTTPS 定向升级、首页排除、完整标题去噪、关键词、日期游标、三种标题来源、共享 HTTP 客户端和详情抓取。
+- 线上冒烟的首次沙箱请求按重试策略失败；沙箱外列表请求成功，但先后暴露 Windows GBK 无法打印 BOM、结果类噪声、专题链接使用同域 HTTP、专题详情以 `ColumnName`/`Maketime` 提供元数据等真实差异，均补充为代码规则和离线回归样本。一次权限审批超时未执行网络请求，按规则重试后继续。
+- 最终线上端到端只读冒烟通过：列表发现 `江苏省2026年度考试录用公务员专题` 和 `江苏省2026年省属事业单位统一公开招聘人员考试专题` 两个 HTTPS 候选；首个专题详情解析标题、`2025-12-04T00:00:00+08:00` 页面日期、8,986 个 HTML 字符和 2,130 个文本字符。只访问公开首页与专题详情，未进入报名、缴费、登录或成绩系统。
+- 同步更新网站库说明及中英文 `COLLECTION.md`。最终数据库启用门禁：84 个文件格式检查、Ruff lint、53 个源文件 Mypy 均通过，81 项测试（含 5 项 PostgreSQL 集成测试）全部通过，覆盖率 88.77%。
+- 来源 2 独立提交：`1df6c8e`（`feat: add Jiangsu personnel exam adapter`）。首次提交后连续 9 次普通 HTTPS 推送因 GitHub 443 超时，心跳重试恢复网络后成功将远程从 `b65a735` 推进到 `1df6c8e`；本地 HEAD 与远程跟踪引用已核对为同一提交。
+
+### 2026-08-11 — JAI-011 来源 3 上海学生就业招聘会开始
+
+- 在国家大学生就业服务平台与上海学生就业创业服务网之间重新核验公开可访问性。国家平台职位/招聘会入口存在个性化登录和动态列表边界；上海市学生事务中心公开首页直接展示 2026 届毕业生就业招聘会、上海专区、长三角专区和时间表，因此选择后者作为第三种代表性公开结构。
+- 来源 3 边界：只采集无需登录的公开招聘会列表、时间安排与详情；不访问企业/学生登录、在线求职、简历、信息登记或报名交互功能。
+- 官网单页应用使用无需登录的表单 POST 返回完整招聘会记录，没有独立详情接口。为避免脱离公共请求策略，`SourceHttpClient` 新增范围受限的 `post_form_query()`：仅用于已核验的只读查询，继承限速、重试、超时和安全日志，明确禁止登录、报名、投递等状态变更。
+
+### 2026-08-11 — JAI-011 来源 3 上海学生就业招聘会完成
+
+- 将 `shanghai-firstjob` 标记为 `active`/启用，新增 `ShanghaiFirstjobAdapter`。发现阶段解析公开 API 的招聘会 UUID、标题、起止日期与海报 URL，应用网站库包含/排除关键词和开始日期游标，并生成同域 `/jobfair?fair_id=<UUID>` 稳定证据 URL。
+- 公开列表记录本身已经是完整时间表，详情物化不再发出第二次请求；原始 JSON 文本和来源元数据保留 UUID、标题、起止日期、上海时区及海报 URL。海报 URL 留给下一阶段附件持久化验收，不访问账号、简历、求职投递或报名功能。
+- 增加 1 个综合列表和 3 组独立招聘会 JSON 固定样本，覆盖信息技术、高职高专和长三角文科类招聘会；测试覆盖公开 POST、共享重试策略、关键词、日期游标、UUID/同域约束、三组详情物化和异常结构可见性。
+- 首次沙箱内线上预览连续 3 次连接失败并按 `crawler.http_retry_exhausted` 退出；获准的沙箱外低频只读重试成功。真实列表发现临港新片区、艺术与应用技能、高端制造业等 3 场招聘会，首条记录物化为 `2026-04-28T00:00:00+08:00`、479 个原始文本字符，并保留公开海报 URL。
+- 同步更新网站库、开发计划、Issue 验收状态及中英文 `HTTP_CLIENT.md`/`COLLECTION.md`。最终数据库启用门禁：87 个文件格式检查、Ruff lint、55 个源文件 Mypy 均通过，88 项测试（含 5 项 PostgreSQL 集成测试）全部通过，覆盖率 88.26%。JAI-011 仍需完成三个来源公告/附件持久化、连续两次幂等验收和国资委线上冒烟。
+- 来源 3 独立提交：`58fd893`（`feat: add Shanghai Firstjob fair adapter`）。提交后的 3 次普通非强制 HTTPS 推送分别因连接重置或 GitHub 443 不可达失败；未强推、未改写历史，也未切换远程或协议。保留自动心跳继续低频重试，成功后再推进持久化幂等验收。
+- 后续心跳前两次普通推送仍因 GitHub 443 不可达失败，第三次恢复并成功将远程从 `1df6c8e` 推进到 `3298a98`；`git rev-parse` 与 `git ls-remote --heads` 均确认本地 HEAD、远程跟踪引用和 GitHub 分支一致。来源 3 推送阻塞解除，自动心跳可停用。
+
+### 2026-08-11 — JAI-011 三来源持久化与幂等验收完成
+
+- 新增 PostgreSQL/文件系统端到端验收：国资委、江苏人事考试、Firstjob 各取 3 份固定公告，首轮写入创建 9 条版本 1 原始记录，第二轮全部返回 `unchanged` 且复用相同文档 ID；数据库最终仍为 9 条记录、无新增版本。
+- 国资委 PDF 与江苏 XLSX 分别执行两次附件发现和原子存储，结果均为首轮 `stored`、第二轮 `reused`；最终只有 2 条附件记录、2 个对象和 2 次下载。Firstjob 仅提供公开海报图片，超出 JAI-010 的 PDF/XLS/XLSX 范围，因此保留经官方域名校验的海报 URL，不提前扩展图片下载。
+- 国资委线上只读冒烟再次在 3 次重试后以连接池超时失败；未更换入口、绕过 TLS 或访问控制。江苏与 Firstjob 线上冒烟已通过，国资委检查保留为进入定时运行前的环境门槛，不阻断固定样本和持久化验收结论。
+- 第一轮全仓门禁中，Ruff format/lint 通过，但新增验收测试对 `JsonValue` 直接调用 `endswith` 导致 Mypy 失败；改为精确 URL 断言后重跑。最终门禁：88 个文件格式检查、Ruff lint、56 个源文件 Mypy 均通过，89 项测试（含 6 项 PostgreSQL 集成测试）全部通过，覆盖率 88.30%。
+- JAI-011 的 Issue 验收项全部满足，feature 分支可按一个 Issue 一个分支的流程合并到 `develop`；国资委线上冒烟限制继续保留在网站库说明和采集文档中。
+
 ## 6. Next actions
 
 ### Codex
 
-1. 开始 JAI-011 前确认远程 `develop` 包含 JAI-010 和 JAI-036 的有序合并历史。
+1. 将完成的 JAI-011 feature 分支按顺序合并到 `develop`，确认远程同步。
+2. 从已合并的 `develop` 创建 `feature/jai-012-...`，实现运行统计、手动触发与失败重跑。
+3. 网络环境允许时补做国资委公开招聘栏目低频线上冒烟；不得绕过 TLS 或访问控制。
 
 ### User
 
