@@ -402,12 +402,13 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - 新增中文单一来源文档 `REFERENCE_SOURCES.md`，把 BOSS 直聘登记为“仅人工交叉参考、禁止自动访问”，并记录未来只有官方 API、合作数据或书面授权才能转为机器集成；中文文档索引已同步。
 - 首次全仓门禁只因 `SOURCE_CATEGORIES` 多行写法不符合 Ruff formatter 而停止，格式化后重跑。最终门禁：89 个文件格式检查、Ruff lint、56 个源文件 Mypy 均通过，89 项测试（含 6 项 PostgreSQL 集成测试）全部通过，覆盖率 88.35%；`git diff --check` 通过。
 - JAI-037 提交：`5d06973`（`docs: plan comprehensive source expansion`）。提交后的 3 次普通非强制 HTTPS 推送均因 GitHub 443 不可达失败；未强推、未改写历史，也未切换远程或协议，分支提交安全保留在本地。
+- 用户要求重试后，普通非强制推送成功创建远程 `feature/jai-037-source-expansion-roadmap`；本地 HEAD、远程跟踪引用与 `git ls-remote --heads` 均核对为 `1d82a30`，JAI-037 推送阻塞解除。
 
 ## 6. Next actions
 
 ### Codex
 
-1. 网络恢复后普通推送 JAI-037，再将完成的 feature 分支合并到 `develop` 并确认远程同步。
+1. 将已推送的 JAI-037 feature 分支合并到 `develop` 并确认远程同步。
 2. 从已合并的 `develop` 创建 `feature/jai-012-...`，实现运行统计、手动触发与失败重跑。
 3. 按 JAI-021、JAI-038～JAI-045 逐步实现 11 个官方候选站和外企专区；单站受限时记录 `blocked`，不得绕过登录、验证码或访问控制。
 
