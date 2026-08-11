@@ -4,7 +4,7 @@
 >
 > Last updated: 2026-08-11
 >
-> Active branch: `feature/jai-011-source-catalog-sasac`
+> Active branch: `feature/jai-037-source-expansion-roadmap`
 
 ## 1. Current status
 
@@ -22,7 +22,8 @@
 | JAI-009 URL/fingerprint/idempotency | Complete, merged to develop | `develop` / `020e0b7` | Canonical URLs, normalized content fingerprints, version-preserving idempotent persistence |
 | JAI-010 Attachment storage | Complete, merged to develop | `develop` / `e0ea5d9` | PDF/XLS/XLSX discovery, streamed validation, SHA-256 content addressing and atomic idempotent storage |
 | JAI-036 Simplified Chinese documentation | Complete, merged to develop | `develop` / `82adb73` | Nine Chinese mirrors, bilingual navigation and durable synchronization rules, based on JAI-010 |
-| JAI-011 来源网站库与首批 Adapter | 完成，待合并 | `feature/jai-011-source-catalog-sasac` | 三来源 Adapter、固定样本、公告/支持格式附件持久化和两次幂等验收完成 |
+| JAI-011 来源网站库与首批 Adapter | 完成，已合并到 develop | `develop` / `368c369` | 三来源 Adapter、固定样本、公告/支持格式附件持久化和两次幂等验收完成 |
+| JAI-037 来源扩展路线与参考边界 | 完成，待合并 | `feature/jai-037-source-expansion-roadmap` | 11 个官方站均映射实施 Issue，新增 5 个外企官方候选和商业平台隔离边界 |
 
 ## 2. Environment readiness
 
@@ -390,13 +391,24 @@ JAI-010 stores validated source bytes in a same-volume, SHA-256-addressed object
 - 第一轮全仓门禁中，Ruff format/lint 通过，但新增验收测试对 `JsonValue` 直接调用 `endswith` 导致 Mypy 失败；改为精确 URL 断言后重跑。最终门禁：88 个文件格式检查、Ruff lint、56 个源文件 Mypy 均通过，89 项测试（含 6 项 PostgreSQL 集成测试）全部通过，覆盖率 88.30%。
 - JAI-011 的 Issue 验收项全部满足，feature 分支可按一个 Issue 一个分支的流程合并到 `develop`；国资委线上冒烟限制继续保留在网站库说明和采集文档中。
 
+### 2026-08-11 — JAI-037 来源扩展路线与参考边界开始
+
+- 用户要求把网站库现有 11 个官方候选站全部纳入实现目标，同时参考 BOSS 直聘等非官方网站，并增加外企招聘专区；开发计划、Issue、网站库和 WORKLOG 必须同步。
+- JAI-011 已在本地以非快进方式合并到 `develop`。首次推送因 GitHub 443 不可达失败，随后普通非强制重试成功，远程 `develop` 推进到 `368c369`；之后从已合并的 `develop` 创建 `feature/jai-037-source-expansion-roadmap`，未从 `main` 或未合并 feature 分支开始。
+- 合规决定：现有 11 个官方候选站全部映射到 JAI-021、JAI-038～JAI-043，但动态门户必须逐站验证公开访问、条款和稳定性；需要登录、验证码或规避反爬时保持 `planned`/`blocked`。BOSS 直聘用户协议明确将 spider/爬虫等非正常浏览列为非法获取方式，因此只作为人工交叉参考，不进入可执行网站库，未来仅在取得官方 API、合作数据或书面授权后评估集成。
+- 外企专区首批登记 Apple、Microsoft、Siemens、SAP、P&G 五个企业官方招聘入口，新增 `foreign_enterprise` 分类；所有条目先保持 `planned`/停用，只读取公开职位，不进入人才社区、账号、简历或申请流程。
+- 路线决定：先完成 JAI-012 的运行统计、手动触发与失败重跑，再按原主线达到 5 个稳定 MVP 来源；其余官方站和外企专区作为 JAI-038～JAI-045 的逐站扩展，不让覆盖数量迫使项目绕过访问边界或拖垮首个可用版本。
+- 网站库从 11 条扩展到 16 条：保留原有 11 个官方目标并新增 5 个 `foreign_enterprise` 官方招聘入口；配置测试明确断言 5 个外企条目均为 `planned` 且停用。JAI-021 固定来源 4、5，JAI-038～JAI-043 覆盖其余 6 个既有官方站，JAI-044～JAI-045 分两阶段完成外企来源和专区筛选。
+- 新增中文单一来源文档 `REFERENCE_SOURCES.md`，把 BOSS 直聘登记为“仅人工交叉参考、禁止自动访问”，并记录未来只有官方 API、合作数据或书面授权才能转为机器集成；中文文档索引已同步。
+- 首次全仓门禁只因 `SOURCE_CATEGORIES` 多行写法不符合 Ruff formatter 而停止，格式化后重跑。最终门禁：89 个文件格式检查、Ruff lint、56 个源文件 Mypy 均通过，89 项测试（含 6 项 PostgreSQL 集成测试）全部通过，覆盖率 88.35%；`git diff --check` 通过。
+
 ## 6. Next actions
 
 ### Codex
 
-1. 将完成的 JAI-011 feature 分支按顺序合并到 `develop`，确认远程同步。
+1. 将完成的 JAI-037 feature 分支合并到 `develop` 并确认远程同步。
 2. 从已合并的 `develop` 创建 `feature/jai-012-...`，实现运行统计、手动触发与失败重跑。
-3. 网络环境允许时补做国资委公开招聘栏目低频线上冒烟；不得绕过 TLS 或访问控制。
+3. 按 JAI-021、JAI-038～JAI-045 逐步实现 11 个官方候选站和外企专区；单站受限时记录 `blocked`，不得绕过登录、验证码或访问控制。
 
 ### User
 

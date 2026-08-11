@@ -178,3 +178,80 @@ crawl_interval_minutes = 360
 include_keywords = ["高校毕业生", "校园招聘", "招聘公告"]
 exclude_keywords = ["录用公示"]
 notes = "候选央企来源；动态门户需先验证公开列表稳定性。"
+
+[[sources]]
+key = "apple-china-careers"
+name = "Apple 中国招聘"
+official_owner = "Apple Inc."
+category = "foreign_enterprise"
+regions = ["national", "shanghai", "jiangsu", "zhejiang"]
+base_url = "https://jobs.apple.com/"
+list_url = "https://jobs.apple.com/zh-cn/search?location=shanghai-state157"
+adapter = "apple_china_careers"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["学生", "毕业生", "校招", "实习", "上海", "江苏", "浙江", "China"]
+notes = "外企专区候选来源；仅采集 Apple 官方公开职位列表和详情，不进入提交简历流程。"
+
+[[sources]]
+key = "microsoft-china-careers"
+name = "Microsoft 中国招聘"
+official_owner = "Microsoft Corporation"
+category = "foreign_enterprise"
+regions = ["national", "shanghai", "jiangsu", "zhejiang"]
+base_url = "https://careers.microsoft.com/"
+list_url = "https://careers.microsoft.com/v2/global/en/locations/gcr.html"
+adapter = "microsoft_china_careers"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["China", "Shanghai", "Suzhou", "graduate", "student", "intern"]
+notes = "外企专区候选来源；只读取 Microsoft 官方公开职位，不访问候选人账号。"
+
+[[sources]]
+key = "siemens-china-careers"
+name = "Siemens 中国招聘"
+official_owner = "Siemens AG"
+category = "foreign_enterprise"
+regions = ["national", "shanghai", "jiangsu", "zhejiang"]
+base_url = "https://jobs.siemens.com/"
+list_url = "https://jobs.siemens.com/en_US/externaljobs/SearchJobs/"
+adapter = "siemens_china_careers"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["China", "Shanghai", "Jiangsu", "Zhejiang", "graduate", "intern"]
+notes = "外企专区候选来源；先验证地区筛选和公开详情 URL 稳定性。"
+
+[[sources]]
+key = "sap-china-careers"
+name = "SAP 中国招聘"
+official_owner = "SAP SE"
+category = "foreign_enterprise"
+regions = ["national", "shanghai", "jiangsu", "zhejiang"]
+base_url = "https://jobs.sap.com/"
+list_url = "https://jobs.sap.com/go/China/8807101/"
+adapter = "sap_china_careers"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["China", "Shanghai", "graduate", "student", "intern", "iXp"]
+exclude_keywords = ["Talent Community"]
+notes = "外企专区候选来源；优先公开中国职位和学生项目，不提交人才社区表单。"
+
+[[sources]]
+key = "pg-greater-china-careers"
+name = "P&G 大中华区招聘"
+official_owner = "The Procter & Gamble Company"
+category = "foreign_enterprise"
+regions = ["national", "shanghai", "jiangsu", "zhejiang"]
+base_url = "https://www.pgcareers.com/"
+list_url = "https://www.pgcareers.com/global/en/locations/greaterchina/"
+adapter = "pg_greater_china_careers"
+implementation_status = "planned"
+enabled = false
+crawl_interval_minutes = 360
+include_keywords = ["Greater China", "Shanghai", "graduate", "entry level", "internship"]
+exclude_keywords = ["Talent Community"]
+notes = "外企专区候选来源；只读取 P&G 官方公开职位，不填写人才社区或申请表单。"

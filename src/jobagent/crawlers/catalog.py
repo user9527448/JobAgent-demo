@@ -9,7 +9,7 @@ from urllib.parse import urlsplit
 
 from jobagent.core.exceptions import ConfigurationError
 
-SOURCE_CATEGORIES = frozenset({"campus", "public_exam", "state_owned"})
+SOURCE_CATEGORIES = frozenset({"campus", "foreign_enterprise", "public_exam", "state_owned"})
 IMPLEMENTATION_STATUSES = frozenset({"active", "planned", "blocked"})
 
 
