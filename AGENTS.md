@@ -28,12 +28,13 @@ Do not use the work log as a raw command transcript. Keep it concise, factual, a
 
 ## Documentation language synchronization
 
-- Keep documents that are already written in Chinese as a single source; do not create duplicate mirrors.
-- Pure-English technical documents listed in `docs/zh-CN/README.md` must have a Simplified Chinese mirror.
-- Update an English source document and its Chinese mirror in the same commit.
-- When adding a pure-English technical document, add its Chinese mirror and index entry at the same time.
+- Maintain project documentation in two separate files: one English version and one Simplified Chinese version.
+- Never satisfy a translation requirement by changing an established English file into Chinese, or an established Chinese file into English. Preserve each file's language and update its counterpart instead.
+- Existing English documents use mirrors under `docs/zh-CN/`; existing Chinese documents must gain English counterparts under `docs/en-US/` unless an established English path already exists.
+- Update both language versions in the same commit. A new document must be created in both languages and added to the relevant indexes in that commit.
+- A legacy single-language document must receive its missing counterpart no later than its next substantive update. Do not change its primary language while waiting for migration.
+- Treat the current mixed-language `docs/WORKLOG.md` history as a legacy migration item. Do not continue switching languages inside one file as a substitute for separate English and Chinese logs; preserve existing history when the pair is split.
 - Do not translate code identifiers, environment variables, error codes, URLs, or commands.
-- Starting with JAI-036, write new WORKLOG entries in Simplified Chinese; retain earlier history as-is.
 
 ## Git workflow
 
@@ -42,6 +43,14 @@ Do not use the work log as a raw command transcript. Keep it concise, factual, a
 - Keep each commit scoped to the active Issue.
 - Run formatting, lint, type checks, and tests before pushing.
 - Never rewrite published history or force-push unless the user explicitly requests it.
+
+## Git authorship
+
+- Use the repository-local Git author identity copied from the user's existing machine-level Git configuration for new commits, unless the user explicitly requests another identity.
+- Do not use placeholder identities such as `Codex Agent` or an `@local` email address for new commits.
+- Verify `git config --local user.name` and `git config --local user.email` before committing after an environment or workspace change.
+- Apply authorship changes only to future commits. Do not rewrite published history merely to change contributor attribution.
+- Contributor attribution on GitHub requires the commit email to be associated with and verified by the user's GitHub account; never commit credentials or authentication tokens.
 
 ## Python environment
 
