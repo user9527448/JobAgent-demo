@@ -57,6 +57,7 @@ JAI-047 只处理使新规则可执行所必需的计划/Backlog 镜像、双语
 - 结构检查通过：开发计划标题 45/45、Backlog 标题 70/70、活动日志标题 13/13、索引标题 5/5，两份 Backlog 的 JAI 编号顺序完全一致。
 - 相对链接检查覆盖 35 份 Markdown，未发现失效链接；`git diff --check` 通过，归档 SHA-256 保持不变。
 - 数据库启用的最终门禁通过：Ruff format 检查 94 个文件，Ruff lint 通过，56 个源文件的 Mypy 通过，89 项测试全部通过，覆盖率 88.35%。
+- 第一次暂存后的 `git diff --cached --check` 在新英文开发计划页眉中发现 4 行行尾空格。PowerShell 没有因前一条原生命令的非零状态停止，仍创建了尚未推送的本地提交；随后立即修正这 4 行，并准备独立的同范围修复提交，不改写历史。
 
 ## 4. 检查与阻塞
 
@@ -64,6 +65,7 @@ JAI-047 只处理使新规则可执行所必需的计划/Backlog 镜像、双语
 - JAI-046 推送核验：本地 `develop`、`origin/develop` 与 `git ls-remote --heads origin develop` 均为 `f07b6d50ed9abda08d38883eefa3904b98b99455`。
 - 推送前一次只读 GitHub 检查遇到临时 443 故障；后续普通推送和显式 `ls-remote` 已成功。
 - JAI-047 检查完成：35 份 Markdown 无失效相对链接；双语标题与 Issue 编号一致；`git diff --check`、Ruff format/lint、Mypy、89 项 PostgreSQL 启用测试和 88.35% 覆盖率全部通过。
+- 推送前格式修正：已删除 `docs/en-US/DEVELOPMENT_PLAN.md` 暂存检查发现的 4 行行尾空格；推送前必须确认最终暂存区和工作区差异检查均通过。
 
 ## 5. 下一步
 

@@ -1,9 +1,9 @@
 # Recruitment Intelligence Agent Detailed Development Plan
 
-> Simplified Chinese source: [`../DEVELOPMENT_PLAN.md`](../DEVELOPMENT_PLAN.md)  
-> Project code name: JOBAGENT V1.0  
-> Document status: Executable baseline  
-> Intended team: one developer covering product, engineering, testing, and operations  
+> Simplified Chinese source: [`../DEVELOPMENT_PLAN.md`](../DEVELOPMENT_PLAN.md)
+> Project code name: JOBAGENT V1.0
+> Document status: Executable baseline
+> Intended team: one developer covering product, engineering, testing, and operations
 > Planned duration: 10 weeks; a daily-usable MVP in week 8 and an Agent-enhanced release in week 10
 
 ## 1. Project definition
