@@ -17,6 +17,7 @@ from jobagent.crawlers.contracts import (
     CrawlBatchResult,
     CrawlCursor,
     CrawlItemFailure,
+    CrawlRunSummary,
     DiscoveredItem,
     RawDocumentInput,
     SourceAdapter,
@@ -44,6 +45,7 @@ from jobagent.crawlers.jiangsu import JiangsuPersonnelExamAdapter
 from jobagent.crawlers.orchestrator import CollectionOrchestrator
 from jobagent.crawlers.registry import AdapterRegistry
 from jobagent.crawlers.repository import CrawlRunRepository, SqlAlchemyCrawlRunRepository
+from jobagent.crawlers.runtime import build_adapter_registry, match_catalog_entry
 from jobagent.crawlers.sasac import SasacRecruitmentAdapter
 
 __all__ = [
@@ -61,6 +63,7 @@ __all__ = [
     "CrawlCursor",
     "CrawlItemFailure",
     "CrawlRunRepository",
+    "CrawlRunSummary",
     "DiscoveredItem",
     "HttpCacheValidators",
     "HttpFetchResult",
@@ -81,10 +84,12 @@ __all__ = [
     "SqlAlchemyAttachmentRepository",
     "SqlAlchemyCrawlRunRepository",
     "SqlAlchemyRawDocumentRepository",
+    "build_adapter_registry",
     "canonicalize_url",
     "content_fingerprint",
     "discover_attachment_links",
     "load_source_catalog",
+    "match_catalog_entry",
     "normalize_document_content",
     "prepare_raw_document",
 ]

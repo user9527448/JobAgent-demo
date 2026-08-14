@@ -8,7 +8,7 @@
 >
 > 最后更新：2026-08-14
 >
-> 当前分支：`feature/jai-047-bilingual-docs-migration`
+> 当前分支：`feature/jai-012-run-stats-retry`
 
 ## 1. 当前状态
 
@@ -19,7 +19,8 @@
 | JAI-011 | 完成，已合并到 `develop` | `develop` / `368c369` | 三个官方来源 Adapter、固定样本、持久化和幂等验收 |
 | JAI-037 | 完成，已合并到 `develop` | `develop` / `c649862` | 官方来源扩展路线、外企候选和参考来源边界 |
 | JAI-046 | 完成，已合并并推送到 `develop` | `develop` / `f07b6d5` | 独立双语文件规则和仓库级 Git 作者身份规则 |
-| JAI-047 | 本地完成，待提交/推送 | `feature/jai-047-bilingual-docs-migration` | 存量迁移基线、独立双语工作日志和 JAI-048 清单已验证 |
+| JAI-047 | 完成，已合并并推送到 `develop` | `develop` / `87cd753` | 存量迁移基线、独立双语工作日志和 JAI-048 清单 |
+| JAI-012 | 本地完成，待提交/推送 | `feature/jai-012-run-stats-retry` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
 
 ## 2. 当前决策
 
@@ -34,6 +35,18 @@
 ### D-017 按独立 Issue 分批迁移存量文档
 
 JAI-047 只处理使新规则可执行所必需的计划/Backlog 镜像、双语索引和 WORKLOG 拆分。其余存量单语文档由 JAI-048 盘点并迁移，不在功能 Issue 中顺手大规模改写。
+
+### D-018 JAI-012 提供命令边界，不提前建设维护 API
+
+JAI-012 通过可复用的编排器与仓储契约提供 `scripts/manage_crawl.py run/show/retry`。来源/运行维护 API 仍属于 JAI-030，调度与锁仍属于 JAI-026，避免当前 Issue 提前重叠后续范围。
+
+### D-019 失败条目重跑采用重新发现后过滤
+
+重跑会再次执行来源公开列表发现以恢复来源专用元数据，再只抓取原运行结构化失败中保存的 URL。命令不接受任意重跑 URL，不直接访问已经无法重新发现的条目，也不重新抓取原运行中的成功 URL。
+
+### D-020 手动采集在计为成功前先完成原文持久化
+
+手动运行把每个已抓取详情交给 `SqlAlchemyRawDocumentRepository`。运行统计记录 `created`、`updated`、`skipped` 和全部失败，同时保留只统计详情阶段的失败计数。重复执行结果不确定或已经成功的写入会返回 `skipped`，保持原始公告幂等。
 
 ## 3. 当前工作记录
 
@@ -59,6 +72,24 @@ JAI-047 只处理使新规则可执行所必需的计划/Backlog 镜像、双语
 - 数据库启用的最终门禁通过：Ruff format 检查 94 个文件，Ruff lint 通过，56 个源文件的 Mypy 通过，89 项测试全部通过，覆盖率 88.35%。
 - 第一次暂存后的 `git diff --cached --check` 在新英文开发计划页眉中发现 4 行行尾空格。PowerShell 没有因前一条原生命令的非零状态停止，仍创建了尚未推送的本地提交；随后立即修正这 4 行，并准备独立的同范围修复提交，不改写历史。
 
+### 2026-08-14 — JAI-012 运行统计、手动触发与失败重跑开始
+
+- JAI-047 已普通推送到 `b428e43`，再以非快进合并 `87cd753` 纳入 `develop`；本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 均核对为 `87cd7538af5cc3da41a811e1d48051358e6c6977`。
+- 从该已同步的 `develop` 创建 `feature/jai-012-run-stats-retry`；没有从 `main` 或未合并 feature 分支开始。
+- 范围遵循 Backlog：按来源手动触发并返回 run ID、查看运行摘要与失败条目，以及不会复制成功数据的失败重跑。
+- 实施前先检查现有编排器、运行仓储/模型、API/CLI 边界、来源注册表、采集文档和测试；不加入调度、解析/抽取或延期来源集成。
+- 实现持久化 `CrawlRunSummary` 查询和结构化失败的兼容解析；JAI-012 之前缺少 `step` 字段的失败记录仍可安全读取。
+- 扩展采集编排：接入幂等原始公告持久化计数，并隔离单条持久化错误。`created`、`updated`、`skipped` 和总 `failed` 与详情专用计数、步骤状态一并保存。
+- 增加失败运行重跑：要求原运行处于终态，只从持久化失败中提取 URL，重新发现公开列表以恢复元数据，筛选失败 URL，安全记录无法重新发现的条目，并通过 `retry_of_run_id` 创建关联的新运行。
+- 为三个已启用官方来源增加显式运行时网站库匹配与 Adapter 接线。数据库来源必须精确匹配一个可运行网站库条目；仍禁止动态导入和执行配置中的任意 Adapter。
+- 新增 `scripts/manage_crawl.py`，提供同步 `run`、只读 `show` 和失败条目 `retry` 命令。命令使用既有 PostgreSQL 配置和低频公开来源 HTTP 策略；没有增加维护 API 或调度器。
+- 第一轮定向 Ruff 只发现 `__all__` 顺序和测试 import 分组，均已修正。第一轮 Mypy 发现脚本被识别为两个模块；新增 `scripts/__init__.py` 后只保留一个可导入命令包。第二轮 Mypy 暴露失败解析/测试设置中的窄 JSON 类型问题，通过显式校验修正，没有使用 suppression。
+- 随后的定向检查通过：Ruff、62 个源文件的 Mypy，以及包含 PostgreSQL 的 23 项相关测试。
+- PostgreSQL 验收证明：首次运行创建 2 条公告并记录 1 个失败；重跑重新发现 3 条但只抓取失败 URL，并新建 1 条公告；再次对同一原失败运行重跑仍只抓取该 URL，结果为 `skipped`，数据库最终恰有 3 条原始公告。
+- 最终复核发现，原始公告持久化期间发生取消可能让运行停留在 `running`。编排器现在会把运行标记为 `cancelled`、保存安全进度并重新抛出取消；专用单元测试覆盖该路径。
+- 最终数据库启用门禁通过：Ruff format 检查 100 个文件，Ruff lint 通过，62 个源文件的 Mypy 通过，105 项测试全部通过，覆盖率 88.38%。
+- 已同步中英文采集文档、计划/Backlog 状态和活动 WORKLOG。没有新增依赖、Schema 迁移、凭据、运行数据、线上来源请求或延期技术。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -66,13 +97,14 @@ JAI-047 只处理使新规则可执行所必需的计划/Backlog 镜像、双语
 - 推送前一次只读 GitHub 检查遇到临时 443 故障；后续普通推送和显式 `ls-remote` 已成功。
 - JAI-047 检查完成：35 份 Markdown 无失效相对链接；双语标题与 Issue 编号一致；`git diff --check`、Ruff format/lint、Mypy、89 项 PostgreSQL 启用测试和 88.35% 覆盖率全部通过。
 - 推送前格式修正：已删除 `docs/en-US/DEVELOPMENT_PLAN.md` 暂存检查发现的 4 行行尾空格；推送前必须确认最终暂存区和工作区差异检查均通过。
+- JAI-012 最终门禁：Ruff format/lint 通过；62 个源文件的 Mypy 通过；PostgreSQL 启用时 105 项测试通过；覆盖率 88.38%。离线 JAI-012 验收未访问线上来源，也未在仓库留下运行数据。
 
 ## 5. 下一步
 
-1. 提交并普通推送已验证的 JAI-047 分支，然后合并到 `develop`。
-2. 核对本地 `develop`、`origin/develop` 和 GitHub `ls-remote` 一致。
-3. 从最新且已同步的 `develop` 恢复产品主线，执行 JAI-012。
-4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入 JAI-012。
+1. 完成最终链接/结构/差异检查，提交 JAI-012 并普通推送 feature 分支。
+2. 合并前核对本地 HEAD、跟踪分支与 GitHub `ls-remote` 一致。
+3. 把 JAI-012 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-013。
+4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
 
 ## 6. 更新模板
 

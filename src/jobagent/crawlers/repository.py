@@ -9,7 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from jobagent.core.exceptions import JsonValue, PermanentJobAgentError, TransientJobAgentError
-from jobagent.crawlers.contracts import SourceDefinition
+from jobagent.crawlers.contracts import CrawlRunSummary, SourceDefinition
 from jobagent.db.models import CrawlRun, Source
 
 
@@ -18,6 +18,10 @@ class CrawlRunRepository(Protocol):
 
     async def get_source(self, source_id: int) -> SourceDefinition | None:
         """Return the requested source configuration when it exists."""
+        ...
+
+    async def get_run(self, run_id: int) -> CrawlRunSummary | None:
+        """Return one persisted run summary when it exists."""
         ...
 
     async def start_run(self, source_id: int, stats: dict[str, JsonValue]) -> int:
@@ -62,6 +66,24 @@ class SqlAlchemyCrawlRunRepository:
                 )
         except SQLAlchemyError as error:
             raise _database_error("load source configuration", error) from error
+
+    async def get_run(self, run_id: int) -> CrawlRunSummary | None:
+        try:
+            async with self._session_factory() as session:
+                run = await session.get(CrawlRun, run_id)
+                if run is None:
+                    return None
+                return CrawlRunSummary(
+                    run_id=run.id,
+                    source_id=run.source_id,
+                    status=run.status,
+                    started_at=run.started_at,
+                    finished_at=run.finished_at,
+                    stats=run.stats,
+                    error_message=run.error_message,
+                )
+        except SQLAlchemyError as error:
+            raise _database_error("load crawl run", error) from error
 
     async def start_run(self, source_id: int, stats: dict[str, JsonValue]) -> int:
         run = CrawlRun(

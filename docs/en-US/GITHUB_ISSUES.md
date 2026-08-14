@@ -171,9 +171,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: explain what happened in one run and rerun failures only.
 - **Scope**: command/API, run state, discovered/created/updated/skipped/failed counts, error classes.
 - **Acceptance**:
-  - [ ] Start a source manually and receive a run ID.
-  - [ ] Read run summary and failed items.
-  - [ ] Reruns do not duplicate successful data.
+  - [x] Start a source manually and receive a run ID.
+  - [x] Read run summary and failed items.
+  - [x] Reruns do not duplicate successful data.
 
 ---
 

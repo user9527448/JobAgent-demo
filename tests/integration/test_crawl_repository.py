@@ -49,7 +49,7 @@ def test_crawl_run_repository_persists_source_progress_and_completion() -> None:
             "detail_failed": 1,
         }
 
-        async def verify_repository() -> int:
+        async def verify_repository() -> tuple[int, dict[str, JsonValue]]:
             database = Database(database_url.render_as_string(hide_password=False))
             repository = SqlAlchemyCrawlRunRepository(database.session_factory)
             try:
@@ -65,12 +65,22 @@ def test_crawl_run_repository_persists_source_progress_and_completion() -> None:
                     stats=completed_stats,
                     error_message="One item failed safely.",
                 )
-                return run_id
+                summary = await repository.get_run(run_id)
+                assert summary is not None
+                assert summary.status == "partial"
+                assert summary.source_id == source_id
+                assert summary.finished_at is not None
+                assert await repository.get_run(run_id + 9999) is None
+                return run_id, summary.to_dict()
             finally:
                 await database.close()
 
         with asyncio.Runner(loop_factory=asyncio.SelectorEventLoop) as runner:
-            run_id = runner.run(verify_repository())
+            run_id, persisted_summary = runner.run(verify_repository())
+
+        assert persisted_summary["run_id"] == run_id
+        assert persisted_summary["stats"] == completed_stats
+        assert persisted_summary["failures"] == []
 
         with Session(engine) as session:
             run = session.scalar(select(CrawlRun).where(CrawlRun.id == run_id))
