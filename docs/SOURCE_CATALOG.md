@@ -7,6 +7,7 @@
 - 校招：优先教育主管部门、学生就业公共服务机构和公开招聘会信息。
 - 江浙沪公职考试：覆盖公务员、事业单位的公开公告、报名时间、资格审查和考试安排。
 - 央国企招聘：优先国务院国资委聚合公告，再逐步接入代表性央企的公开招聘门户。
+- 外企招聘：优先跨国企业自有招聘站，覆盖中国及江浙沪职位，并在后续产品中提供独立筛选专区。
 - 只采集无需登录的公开列表、详情和附件；不进入报名表单，不处理验证码，不绕过访问控制。
 
 ## 2. 目标网站名单
@@ -24,15 +25,24 @@
 | 央国企 | 全国/江浙沪 | 中国移动 | [招聘平台](https://job.10086.cn/) | 待接入 | 只接入无需登录的校招公告 |
 | 央国企 | 全国/江浙沪 | 中国电信 | [集团招聘栏目](https://www.chinatelecom.com.cn/ct/zp/) | 待接入 | 优先集团公开栏目，避免依赖个人申请功能 |
 | 央国企 | 全国/江浙沪 | 中国石油 | [高校毕业生招聘平台](https://zhaopin.cnpc.com.cn/) | 待接入 | 动态门户，需先验证公开列表稳定性 |
+| 外企 | 中国/江浙沪 | Apple | [中国招聘](https://jobs.apple.com/zh-cn/search?location=shanghai-state157) | 待接入 | 官方公开职位、学生和毕业生岗位；不进入提交简历流程 |
+| 外企 | 中国/江浙沪 | Microsoft | [大中华区招聘](https://careers.microsoft.com/v2/global/en/locations/gcr.html) | 待接入 | 官方公开职位；不访问候选人账号 |
+| 外企 | 中国/江浙沪 | Siemens | [职位搜索](https://jobs.siemens.com/en_US/externaljobs/SearchJobs/) | 待接入 | 先验证中国地区筛选和公开详情 URL 稳定性 |
+| 外企 | 中国/江浙沪 | SAP | [中国职位](https://jobs.sap.com/go/China/8807101/) | 待接入 | 官方中国职位和学生项目；不提交人才社区表单 |
+| 外企 | 中国/江浙沪 | P&G | [大中华区招聘](https://www.pgcareers.com/global/en/locations/greaterchina/) | 待接入 | 官方大中华区职位；不填写人才社区或申请表单 |
 
 “待接入”只表示已登记候选来源，不表示当前程序会访问它。机器配置要求此类来源为 `implementation_status = "planned"` 且 `enabled = false`。
+
+现有 11 个官方候选站全部进入实施路线：JAI-011 已启用其中 3 个，JAI-021 将补足 MVP 的来源 4、5，JAI-038～JAI-043 逐站处理其余 6 个。动态门户无法在无需登录、无需验证码且条款允许的条件下稳定读取时，必须保持 `planned` 或改为 `blocked`，并优先寻找同一官方主体的公开公告入口；“全部纳入目标”不等于允许绕过限制强行启用。
+
+BOSS 直聘等非官方平台不进入本可执行网站库；其人工参考用途和合规边界单独记录在[非官方招聘信息参考源](REFERENCE_SOURCES.md)。
 
 ## 3. 手工维护方法
 
 编辑 `config/source_catalog.toml` 中对应的 `[[sources]]`：
 
 - `key`：稳定、唯一的机器标识；上线后不要随意改名。
-- `category`：只能是 `campus`、`public_exam`、`state_owned`。
+- `category`：只能是 `campus`、`public_exam`、`state_owned`、`foreign_enterprise`。
 - `regions`：用 `national`、`jiangsu`、`zhejiang`、`shanghai` 等稳定英文标识。
 - `base_url` / `list_url`：必须是无凭据的 HTTPS 官方 URL。
 - `implementation_status`：`planned`、`active` 或 `blocked`。

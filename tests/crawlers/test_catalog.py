@@ -13,8 +13,10 @@ CATALOG_PATH = Path(__file__).parents[2] / "config" / "source_catalog.toml"
 def test_repository_catalog_is_valid_and_has_required_coverage() -> None:
     catalog = load_source_catalog(CATALOG_PATH)
 
+    assert len(catalog.entries) == 16
     assert {entry.category for entry in catalog.entries} == {
         "campus",
+        "foreign_enterprise",
         "public_exam",
         "state_owned",
     }
@@ -31,6 +33,12 @@ def test_repository_catalog_is_valid_and_has_required_coverage() -> None:
         "jiangsu-personnel-exam",
     ]
     assert catalog.get("sasac-recruitment").include_keywords
+    assert catalog.get("apple-china-careers").implementation_status == "planned"
+    foreign_entries = tuple(
+        entry for entry in catalog.entries if entry.category == "foreign_enterprise"
+    )
+    assert len(foreign_entries) == 5
+    assert all(not entry.enabled for entry in foreign_entries)
 
 
 def test_catalog_rejects_duplicate_keys(tmp_path: Path) -> None:
