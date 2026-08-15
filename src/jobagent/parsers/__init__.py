@@ -1,0 +1,45 @@
+"""Traceable parser contracts and explicit MIME-based registration."""
+
+from jobagent.parsers.contracts import (
+    CellRangeLocation,
+    DocumentParser,
+    EvidenceLocation,
+    LineRangeLocation,
+    PageLocation,
+    ParsedBlock,
+    ParseErrorCode,
+    ParseIssue,
+    ParseRequest,
+    ParseResult,
+    ParseSource,
+    ParseSourceType,
+    ParseStatus,
+    TableBlock,
+    TableCell,
+    TextBlock,
+    TextBlockKind,
+    normalize_media_type,
+)
+from jobagent.parsers.registry import ParserRegistry
+
+__all__ = [
+    "CellRangeLocation",
+    "DocumentParser",
+    "EvidenceLocation",
+    "LineRangeLocation",
+    "PageLocation",
+    "ParseErrorCode",
+    "ParseIssue",
+    "ParseRequest",
+    "ParseResult",
+    "ParseSource",
+    "ParseSourceType",
+    "ParseStatus",
+    "ParsedBlock",
+    "ParserRegistry",
+    "TableBlock",
+    "TableCell",
+    "TextBlock",
+    "TextBlockKind",
+    "normalize_media_type",
+]

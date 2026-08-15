@@ -8,7 +8,7 @@
 >
 > Last updated: 2026-08-15
 >
-> Active branch: `feature/jai-012-run-stats-retry`
+> Active branch: `feature/jai-013-parser-protocol-intermediate-format`
 
 ## 1. Current status
 
@@ -20,7 +20,8 @@
 | JAI-037 | Complete, merged to `develop` | `develop` / `c649862` | Official-source expansion roadmap, foreign-enterprise candidates, and reference-source boundary |
 | JAI-046 | Complete, merged and pushed to `develop` | `develop` / `f07b6d5` | Separate bilingual-file rules and repository-local Git authorship policy |
 | JAI-047 | Complete, merged and pushed to `develop` | `develop` / `87cd753` | Legacy-document migration baseline, separate bilingual work logs, and JAI-048 inventory |
-| JAI-012 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-012-run-stats-retry` / `7e5e888` implementation | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
+| JAI-012 | Complete, merged and pushed to `develop` | `develop` / `70dd3b2` | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
+| JAI-013 | Complete locally, pending commit/push | `feature/jai-013-parser-protocol-intermediate-format` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
 
 ## 2. Current decisions
 
@@ -47,6 +48,14 @@ A retry repeats the source's public list discovery to reconstruct source-specifi
 ### D-020 Manual collection persists before counting item success
 
 Manual runs pass each fetched detail through `SqlAlchemyRawDocumentRepository`. Run statistics count `created`, `updated`, `skipped`, and all failures while retaining detail-only failure counters. Repeating an uncertain or already completed write returns `skipped`, preserving raw-document idempotency.
+
+### D-021 Parser output is a strict in-memory contract before persistence orchestration
+
+JAI-013 defines immutable `ParseSource`, location, block, issue, and result contracts plus explicit MIME registration. It does not add an intermediate-block table, attachment parsing worker, PDF/Excel implementation, or field extraction. Later Issues may map the completed result status and safe diagnostics onto existing attachment fields.
+
+### D-022 Evidence coordinates belong to every intermediate block
+
+Text and table blocks retain a persisted source reference and a one-based page, inclusive line range, or worksheet/A1 cell range. Table cells carry their own locations, and both table/result construction reject mixed-source output before downstream extraction can consume it.
 
 ## 3. Active work history
 
@@ -91,6 +100,18 @@ Manual runs pass each fetched detail through `SqlAlchemyRawDocumentRepository`. 
 - Synchronized English/Chinese collection documentation, plan/backlog status, and active WORKLOG. No dependency, schema migration, credential, runtime data, live-source request, or deferred technology was added.
 - After transient GitHub port 443 timeouts, normally pushed the feature branch and verified local HEAD, `origin/feature/jai-012-run-stats-retry`, and GitHub `ls-remote` all matched `7e5e888a09ff8bd13094f277631e87d021c27f7a`; no history or remote configuration was rewritten.
 
+### 2026-08-15 — JAI-013 parser protocol and standard intermediate format completed
+
+- Merged JAI-012 into `develop` with non-fast-forward merge `70dd3b2` and normally pushed it; local `develop`, `origin/develop`, and GitHub `ls-remote` all match `70dd3b2144c12aff8e483ec89420ee4486374c2e`.
+- Created `feature/jai-013-parser-protocol-intermediate-format` from that synchronized `develop`; no work started from `main` or an unmerged feature branch.
+- Scope is limited to MIME-based parser selection, traceable document/table intermediate schemas, parser statuses and error codes, unsupported-format handling, tests, and synchronized documentation. PDF extraction, OCR, Excel table heuristics, and field extraction remain later Issues.
+- Added `jobagent.parsers` with immutable source/request contracts, one-based page/line/A1 cell locators, text/table blocks, stable status/error enums, diagnostics, and result invariants. No dependency or schema migration was required.
+- Added an explicit registry that normalizes MIME parameters, prevents duplicate parser names/media types, rejects inconsistent source/name output, and returns `unsupported` with `parser.unsupported_media_type` when no parser is registered.
+- Added 31 focused tests covering HTML, PDF, XLS/XLSX selection; source and coordinate validation; block/cell traceability; registry conflicts; and unsupported or inconsistent output.
+- Added paired English/Chinese parser documentation and index entries, and synchronized the attachment guide, development plan, backlog, and active logs.
+- The first unified gate exposed duplicate `test_contracts` module names; making `tests/parsers` a package resolved it. The second gate exposed narrow regex-group typing in the new A1 validator; passing explicit capture groups resolved it without suppression.
+- Final PostgreSQL-enabled `scripts/check.py` gate passed: Ruff format checked 108 files, Ruff lint passed, Mypy passed across 68 source files, all 136 tests passed, and coverage was 88.85%.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -103,9 +124,10 @@ Manual runs pass each fetched detail through `SqlAlchemyRawDocumentRepository`. 
 
 ## 5. Next actions
 
-1. Commit and normally push this JAI-012 handoff-status update, then re-verify local, tracking, and GitHub branch hashes.
-2. Merge JAI-012 into `develop`, normally push, then start JAI-013 from the latest synchronized `develop`.
-3. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
+1. Complete final link/parity/diff checks, commit JAI-013, and normally push the feature branch.
+2. Verify local HEAD, its tracking branch, and GitHub `ls-remote` agree before merging.
+3. Merge JAI-013 into `develop`, normally push, then start JAI-014 from the latest synchronized `develop`.
+4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
 
 ## 6. Update template
 
