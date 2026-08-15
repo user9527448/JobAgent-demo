@@ -441,6 +441,6 @@ Before starting, an Issue must define goal, scope, acceptance criteria, dependen
 
 ## 13. Current next step
 
-JAI-011, JAI-037, and JAI-046 have been merged and normally pushed to `develop` in order. JAI-047 is active on its own branch to establish an executable bilingual-documentation migration baseline: add English mirrors for documents changed now, archive the mixed-language WORKLOG without loss, and start separate active English and Simplified Chinese logs.
+JAI-011, JAI-037, JAI-046, and JAI-047 have been merged and normally pushed to `develop` in order. JAI-012 is complete on its own branch with manual runs, persistence statistics, run summaries, failed-URL-only retries, and PostgreSQL idempotency acceptance.
 
-After JAI-047 merges, proceed to JAI-012 for reliable manual triggers, run statistics, and failed-item reruns. Continue through JAI-013–JAI-021 to reach five stable MVP sources. Execute JAI-048 as a separate documentation Issue and never mix broad legacy-document migration into JAI-012. Integrate remaining official and foreign-enterprise sources one by one under JAI-038–JAI-045 without bypassing login, CAPTCHA, anti-bot controls, or platform terms.
+After JAI-012 merges, proceed to JAI-013 to define a unified, traceable parser protocol and intermediate representation, then continue through JAI-021 to reach five stable MVP sources. Execute JAI-048 as a separate documentation Issue and never mix broad legacy-document migration into feature branches. Integrate remaining official and foreign-enterprise sources one by one under JAI-038–JAI-045 without bypassing login, CAPTCHA, anti-bot controls, or platform terms.

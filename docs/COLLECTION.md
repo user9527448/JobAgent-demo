@@ -2,7 +2,7 @@
 
 > 简体中文：[Source Adapter 与采集编排](zh-CN/COLLECTION.md)
 
-JAI-007 establishes the source plug-in boundary and the common batch flow. HTTP behavior is supplied separately by the JAI-008 [source HTTP client policy](HTTP_CLIENT.md), JAI-009 supplies [canonical raw-document persistence](RAW_DOCUMENTS.md), and JAI-010 adds downstream [attachment discovery and storage](ATTACHMENTS.md).
+JAI-007 establishes the source plug-in boundary and the common batch flow. HTTP behavior is supplied separately by the JAI-008 [source HTTP client policy](HTTP_CLIENT.md), JAI-009 supplies [canonical raw-document persistence](RAW_DOCUMENTS.md), and JAI-010 adds downstream [attachment discovery and storage](ATTACHMENTS.md). JAI-012 connects manual runs to raw-document persistence, persisted summaries, and failed-item retries.
 
 JAI-011 adds the manually maintained `config/source_catalog.toml`. The Chinese [target-source catalog and maintenance guide](SOURCE_CATALOG.md) records official campus, Jiangsu/Zhejiang/Shanghai public-exam, and central/state-owned enterprise sources. Only entries marked `active` and `enabled`, with an implemented explicit Adapter, are runnable.
 
@@ -49,13 +49,19 @@ Cancellation is not swallowed: the run is marked `cancelled`, then the cancellat
   "discovered": 3,
   "detail_succeeded": 2,
   "detail_failed": 1,
+  "created": 1,
+  "updated": 0,
+  "skipped": 1,
+  "failed": 1,
   "steps": {
-    "discover": {"status": "succeeded", "count": 3},
-    "fetch_detail": {"status": "partial", "succeeded": 2, "failed": 1}
+    "discover": {"status": "succeeded", "count": 3, "total": 3},
+    "fetch_detail": {"status": "partial", "succeeded": 2, "failed": 1},
+    "persist": {"status": "succeeded", "created": 1, "updated": 0, "skipped": 1, "failed": 0}
   },
   "failures": [
     {
       "url": "https://example.invalid/jobs/2",
+      "step": "fetch_detail",
       "code": "crawler.adapter_fetch_detail_failed",
       "message": "Adapter fetch_detail failed with RuntimeError.",
       "retryable": false
@@ -66,9 +72,30 @@ Cancellation is not swallowed: the run is marked `cancelled`, then the cancellat
 
 Unexpected exception messages are not persisted because they may contain upstream response data or credentials. Domain errors retain their explicitly safe code, message and retryability.
 
+`created`, `updated` and `skipped` are the idempotent outcomes returned by `SqlAlchemyRawDocumentRepository`; `failed` counts all failed retry filters, detail fetches and persistence attempts. `detail_failed` remains a detail-fetch-only counter so operators can distinguish upstream parsing failures from database failures.
+
+## JAI-012 manual runs and failed-item retries
+
+The JAI-012 command is synchronous: it returns after the run reaches a terminal state and prints a JSON summary containing the run ID, source ID, status, timestamps, counters and structured failures. It uses the normal configured database and the manually maintained catalog:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/manage_crawl.py run --source-id 7
+.\.venv\Scripts\python.exe scripts/manage_crawl.py show --run-id 101
+.\.venv\Scripts\python.exe scripts/manage_crawl.py retry --run-id 101
+```
+
+- `run` accepts only an enabled database source that exactly matches one runnable catalog entry and an explicitly wired Adapter. It discovers public items, fetches details, and saves each successful detail through the idempotent raw-document repository.
+- `show` performs no source-site request. It reads one persisted `crawl_runs` summary and exposes the structured `failures` list separately from the complete `stats` payload.
+- `retry` requires a terminal run with failed item URLs. It repeats public list discovery to reconstruct source metadata, then filters the result to the prior failed URLs before detail fetches. Successful URLs from the prior run are never fetched again.
+- Retry never accepts an arbitrary URL from the command line. A prior failed URL that is no longer rediscovered is recorded as `crawler.retry_item_not_discovered`; it is not fetched directly.
+- Every retry creates a new run with `retry_of_run_id`, `retry_requested`, selected `discovered`, and pre-filter `discovered_total` statistics. An ambiguous prior database commit is safe because a repeated raw-document save becomes `skipped` instead of a duplicate.
+- Discovery failures have no failed detail URL and therefore use a new manual `run`, not `retry`. Nonterminal or successful runs return explicit `crawler.run_not_terminal` or `crawler.run_has_no_failed_items` errors.
+
+JAI-012 deliberately provides a command boundary only. Source/run maintenance APIs remain JAI-030 scope; scheduling and concurrency locks remain JAI-026.
+
 ## Downstream persistence boundary
 
-A completed `CrawlBatchResult` carries successful `RawDocumentInput` objects to `SqlAlchemyRawDocumentRepository`. The repository resolves canonical URLs, computes normalized-content SHA-256 values and atomically creates/reuses/versions immutable `raw_documents` rows without changing individual Adapters. HTTP cache validators are retained for later conditional requests.
+A completed `CrawlBatchResult` carries successful `RawDocumentInput` objects. In JAI-012 manual execution, the orchestrator saves each successful detail through `SqlAlchemyRawDocumentRepository` before marking that item successful. The repository resolves canonical URLs, computes normalized-content SHA-256 values and atomically creates/reuses/versions immutable `raw_documents` rows without changing individual Adapters. HTTP cache validators are retained for later conditional requests.
 
 Attachment discovery and file persistence do not occur inside the Adapter or batch loop. After a raw-document version is known, the JAI-010 attachment service discovers supported links from that version's HTML and atomically stores validated files against its document ID.
 

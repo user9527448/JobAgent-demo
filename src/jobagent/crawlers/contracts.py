@@ -70,6 +70,7 @@ class CrawlItemFailure:
     """Safe, structured information about one isolated detail failure."""
 
     url: str
+    step: str
     code: str
     message: str
     retryable: bool
@@ -78,10 +79,39 @@ class CrawlItemFailure:
         """Return JSON-compatible data for crawl-run statistics."""
         return {
             "url": self.url,
+            "step": self.step,
             "code": self.code,
             "message": self.message,
             "retryable": self.retryable,
         }
+
+    @classmethod
+    def from_dict(cls, value: object) -> CrawlItemFailure | None:
+        """Parse one persisted failure while tolerating pre-JAI-012 records."""
+        if not isinstance(value, dict):
+            return None
+        url = value.get("url")
+        step = value.get("step", "unknown")
+        code = value.get("code")
+        message = value.get("message")
+        retryable = value.get("retryable")
+        if not isinstance(url, str):
+            return None
+        if not isinstance(step, str):
+            return None
+        if not isinstance(code, str):
+            return None
+        if not isinstance(message, str):
+            return None
+        if not isinstance(retryable, bool):
+            return None
+        return cls(
+            url=url,
+            step=step,
+            code=code,
+            message=message,
+            retryable=retryable,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,3 +124,41 @@ class CrawlBatchResult:
     documents: tuple[RawDocumentInput, ...]
     failures: tuple[CrawlItemFailure, ...]
     stats: dict[str, JsonValue]
+
+
+@dataclass(frozen=True, slots=True)
+class CrawlRunSummary:
+    """Safe persisted view used by manual inspection and later APIs."""
+
+    run_id: int
+    source_id: int
+    status: str
+    started_at: datetime
+    finished_at: datetime | None
+    stats: dict[str, JsonValue]
+    error_message: str | None
+
+    @property
+    def failures(self) -> tuple[CrawlItemFailure, ...]:
+        """Return valid structured failures from this run's persisted stats."""
+        values = self.stats.get("failures")
+        if not isinstance(values, list):
+            return ()
+        return tuple(
+            failure
+            for value in values
+            if (failure := CrawlItemFailure.from_dict(value)) is not None
+        )
+
+    def to_dict(self) -> dict[str, JsonValue]:
+        """Return a JSON-compatible summary for CLI and API boundaries."""
+        return {
+            "run_id": self.run_id,
+            "source_id": self.source_id,
+            "status": self.status,
+            "started_at": self.started_at.isoformat(),
+            "finished_at": self.finished_at.isoformat() if self.finished_at else None,
+            "stats": self.stats,
+            "error_message": self.error_message,
+            "failures": [failure.to_dict() for failure in self.failures],
+        }

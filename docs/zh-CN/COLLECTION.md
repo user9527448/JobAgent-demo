@@ -2,7 +2,7 @@
 
 > 英文原文：[Source Adapter and collection orchestration](../COLLECTION.md)。修改原文时必须在同一提交中同步更新本镜像。
 
-JAI-007 建立来源插件边界和通用批处理流程。HTTP 行为由 JAI-008 的[来源 HTTP 客户端策略](HTTP_CLIENT.md)单独提供，JAI-009 提供[原始公告规范化持久化](RAW_DOCUMENTS.md)，JAI-010 在下游增加[附件发现与存储](ATTACHMENTS.md)。
+JAI-007 建立来源插件边界和通用批处理流程。HTTP 行为由 JAI-008 的[来源 HTTP 客户端策略](HTTP_CLIENT.md)单独提供，JAI-009 提供[原始公告规范化持久化](RAW_DOCUMENTS.md)，JAI-010 在下游增加[附件发现与存储](ATTACHMENTS.md)。JAI-012 把手动运行与原始公告持久化、运行摘要和失败条目重跑连接起来。
 
 JAI-011 增加可手工维护的 `config/source_catalog.toml`。中文的[目标网站库与维护说明](../SOURCE_CATALOG.md)登记校招、江浙沪公职考试、央国企官方来源。只有标记为 `active` 且 `enabled`、并已有显式 Adapter 实现的条目才可运行。
 
@@ -49,13 +49,19 @@ class SourceAdapter(Protocol):
   "discovered": 3,
   "detail_succeeded": 2,
   "detail_failed": 1,
+  "created": 1,
+  "updated": 0,
+  "skipped": 1,
+  "failed": 1,
   "steps": {
-    "discover": {"status": "succeeded", "count": 3},
-    "fetch_detail": {"status": "partial", "succeeded": 2, "failed": 1}
+    "discover": {"status": "succeeded", "count": 3, "total": 3},
+    "fetch_detail": {"status": "partial", "succeeded": 2, "failed": 1},
+    "persist": {"status": "succeeded", "created": 1, "updated": 0, "skipped": 1, "failed": 0}
   },
   "failures": [
     {
       "url": "https://example.invalid/jobs/2",
+      "step": "fetch_detail",
       "code": "crawler.adapter_fetch_detail_failed",
       "message": "Adapter fetch_detail failed with RuntimeError.",
       "retryable": false
@@ -66,9 +72,30 @@ class SourceAdapter(Protocol):
 
 意外异常的原始消息不会持久化，因为其中可能包含上游响应数据或凭据。领域错误会保留其已明确标记为安全的错误码、消息和可重试性。
 
+`created`、`updated` 和 `skipped` 是 `SqlAlchemyRawDocumentRepository` 返回的幂等写入结果；`failed` 统计重跑筛选、详情抓取和持久化的全部失败。`detail_failed` 仍只统计详情抓取失败，便于区分上游解析错误和数据库错误。
+
+## JAI-012 手动运行与失败条目重跑
+
+JAI-012 命令同步执行：运行到达终态后返回，并输出包含 run ID、source ID、状态、时间、计数器和结构化失败的 JSON 摘要。它使用正常配置的数据库和可手工维护的网站库：
+
+```powershell
+.\.venv\Scripts\python.exe scripts/manage_crawl.py run --source-id 7
+.\.venv\Scripts\python.exe scripts/manage_crawl.py show --run-id 101
+.\.venv\Scripts\python.exe scripts/manage_crawl.py retry --run-id 101
+```
+
+- `run` 只接受数据库中已启用、与一个可运行网站库条目精确匹配、且已有显式运行时接线的来源。命令发现公开条目、抓取详情，并通过幂等原始公告仓储保存每个成功详情。
+- `show` 不访问来源网站，只读取一条持久化的 `crawl_runs` 摘要，并在完整 `stats` 之外单独展示结构化 `failures` 列表。
+- `retry` 要求原运行已经结束且存在失败条目 URL。它重新执行公开列表发现以恢复来源元数据，再把结果过滤为原失败 URL 后才抓取详情；原运行中的成功 URL 不会再次抓取。
+- 重跑命令不接受任意 URL。原失败 URL 若不再能从公开列表发现，会记录为 `crawler.retry_item_not_discovered`，不会直接访问该 URL。
+- 每次重跑创建新运行，并记录 `retry_of_run_id`、`retry_requested`、筛选后的 `discovered` 和筛选前的 `discovered_total`。如果此前数据库提交结果不确定，重复保存会安全得到 `skipped`，不会产生重复公告。
+- 发现阶段失败没有失败详情 URL，因此使用新的手动 `run`，而不是 `retry`。未结束或无失败条目的运行分别返回明确的 `crawler.run_not_terminal` 或 `crawler.run_has_no_failed_items`。
+
+JAI-012 有意只提供命令边界。来源/运行维护 API 仍属于 JAI-030；调度和并发锁仍属于 JAI-026。
+
 ## 下游持久化边界
 
-完成的 `CrawlBatchResult` 会把成功的 `RawDocumentInput` 对象交给 `SqlAlchemyRawDocumentRepository`。仓库解析规范 URL、计算规范化内容的 SHA-256，并以原子方式创建、复用或版本化不可变 `raw_documents` 记录，无需改变各来源 Adapter。HTTP 缓存校验值会保留给后续条件请求。
+完成的 `CrawlBatchResult` 携带成功的 `RawDocumentInput` 对象。在 JAI-012 手动执行中，编排器会先通过 `SqlAlchemyRawDocumentRepository` 保存每个成功详情，再把该条目标记为成功。仓库解析规范 URL、计算规范化内容的 SHA-256，并以原子方式创建、复用或版本化不可变 `raw_documents` 记录，无需改变各来源 Adapter。HTTP 缓存校验值会保留给后续条件请求。
 
 附件发现和文件持久化不发生在 Adapter 或批处理循环内部。确定原始公告版本后，JAI-010 附件服务从该版本 HTML 中发现支持的链接，并以公告文档 ID 为归属原子存储已验证文件。
 
