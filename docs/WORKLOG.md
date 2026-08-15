@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-14
+> Last updated: 2026-08-15
 >
 > Active branch: `feature/jai-012-run-stats-retry`
 
@@ -20,7 +20,7 @@
 | JAI-037 | Complete, merged to `develop` | `develop` / `c649862` | Official-source expansion roadmap, foreign-enterprise candidates, and reference-source boundary |
 | JAI-046 | Complete, merged and pushed to `develop` | `develop` / `f07b6d5` | Separate bilingual-file rules and repository-local Git authorship policy |
 | JAI-047 | Complete, merged and pushed to `develop` | `develop` / `87cd753` | Legacy-document migration baseline, separate bilingual work logs, and JAI-048 inventory |
-| JAI-012 | Complete locally, pending commit/push | `feature/jai-012-run-stats-retry` | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
+| JAI-012 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-012-run-stats-retry` / `7e5e888` implementation | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
 
 ## 2. Current decisions
 
@@ -89,6 +89,7 @@ Manual runs pass each fetched detail through `SqlAlchemyRawDocumentRepository`. 
 - Final review identified that cancellation during raw-document persistence could otherwise leave a run in `running`. The orchestrator now marks the run `cancelled`, records safe progress, and re-raises cancellation; a dedicated unit test covers this path.
 - Final database-enabled gate passed: Ruff format checked 100 files, Ruff lint passed, Mypy passed across 62 source files, all 105 tests passed, and coverage was 88.38%.
 - Synchronized English/Chinese collection documentation, plan/backlog status, and active WORKLOG. No dependency, schema migration, credential, runtime data, live-source request, or deferred technology was added.
+- After transient GitHub port 443 timeouts, normally pushed the feature branch and verified local HEAD, `origin/feature/jai-012-run-stats-retry`, and GitHub `ls-remote` all matched `7e5e888a09ff8bd13094f277631e87d021c27f7a`; no history or remote configuration was rewritten.
 
 ## 4. Verification and blockers
 
@@ -98,13 +99,13 @@ Manual runs pass each fetched detail through `SqlAlchemyRawDocumentRepository`. 
 - JAI-047 verification passed: 35 Markdown files had no broken relative links; bilingual heading and Issue-ID parity passed; `git diff --check` passed; Ruff format/lint, Mypy, all 89 PostgreSQL-enabled tests, and 88.35% coverage passed.
 - Pre-push formatting correction: four staged trailing-space findings in `docs/en-US/DEVELOPMENT_PLAN.md` were removed; final staged and worktree diff checks must pass before push.
 - JAI-012 final gate: Ruff format/lint passed; Mypy passed across 62 source files; 105 tests passed with PostgreSQL; coverage 88.38%. The offline JAI-012 acceptance performed no live-source request and left no repository runtime data.
+- JAI-012 handoff recheck on 2026-08-15: the first Mypy invocation named the non-existent planned `app` directory and was corrected to the repository-configured targets; the first test run omitted `JOBAGENT_TEST_DATABASE_URL`, so 98 tests passed, 7 PostgreSQL tests skipped, and coverage was 83.18%. After starting the existing Docker Desktop installation and using the existing `jobagent_test` database, Ruff format/lint, Mypy, all 105 tests, and 88.38% coverage passed.
 
 ## 5. Next actions
 
-1. Complete final link/parity/diff checks, commit JAI-012, and normally push the feature branch.
-2. Verify local HEAD, its tracking branch, and GitHub `ls-remote` agree before merging.
-3. Merge JAI-012 into `develop`, normally push, then start JAI-013 from the latest synchronized `develop`.
-4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
+1. Commit and normally push this JAI-012 handoff-status update, then re-verify local, tracking, and GitHub branch hashes.
+2. Merge JAI-012 into `develop`, normally push, then start JAI-013 from the latest synchronized `develop`.
+3. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
 
 ## 6. Update template
 

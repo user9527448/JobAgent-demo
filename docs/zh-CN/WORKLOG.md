@@ -6,7 +6,7 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-14
+> 最后更新：2026-08-15
 >
 > 当前分支：`feature/jai-012-run-stats-retry`
 
@@ -20,7 +20,7 @@
 | JAI-037 | 完成，已合并到 `develop` | `develop` / `c649862` | 官方来源扩展路线、外企候选和参考来源边界 |
 | JAI-046 | 完成，已合并并推送到 `develop` | `develop` / `f07b6d5` | 独立双语文件规则和仓库级 Git 作者身份规则 |
 | JAI-047 | 完成，已合并并推送到 `develop` | `develop` / `87cd753` | 存量迁移基线、独立双语工作日志和 JAI-048 清单 |
-| JAI-012 | 本地完成，待提交/推送 | `feature/jai-012-run-stats-retry` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
+| JAI-012 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-012-run-stats-retry` / 实现提交 `7e5e888` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
 
 ## 2. 当前决策
 
@@ -89,6 +89,7 @@ JAI-012 通过可复用的编排器与仓储契约提供 `scripts/manage_crawl.p
 - 最终复核发现，原始公告持久化期间发生取消可能让运行停留在 `running`。编排器现在会把运行标记为 `cancelled`、保存安全进度并重新抛出取消；专用单元测试覆盖该路径。
 - 最终数据库启用门禁通过：Ruff format 检查 100 个文件，Ruff lint 通过，62 个源文件的 Mypy 通过，105 项测试全部通过，覆盖率 88.38%。
 - 已同步中英文采集文档、计划/Backlog 状态和活动 WORKLOG。没有新增依赖、Schema 迁移、凭据、运行数据、线上来源请求或延期技术。
+- GitHub 端口 443 临时超时恢复后，已普通推送 feature 分支，并核对本地 HEAD、`origin/feature/jai-012-run-stats-retry` 与 GitHub `ls-remote` 均为 `7e5e888a09ff8bd13094f277631e87d021c27f7a`；没有改写历史或远程配置。
 
 ## 4. 检查与阻塞
 
@@ -98,13 +99,13 @@ JAI-012 通过可复用的编排器与仓储契约提供 `scripts/manage_crawl.p
 - JAI-047 检查完成：35 份 Markdown 无失效相对链接；双语标题与 Issue 编号一致；`git diff --check`、Ruff format/lint、Mypy、89 项 PostgreSQL 启用测试和 88.35% 覆盖率全部通过。
 - 推送前格式修正：已删除 `docs/en-US/DEVELOPMENT_PLAN.md` 暂存检查发现的 4 行行尾空格；推送前必须确认最终暂存区和工作区差异检查均通过。
 - JAI-012 最终门禁：Ruff format/lint 通过；62 个源文件的 Mypy 通过；PostgreSQL 启用时 105 项测试通过；覆盖率 88.38%。离线 JAI-012 验收未访问线上来源，也未在仓库留下运行数据。
+- 2026-08-15 的 JAI-012 交接复查中，首次 Mypy 命令误用了计划中的非现存 `app` 目录，随后改为仓库配置目标；首次测试未设置 `JOBAGENT_TEST_DATABASE_URL`，因此 98 项通过、7 项 PostgreSQL 测试跳过，覆盖率仅 83.18%。启动现有 Docker Desktop 并使用既有 `jobagent_test` 数据库后，Ruff format/lint、Mypy、全部 105 项测试和 88.38% 覆盖率均通过。
 
 ## 5. 下一步
 
-1. 完成最终链接/结构/差异检查，提交 JAI-012 并普通推送 feature 分支。
-2. 合并前核对本地 HEAD、跟踪分支与 GitHub `ls-remote` 一致。
-3. 把 JAI-012 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-013。
-4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
+1. 提交并普通推送本次 JAI-012 交接状态更新，再次核对本地、跟踪分支与 GitHub 分支哈希。
+2. 把 JAI-012 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-013。
+3. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
 
 ## 6. 更新模板
 
