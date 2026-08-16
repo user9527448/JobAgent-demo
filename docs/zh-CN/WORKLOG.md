@@ -6,9 +6,9 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-15
+> 最后更新：2026-08-16
 >
-> 当前分支：`feature/jai-012-run-stats-retry`
+> 当前分支：`feature/jai-013-parser-protocol-intermediate-format`
 
 ## 1. 当前状态
 
@@ -20,7 +20,8 @@
 | JAI-037 | 完成，已合并到 `develop` | `develop` / `c649862` | 官方来源扩展路线、外企候选和参考来源边界 |
 | JAI-046 | 完成，已合并并推送到 `develop` | `develop` / `f07b6d5` | 独立双语文件规则和仓库级 Git 作者身份规则 |
 | JAI-047 | 完成，已合并并推送到 `develop` | `develop` / `87cd753` | 存量迁移基线、独立双语工作日志和 JAI-048 清单 |
-| JAI-012 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-012-run-stats-retry` / 实现提交 `7e5e888` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
+| JAI-012 | 已完成、合并并推送到 `develop` | `develop` / `70dd3b2` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
+| JAI-013 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-013-parser-protocol-intermediate-format` / `269648a` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
 
 ## 2. 当前决策
 
@@ -47,6 +48,14 @@ JAI-012 通过可复用的编排器与仓储契约提供 `scripts/manage_crawl.p
 ### D-020 手动采集在计为成功前先完成原文持久化
 
 手动运行把每个已抓取详情交给 `SqlAlchemyRawDocumentRepository`。运行统计记录 `created`、`updated`、`skipped` 和全部失败，同时保留只统计详情阶段的失败计数。重复执行结果不确定或已经成功的写入会返回 `skipped`，保持原始公告幂等。
+
+### D-021 先把解析输出定义为严格内存契约，再由后续 Issue 编排持久化
+
+JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约，以及显式 MIME 注册。本 Issue 不新增中间块数据表、附件解析 worker、PDF/Excel 实现或字段抽取。后续 Issue 可把完成结果的状态和安全诊断映射到现有附件字段。
+
+### D-022 每个中间块都必须携带证据坐标
+
+文本块和表格块保留持久化来源引用，以及从 1 开始的页码、包含端点的行范围或工作表/A1 单元格范围。表格单元格携带自身定位；表格/结果构造都会在下游抽取消费前拒绝混合来源输出。
 
 ## 3. 当前工作记录
 
@@ -91,6 +100,19 @@ JAI-012 通过可复用的编排器与仓储契约提供 `scripts/manage_crawl.p
 - 已同步中英文采集文档、计划/Backlog 状态和活动 WORKLOG。没有新增依赖、Schema 迁移、凭据、运行数据、线上来源请求或延期技术。
 - GitHub 端口 443 临时超时恢复后，已普通推送 feature 分支，并核对本地 HEAD、`origin/feature/jai-012-run-stats-retry` 与 GitHub `ls-remote` 均为 `7e5e888a09ff8bd13094f277631e87d021c27f7a`；没有改写历史或远程配置。
 
+### 2026-08-15 — JAI-013 解析器协议与标准中间格式完成
+
+- 以非快进合并 `70dd3b2` 把 JAI-012 纳入 `develop` 并普通推送；本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 均为 `70dd3b2144c12aff8e483ec89420ee4486374c2e`。
+- 从该已同步的 `develop` 创建 `feature/jai-013-parser-protocol-intermediate-format`；没有从 `main` 或未合并 feature 分支开始。
+- 范围仅限按 MIME 选择解析器、可追溯的文档/表格中间 Schema、解析状态和错误码、不支持格式处理、测试与双语文档；PDF 提取、OCR、Excel 表格启发式和字段抽取仍留给后续 Issue。
+- 新增 `jobagent.parsers`，包含不可变来源/请求契约、从 1 开始的页/行/A1 单元格定位、文本/表格块、稳定状态/错误枚举、诊断和结果不变量；无需新增依赖或 Schema 迁移。
+- 新增显式注册表：规范 MIME 参数、防止重复解析器名称/MIME、拒绝不一致的来源/名称输出，并在没有注册解析器时以 `parser.unsupported_media_type` 返回 `unsupported`。
+- 新增 31 项定向测试，覆盖 HTML、PDF、XLS/XLSX 选择，来源与坐标校验，块/单元格可追溯性，注册冲突，以及不支持或不一致输出。
+- 新增配对的中英文解析文档和索引条目，并同步附件指南、开发计划、Backlog 和活动日志。
+- 第一轮统一门禁发现 `test_contracts` 测试模块重名；把 `tests/parsers` 设为包后解决。第二轮发现新 A1 校验器中的正则分组类型过宽；显式传递捕获组后解决，未使用 suppression。
+- 最终启用 PostgreSQL 的 `scripts/check.py` 门禁通过：Ruff format 检查 108 个文件，Ruff lint 通过，68 个源文件的 Mypy 通过，136 项测试全部通过，覆盖率 88.85%。
+- 已普通推送 JAI-013，并核对本地 HEAD、`origin/feature/jai-013-parser-protocol-intermediate-format` 与 GitHub `ls-remote` 均为 `269648a384027de772b2fa2c4dd5661cb183594c`。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -103,8 +125,8 @@ JAI-012 通过可复用的编排器与仓储契约提供 `scripts/manage_crawl.p
 
 ## 5. 下一步
 
-1. 提交并普通推送本次 JAI-012 交接状态更新，再次核对本地、跟踪分支与 GitHub 分支哈希。
-2. 把 JAI-012 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-013。
+1. 提交并普通推送本次 JAI-013 交接状态更新，再次核对本地、跟踪分支与 GitHub 分支哈希。
+2. 把 JAI-013 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-014。
 3. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
 
 ## 6. 更新模板

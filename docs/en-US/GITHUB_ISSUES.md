@@ -186,9 +186,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: give HTML, PDF, and Excel a common traceable output.
 - **Scope**: parser registry, block/table/evidence Schemas, states, error codes.
 - **Acceptance**:
-  - [ ] Select parsers by MIME type.
-  - [ ] Every block retains source file and page/row/cell position.
-  - [ ] Unsupported files enter an explicit state.
+  - [x] Select parsers by MIME type.
+  - [x] Every block retains source file and page/row/cell position.
+  - [x] Unsupported files enter an explicit state.
 
 ### JAI-014 Implement PDF text parsing and scan detection
 

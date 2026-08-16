@@ -28,7 +28,7 @@ JAI-010 为不可变原始公告版本链接的 PDF、XLS 和 XLSX 文件提供�
 | XLS | OLE 复合文件签名 | `application/vnd.ms-excel` 或通用二进制类型 |
 | XLSX | ZIP 内含 `[Content_Types].xml` 和 `xl/workbook.xml` | XLSX MIME、`application/zip` 或通用二进制类型 |
 
-HTML 错误页、空响应体、签名不匹配和不兼容的非通用 MIME 类型都会被拒绝。校验只用于确认文件身份；PDF 文本提取、OCR 和表格解析属于 JAI-013 至 JAI-016。
+HTML 错误页、空响应体、签名不匹配和不兼容的非通用 MIME 类型都会被拒绝。校验只用于确认文件身份；公共解析器契约见 [`PARSING.md`](PARSING.md)，PDF 文本提取、OCR 和表格解析属于 JAI-014 至 JAI-016。
 
 ## 原子内容寻址存储
 
