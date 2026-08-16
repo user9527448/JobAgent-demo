@@ -8,7 +8,7 @@
 >
 > 最后更新：2026-08-16
 >
-> 当前分支：`feature/jai-015-excel-position-table-parsing`
+> 当前分支：`feature/jai-016-attachment-golden-samples-regression`
 
 ## 1. 当前状态
 
@@ -23,7 +23,8 @@
 | JAI-012 | 已完成、合并并推送到 `develop` | `develop` / `70dd3b2` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
 | JAI-013 | 已完成、合并并推送到 `develop` | `develop` / `36d389f` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
 | JAI-014 | 已完成、合并并推送到 `develop` | `develop` / `8f21745` | 页级文本、元数据、确定性扫描判断、加密/损坏诊断、测试和双语文档已验证 |
-| JAI-015 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-015-excel-position-table-parsing` / `7a5f3a3` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
+| JAI-015 | 已完成、合并并推送到 `develop` | `develop` / `fca197d` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
+| JAI-016 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-016-attachment-golden-samples-regression` / `819c63f` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
 
 ## 2. 当前决策
 
@@ -153,6 +154,20 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 最终文档检查确认 37 份 Markdown 无失效相对链接；4 组本次修改的双语文档标题数量一致，两份 Backlog 中 161 次 Issue 编号出现顺序一致，且 `git diff --check` 通过。
 - 已普通推送 JAI-015，并核对本地 HEAD、`origin/feature/jai-015-excel-position-table-parsing` 与 GitHub `ls-remote` 均为 `7a5f3a3d29d7bb40459dbaa10fb30ce6c2835f5b`。
 
+### 2026-08-16 — JAI-016 附件黄金样本与回归启动
+
+- 已推送 JAI-015 交接提交 `633ebc1` 并核对本地、跟踪和 GitHub feature 引用一致，随后以非快进合并 `fca197d` 纳入 `develop` 并普通推送。本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 均为 `fca197de89634517a0aac6fbd84f1e63cc5573f0`。
+- 从该已同步的 `develop` 创建 `feature/jai-016-attachment-golden-samples-regression`；没有从 `main` 或未合并 feature 分支开始。
+- 范围仅限至少 10 份脱敏 PDF/XLSX 固定样本、已提交的期望中间结果、离线批量评估器、回归测试和同步文档。解析器功能扩展和字段抽取仍不在范围内。
+- 新增 5 份纯合成 PDF 和 5 份纯合成 XLSX，覆盖多页、稀疏/空白文本、中英文表头、多工作表、合并单元格、空行、3 种日期表示和无法识别表头的复核结果；不含下载的来源材料或真实个人数据。
+- 新增已审查的 `manifest.json`，保存完整规范文本/表格块与页码/A1 证据。`serialize_parse_result()` 排除不稳定来源 ID 和第三方库元数据，同时保留与解析行为相关的输出。
+- 新增 `evaluate_golden_fixtures()`、稳定汇总/差异报告和 `scripts/evaluate_attachment_fixtures.py`。评估器使用生产注册表、不访问网络，输出总数/匹配数/成功率及完整逐样本 expected/actual 差异，发生回归时返回非零退出码。
+- 保留独立显式生成器，使纯合成二进制来源可审查；常规回归测试不会重新生成或静默批准快照。新增测试证明 10 份已提交样本全部匹配，且篡改一项期望后会产生 1 条详细差异和 90% 成功率。
+- 新增独立中英文固定样本说明，并同步两份文档索引、解析文档、计划、Backlog 验收和活动日志。
+- 最终离线评估为 10/10、成功率 100%、无差异。启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 119 个文件，Ruff lint 通过，77 个源文件的 Mypy 通过，157 项测试全部通过，覆盖率 89.30%。
+- 最终文档检查确认 39 份 Markdown 无失效相对链接；6 组本次修改的双语文档标题数量一致，两份 Backlog 中 161 次 Issue 编号出现顺序一致，且 `git diff --check` 通过。
+- 已普通推送 JAI-016；推送时本地 HEAD、`origin/feature/jai-016-attachment-golden-samples-regression` 与 GitHub `ls-remote` 均为 `819c63fa00d31225ad65723605e91c0b8366bc2d`。后续合并前重试 `ls-remote` 时 GitHub 443 超时，仓库状态未发生变化。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -165,9 +180,9 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 提交并普通推送本次 JAI-015 交接状态更新。
-2. 把 JAI-015 合并到 `develop` 并普通推送，再核对本地/跟踪/GitHub 引用一致。
-3. 从最新且已同步的 `develop` 开始 JAI-016，并把黄金样本回归工作严格限制在该 Issue 范围内。
+1. 提交并普通推送本次 JAI-016 交接状态更新。
+2. 再次核对 GitHub 状态，把 JAI-016 合并到 `develop` 并普通推送合并提交。
+3. 从最新且已同步的 `develop` 开始 JAI-017，并把确定性字段抽取严格限制在该 Issue 范围内。
 4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
 
 ## 6. 更新模板

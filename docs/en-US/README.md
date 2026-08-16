@@ -21,6 +21,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | JAI-005 Jining source Spike | [English](../spikes/JAI-005-JINING-SOURCE.md) | [中文](../zh-CN/spikes/JAI-005-JINING-SOURCE.md) |
 | Database migration guide | [English](../../migrations/README.md) | [中文](../zh-CN/MIGRATIONS.md) |
 | JAI-005 fixture guide | [English](../../tests/fixtures/jining/README.md) | [中文](../zh-CN/fixtures/JINING.md) |
+| JAI-016 attachment golden fixtures | [English](../../tests/fixtures/attachments/README.md) | [中文](../zh-CN/fixtures/ATTACHMENTS.md) |
 
 ## Historical archive
 
