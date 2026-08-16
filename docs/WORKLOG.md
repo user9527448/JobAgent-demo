@@ -8,7 +8,7 @@
 >
 > Last updated: 2026-08-16
 >
-> Active branch: `feature/jai-013-parser-protocol-intermediate-format`
+> Active branch: `feature/jai-014-pdf-text-scan-detection`
 
 ## 1. Current status
 
@@ -21,7 +21,8 @@
 | JAI-046 | Complete, merged and pushed to `develop` | `develop` / `f07b6d5` | Separate bilingual-file rules and repository-local Git authorship policy |
 | JAI-047 | Complete, merged and pushed to `develop` | `develop` / `87cd753` | Legacy-document migration baseline, separate bilingual work logs, and JAI-048 inventory |
 | JAI-012 | Complete, merged and pushed to `develop` | `develop` / `70dd3b2` | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
-| JAI-013 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-013-parser-protocol-intermediate-format` / `269648a` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
+| JAI-013 | Complete, merged and pushed to `develop` | `develop` / `36d389f` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
+| JAI-014 | Complete locally, pending commit/push | `feature/jai-014-pdf-text-scan-detection` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
 
 ## 2. Current decisions
 
@@ -56,6 +57,14 @@ JAI-013 defines immutable `ParseSource`, location, block, issue, and result cont
 ### D-022 Evidence coordinates belong to every intermediate block
 
 Text and table blocks retain a persisted source reference and a one-based page, inclusive line range, or worksheet/A1 cell range. Table cells carry their own locations, and both table/result construction reject mixed-source output before downstream extraction can consume it.
+
+### D-023 PDF scan detection uses a configurable deterministic text threshold
+
+`PdfTextPolicy` defaults to 40 non-whitespace characters per page averaged across the document. Results below the threshold become `ocr_required` while retaining any partial page blocks for manual review. The parser does not invoke OCR; broader threshold evaluation remains JAI-016 and OCR implementation remains JAI-B01.
+
+### D-024 PDF failures return safe status objects instead of third-party exceptions
+
+Password-protected PDFs return `parser.encrypted_document`; empty, invalid, damaged, or unreadable PDFs return `parser.corrupt_document`; wrong MIME input returns `parser.invalid_input`. Results contain safe fixed messages without file content, passwords, or raw PyMuPDF exception text.
 
 ## 3. Active work history
 
@@ -113,6 +122,19 @@ Text and table blocks retain a persisted source reference and a one-based page, 
 - Final PostgreSQL-enabled `scripts/check.py` gate passed: Ruff format checked 108 files, Ruff lint passed, Mypy passed across 68 source files, all 136 tests passed, and coverage was 88.85%.
 - Normally pushed JAI-013 and verified local HEAD, `origin/feature/jai-013-parser-protocol-intermediate-format`, and GitHub `ls-remote` all match `269648a384027de772b2fa2c4dd5661cb183594c`.
 
+### 2026-08-16 — JAI-014 PDF text parsing and scan detection completed
+
+- Merged JAI-013 into `develop` with non-fast-forward merge `36d389f` and normally pushed it; local `develop`, `origin/develop`, and GitHub `ls-remote` all match `36d389fbe1edffe5131eba09ea16a21623d0f3d6`.
+- Created `feature/jai-014-pdf-text-scan-detection` from that synchronized `develop`; no work started from `main` or an unmerged feature branch.
+- Scope is limited to a registered PDF parser, page-level text and metadata, deterministic scan/low-text detection, encrypted/corrupt diagnostics, tests, and synchronized documentation. OCR implementation, Excel parsing, parser-worker persistence, and field extraction remain out of scope.
+- Added `PdfTextParser`, `PdfTextPolicy`, and explicit production registry construction. Normal PDFs produce normalized page blocks with one-based evidence; result metadata preserves page counts, character statistics, and non-empty standard PDF metadata.
+- Image-only and low-text PDFs return `ocr_required` without running OCR. Encrypted, corrupt, empty/unreadable, and wrong-MIME inputs return stable safe issues instead of leaking third-party exceptions.
+- Added 11 PDF tests using the existing real four-page fixture plus generated image-only, low-text, encrypted, and corrupt inputs. All 42 parser tests pass offline without live source access or committed runtime files.
+- Synchronized the English/Chinese parsing and attachment documentation, plan, backlog, and active logs. No dependency, database migration, worker, network collector, OCR engine, or Excel behavior was added.
+- The first targeted static pass found only formatting/export order plus narrow PyMuPDF and JSON-union typing boundaries; explicit type narrowing and the same limited third-party suppressions already established by the Spike resolved them. Behavior tests passed throughout.
+- Docker Desktop and the existing Compose database were initially stopped; starting the existing installation and `db` service restored the existing `jobagent_test` database without rebuilding or deleting data.
+- Final PostgreSQL-enabled `scripts/check.py` gate passed: Ruff format checked 111 files, Ruff lint passed, Mypy passed across 71 source files, all 147 tests passed, and coverage was 89.07%.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -125,9 +147,10 @@ Text and table blocks retain a persisted source reference and a one-based page, 
 
 ## 5. Next actions
 
-1. Commit and normally push this JAI-013 handoff-status update, then re-verify local, tracking, and GitHub branch hashes.
-2. Merge JAI-013 into `develop`, normally push, then start JAI-014 from the latest synchronized `develop`.
-3. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
+1. Complete final link/parity/diff checks, commit JAI-014, and normally push the feature branch.
+2. Verify local HEAD, its tracking branch, and GitHub `ls-remote` agree before merging.
+3. Merge JAI-014 into `develop`, normally push, then start JAI-015 from the latest synchronized `develop`.
+4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
 
 ## 6. Update template
 
