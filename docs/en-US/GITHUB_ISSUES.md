@@ -197,9 +197,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: parse text PDFs and identify files that cannot be parsed directly.
 - **Scope**: page text, metadata, encrypted/corrupt errors, text density; no V1 OCR.
 - **Acceptance**:
-  - [ ] Normal PDFs emit page text and page numbers.
-  - [ ] Scans become `ocr_required`.
-  - [ ] Encrypted/corrupt files return diagnostic errors.
+  - [x] Normal PDFs emit page text and page numbers.
+  - [x] Scans become `ocr_required`.
+  - [x] Encrypted/corrupt files return diagnostic errors.
 
 ### JAI-015 Implement Excel position-table parsing
 

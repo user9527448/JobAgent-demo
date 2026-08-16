@@ -32,6 +32,18 @@ Every output block carries an `EvidenceLocation` whose `source` equals the resul
 
 `TableBlock` rejects cells that reference another source. `ParseResult` applies the same invariant to every top-level block, so later extraction can always return to the persisted document or attachment without relying on parser-local state.
 
+## PDF text parser
+
+JAI-014 adds `PdfTextParser` and registers it explicitly through `build_parser_registry()` for `application/pdf`. It uses the existing PyMuPDF dependency and never performs network access or OCR.
+
+- Each non-empty page becomes one normalized `TextBlock` with a one-based `PageLocation`; page order and line breaks are preserved while repeated inline whitespace is collapsed.
+- Result metadata records page count, total and average non-whitespace character counts, page-level counts, and non-empty standard PDF metadata fields.
+- `PdfTextPolicy.min_average_characters_per_page` defaults to `40`. A document below this deterministic average returns `ocr_required`; any partial text blocks remain available for manual review, but no OCR engine is invoked.
+- Password-protected files return `failed` with `parser.encrypted_document`. Empty, invalid, damaged, or unreadable page trees return `failed` with `parser.corrupt_document`.
+- Direct calls with a non-PDF media type return `parser.invalid_input`; normal callers select the parser through the registry.
+
+The threshold is intentionally conservative and configurable for later fixture evaluation. JAI-016 will establish the broader golden-sample success metric; JAI-B01 remains the only planned OCR implementation.
+
 ## Status and error codes
 
 `ParseStatus` matches the existing attachment state vocabulary:

@@ -32,6 +32,18 @@ JAI-013 定义已存储来源内容与后续格式专用解析/抽取之间的�
 
 `TableBlock` 会拒绝引用其他来源的单元格；`ParseResult` 对每个顶层块应用相同约束。因此后续抽取始终可以回到已持久化的文档或附件，而不依赖解析器本地状态。
 
+## PDF 文本解析器
+
+JAI-014 新增 `PdfTextParser`，并通过 `build_parser_registry()` 为 `application/pdf` 显式注册。它复用现有 PyMuPDF 依赖，不访问网络，也不执行 OCR。
+
+- 每个非空页面生成一个规范化 `TextBlock`，携带从 1 开始的 `PageLocation`；保留页面顺序和换行，同时折叠行内重复空白。
+- 结果元数据记录页数、非空白字符总数与页均值、页级字符数，以及非空的标准 PDF 元数据字段。
+- `PdfTextPolicy.min_average_characters_per_page` 默认是 `40`。低于该确定性平均阈值的文档返回 `ocr_required`；已经提取的部分文本块保留供人工复核，但不会调用 OCR 引擎。
+- 密码保护文件返回 `failed` 和 `parser.encrypted_document`；空文件、无效/损坏文件或不可读页树返回 `failed` 和 `parser.corrupt_document`。
+- 直接使用非 PDF MIME 调用时返回 `parser.invalid_input`；正常调用方通过注册表选择解析器。
+
+该阈值有意保持保守并允许配置，以便后续固定样本评估。JAI-016 将建立更完整的黄金样本成功率指标；JAI-B01 仍是唯一规划中的 OCR 实现。
+
 ## 状态与错误码
 
 `ParseStatus` 与现有附件状态词汇一致：

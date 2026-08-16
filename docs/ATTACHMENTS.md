@@ -28,7 +28,7 @@ An extension alone is never enough to accept a file:
 | XLS | OLE compound-file signature | `application/vnd.ms-excel` or a generic binary type |
 | XLSX | ZIP containing `[Content_Types].xml` and `xl/workbook.xml` | XLSX MIME, `application/zip` or a generic binary type |
 
-HTML error pages, empty bodies, mismatched signatures and incompatible non-generic MIME types are rejected. Validation intentionally establishes file identity only; the common parser contract is documented in [`PARSING.md`](PARSING.md), while PDF text extraction, OCR and spreadsheet parsing belong to JAI-014 through JAI-016.
+HTML error pages, empty bodies, mismatched signatures and incompatible non-generic MIME types are rejected. Validation intentionally establishes file identity only; the common parser contract and JAI-014 PDF text parser are documented in [`PARSING.md`](PARSING.md), while OCR remains deferred and spreadsheet parsing belongs to JAI-015/JAI-016.
 
 ## Atomic content-addressed storage
 

@@ -20,9 +20,13 @@ from jobagent.parsers.contracts import (
     TextBlockKind,
     normalize_media_type,
 )
+from jobagent.parsers.pdf import PDF_MEDIA_TYPE, PDF_PARSER_NAME, PdfTextParser, PdfTextPolicy
 from jobagent.parsers.registry import ParserRegistry
+from jobagent.parsers.runtime import build_parser_registry
 
 __all__ = [
+    "PDF_MEDIA_TYPE",
+    "PDF_PARSER_NAME",
     "CellRangeLocation",
     "DocumentParser",
     "EvidenceLocation",
@@ -37,9 +41,12 @@ __all__ = [
     "ParseStatus",
     "ParsedBlock",
     "ParserRegistry",
+    "PdfTextParser",
+    "PdfTextPolicy",
     "TableBlock",
     "TableCell",
     "TextBlock",
     "TextBlockKind",
+    "build_parser_registry",
     "normalize_media_type",
 ]

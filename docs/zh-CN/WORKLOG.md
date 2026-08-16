@@ -8,7 +8,7 @@
 >
 > 最后更新：2026-08-16
 >
-> 当前分支：`feature/jai-013-parser-protocol-intermediate-format`
+> 当前分支：`feature/jai-014-pdf-text-scan-detection`
 
 ## 1. 当前状态
 
@@ -21,7 +21,8 @@
 | JAI-046 | 完成，已合并并推送到 `develop` | `develop` / `f07b6d5` | 独立双语文件规则和仓库级 Git 作者身份规则 |
 | JAI-047 | 完成，已合并并推送到 `develop` | `develop` / `87cd753` | 存量迁移基线、独立双语工作日志和 JAI-048 清单 |
 | JAI-012 | 已完成、合并并推送到 `develop` | `develop` / `70dd3b2` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
-| JAI-013 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-013-parser-protocol-intermediate-format` / `269648a` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
+| JAI-013 | 已完成、合并并推送到 `develop` | `develop` / `36d389f` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
+| JAI-014 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-014-pdf-text-scan-detection` / `8964272` | 页级文本、元数据、确定性扫描判断、加密/损坏诊断、测试和双语文档已验证 |
 
 ## 2. 当前决策
 
@@ -56,6 +57,14 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 ### D-022 每个中间块都必须携带证据坐标
 
 文本块和表格块保留持久化来源引用，以及从 1 开始的页码、包含端点的行范围或工作表/A1 单元格范围。表格单元格携带自身定位；表格/结果构造都会在下游抽取消费前拒绝混合来源输出。
+
+### D-023 PDF 扫描判断使用可配置的确定性文本阈值
+
+`PdfTextPolicy` 默认按整个文档计算每页平均 40 个非空白字符。低于阈值时返回 `ocr_required`，同时保留已经提取的部分页面块供人工复核。解析器不调用 OCR；更广泛的阈值评估属于 JAI-016，OCR 实现仍属于 JAI-B01。
+
+### D-024 PDF 失败返回安全状态对象，不暴露第三方异常
+
+密码保护 PDF 返回 `parser.encrypted_document`；空、无效、损坏或不可读 PDF 返回 `parser.corrupt_document`；错误 MIME 输入返回 `parser.invalid_input`。结果只包含安全固定消息，不包含文件正文、密码或原始 PyMuPDF 异常文本。
 
 ## 3. 当前工作记录
 
@@ -113,6 +122,20 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 最终启用 PostgreSQL 的 `scripts/check.py` 门禁通过：Ruff format 检查 108 个文件，Ruff lint 通过，68 个源文件的 Mypy 通过，136 项测试全部通过，覆盖率 88.85%。
 - 已普通推送 JAI-013，并核对本地 HEAD、`origin/feature/jai-013-parser-protocol-intermediate-format` 与 GitHub `ls-remote` 均为 `269648a384027de772b2fa2c4dd5661cb183594c`。
 
+### 2026-08-16 — JAI-014 PDF 文本解析与扫描件识别完成
+
+- 以非快进合并 `36d389f` 把 JAI-013 纳入 `develop` 并普通推送；本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 均为 `36d389fbe1edffe5131eba09ea16a21623d0f3d6`。
+- 从该已同步的 `develop` 创建 `feature/jai-014-pdf-text-scan-detection`；没有从 `main` 或未合并 feature 分支开始。
+- 范围仅限已注册 PDF 解析器、页级文本与元数据、确定性的扫描/低文本判断、加密/损坏诊断、测试和双语文档。OCR 实现、Excel 解析、解析 worker 持久化和字段抽取均不在范围内。
+- 新增 `PdfTextParser`、`PdfTextPolicy` 和显式生产注册表构造。正常 PDF 生成带从 1 开始证据页码的规范化页面块；结果元数据保留页数、字符统计和非空的标准 PDF 元数据。
+- 图像-only 和低文本 PDF 返回 `ocr_required`，但不执行 OCR。加密、损坏、空/不可读和错误 MIME 输入返回稳定安全 Issue，不泄露第三方异常。
+- 新增 11 项 PDF 测试，使用既有真实四页固定样本，以及运行时生成的图像-only、低文本、加密和损坏输入。全部 42 项解析器测试均离线通过，没有访问线上来源或提交运行文件。
+- 已同步中英文解析/附件文档、计划、Backlog 和活动日志。没有新增依赖、数据库迁移、worker、网络采集器、OCR 引擎或 Excel 行为。
+- 首轮定向静态检查只发现格式/导出顺序，以及窄 PyMuPDF 和 JSON 联合类型边界；通过显式类型收窄和 Spike 已确立的同类有限第三方 suppression 解决，行为测试始终通过。
+- Docker Desktop 和既有 Compose 数据库最初未运行；启动现有安装与 `db` 服务后恢复既有 `jobagent_test`，没有重建或删除数据。
+- 最终启用 PostgreSQL 的 `scripts/check.py` 门禁通过：Ruff format 检查 111 个文件，Ruff lint 通过，71 个源文件的 Mypy 通过，147 项测试全部通过，覆盖率 89.07%。
+- 已普通推送 JAI-014；推送时本地 HEAD、`origin/feature/jai-014-pdf-text-scan-detection` 与 GitHub `ls-remote` 均为 `8964272973ef581ec3cc2ff36425810b7998e22e`。后续合并前重试 `ls-remote` 时连接被重置，仓库状态未发生变化。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -125,9 +148,10 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 提交并普通推送本次 JAI-013 交接状态更新，再次核对本地、跟踪分支与 GitHub 分支哈希。
-2. 把 JAI-013 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-014。
-3. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
+1. 提交并普通推送本次 JAI-014 交接状态更新。
+2. 再次核对 GitHub 状态，把 JAI-014 合并到 `develop` 并普通推送合并提交。
+3. 从最新且已同步的 `develop` 开始 JAI-015，并把 Excel 解析严格限制在该 Issue 范围内。
+4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
 
 ## 6. 更新模板
 

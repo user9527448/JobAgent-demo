@@ -441,6 +441,6 @@ Before starting, an Issue must define goal, scope, acceptance criteria, dependen
 
 ## 13. Current next step
 
-JAI-011, JAI-037, JAI-046, JAI-047, and JAI-012 have been merged and normally pushed to `develop` in order. JAI-013 is complete on its own branch with an explicit MIME registry, traceable text/table intermediate Schemas, parser statuses and error codes, and the full quality gate passing.
+JAI-011, JAI-037, JAI-046, JAI-047, JAI-012, and JAI-013 have been merged and normally pushed to `develop` in order. JAI-014 is complete on its own branch with page-level PDF text, deterministic low-text/scan detection, metadata, encrypted/corrupt diagnostics, and the full quality gate passing.
 
-After JAI-013 merges, proceed to JAI-014 for page-level PDF text, scan detection, and encrypted/corrupt diagnostics without implementing OCR early in V1, then continue through JAI-021 to reach five stable MVP sources. Execute JAI-048 as a separate documentation Issue and never mix broad legacy-document migration into feature branches. Integrate remaining official and foreign-enterprise sources one by one under JAI-038–JAI-045 without bypassing login, CAPTCHA, anti-bot controls, or platform terms.
+After JAI-014 merges, proceed to JAI-015 for Excel position-table parsing with worksheet/cell evidence, then continue through JAI-021 to reach five stable MVP sources. OCR remains deferred to JAI-B01 and must not be added early. Execute JAI-048 as a separate documentation Issue and never mix broad legacy-document migration into feature branches. Integrate remaining official and foreign-enterprise sources one by one under JAI-038–JAI-045 without bypassing login, CAPTCHA, anti-bot controls, or platform terms.
