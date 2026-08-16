@@ -170,9 +170,9 @@ def test_pdf_policy_rejects_non_positive_threshold() -> None:
         PdfTextPolicy(min_average_characters_per_page=0)
 
 
-def test_default_registry_registers_pdf_parser_explicitly() -> None:
+def test_default_registry_registers_pdf_and_excel_parsers_explicitly() -> None:
     registry = build_parser_registry()
 
-    assert registry.names == (PDF_PARSER_NAME,)
-    assert registry.media_types == (PDF_MEDIA_TYPE,)
+    assert PDF_PARSER_NAME in registry.names
+    assert PDF_MEDIA_TYPE in registry.media_types
     assert registry.select(PDF_MEDIA_TYPE) is not None

@@ -40,6 +40,7 @@ class ParseErrorCode(StrEnum):
     CORRUPT_DOCUMENT = "parser.corrupt_document"
     ENCRYPTED_DOCUMENT = "parser.encrypted_document"
     OCR_REQUIRED = "parser.ocr_required"
+    HEADER_NOT_RECOGNIZED = "parser.header_not_recognized"
     PARSER_FAILED = "parser.failed"
 
 

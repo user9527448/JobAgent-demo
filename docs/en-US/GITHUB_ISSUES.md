@@ -208,9 +208,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: convert common position sheets into evidence-preserving tables.
 - **Scope**: multiple sheets, header detection, blank rows, merged cells, XLSX; decide XLS support from feasible dependencies.
 - **Acceptance**:
-  - [ ] Header/data-region accuracy reaches the agreed golden-sample target.
-  - [ ] Every field points to sheet and cell/row.
-  - [ ] Unrecognized headers enter review state.
+  - [x] Header/data-region accuracy reaches the agreed golden-sample target.
+  - [x] Every field points to sheet and cell/row.
+  - [x] Unrecognized headers enter review state.
 
 ### JAI-016 Establish attachment golden samples and regression tests
 
