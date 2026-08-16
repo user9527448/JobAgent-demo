@@ -23,7 +23,7 @@
 | JAI-012 | Complete, merged and pushed to `develop` | `develop` / `70dd3b2` | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
 | JAI-013 | Complete, merged and pushed to `develop` | `develop` / `36d389f` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
 | JAI-014 | Complete, merged and pushed to `develop` | `develop` / `8f21745` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
-| JAI-015 | Complete locally, pending commit/push | `feature/jai-015-excel-position-table-parsing` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
+| JAI-015 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-015-excel-position-table-parsing` / `7a5f3a3` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
 
 ## 2. Current decisions
 
@@ -151,6 +151,7 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 - Added eight XLSX tests covering Chinese/English and two-level merged headers, multiple worksheets, blank rows, vertical merged cells, cell/range evidence, review diagnostics, corrupt/wrong inputs, policy validation, and XLS registry behavior. The initial targeted pass found only export ordering, JSON-union narrowing, date normalization, and the existing PDF registry expectation; all were corrected and 50 parser tests passed.
 - Synchronized the English/Chinese parsing docs, plan, backlog acceptance, and active work logs. Final PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 113 files, Ruff lint passed, Mypy passed across 73 source files, all 155 tests passed, and coverage was 89.51%.
 - Final documentation verification found no broken relative links across 37 Markdown files; heading counts match across the four modified bilingual pairs, the two backlogs preserve the same 161 Issue-ID occurrences in order, and `git diff --check` passed.
+- Normally pushed JAI-015 and verified local HEAD, `origin/feature/jai-015-excel-position-table-parsing`, and GitHub `ls-remote` all match `7a5f3a3d29d7bb40459dbaa10fb30ce6c2835f5b`.
 
 ## 4. Verification and blockers
 
@@ -164,9 +165,9 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 
 ## 5. Next actions
 
-1. Complete final link/parity/diff checks, commit JAI-015, and normally push the feature branch.
-2. Verify local HEAD, its tracking branch, and GitHub `ls-remote` agree before merging.
-3. Merge JAI-015 into `develop`, normally push, then start JAI-016 from the latest synchronized `develop`.
+1. Commit and normally push this JAI-015 handoff-status update.
+2. Merge JAI-015 into `develop`, normally push, and verify local/tracking/GitHub refs agree.
+3. Start JAI-016 from the latest synchronized `develop` and keep golden-sample regression work scoped to that Issue.
 4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
 
 ## 6. Update template

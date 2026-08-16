@@ -23,7 +23,7 @@
 | JAI-012 | 已完成、合并并推送到 `develop` | `develop` / `70dd3b2` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
 | JAI-013 | 已完成、合并并推送到 `develop` | `develop` / `36d389f` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
 | JAI-014 | 已完成、合并并推送到 `develop` | `develop` / `8f21745` | 页级文本、元数据、确定性扫描判断、加密/损坏诊断、测试和双语文档已验证 |
-| JAI-015 | 本地完成，待提交/推送 | `feature/jai-015-excel-position-table-parsing` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
+| JAI-015 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-015-excel-position-table-parsing` / `7a5f3a3` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
 
 ## 2. 当前决策
 
@@ -151,6 +151,7 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 新增 8 项 XLSX 测试，覆盖中英文及两层合并表头、多工作表、空行、纵向合并单元格、单元格/范围证据、复核诊断、损坏/错误输入、策略校验和 XLS 注册行为。首轮定向检查只发现导出排序、JSON 联合类型收窄、日期规范化及既有 PDF 注册表预期，均已修正，50 项解析器测试通过。
 - 已同步中英文解析文档、计划、Backlog 验收和活动日志。最终启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 113 个文件，Ruff lint 通过，73 个源文件的 Mypy 通过，155 项测试全部通过，覆盖率 89.51%。
 - 最终文档检查确认 37 份 Markdown 无失效相对链接；4 组本次修改的双语文档标题数量一致，两份 Backlog 中 161 次 Issue 编号出现顺序一致，且 `git diff --check` 通过。
+- 已普通推送 JAI-015，并核对本地 HEAD、`origin/feature/jai-015-excel-position-table-parsing` 与 GitHub `ls-remote` 均为 `7a5f3a3d29d7bb40459dbaa10fb30ce6c2835f5b`。
 
 ## 4. 检查与阻塞
 
@@ -164,9 +165,9 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 完成最终链接/结构/差异检查，提交 JAI-015 并普通推送 feature 分支。
-2. 合并前核对本地 HEAD、跟踪分支与 GitHub `ls-remote` 一致。
-3. 把 JAI-015 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-016。
+1. 提交并普通推送本次 JAI-015 交接状态更新。
+2. 把 JAI-015 合并到 `develop` 并普通推送，再核对本地/跟踪/GitHub 引用一致。
+3. 从最新且已同步的 `develop` 开始 JAI-016，并把黄金样本回归工作严格限制在该 Issue 范围内。
 4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
 
 ## 6. 更新模板
