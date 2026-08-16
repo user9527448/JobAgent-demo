@@ -22,7 +22,7 @@
 | JAI-047 | Complete, merged and pushed to `develop` | `develop` / `87cd753` | Legacy-document migration baseline, separate bilingual work logs, and JAI-048 inventory |
 | JAI-012 | Complete, merged and pushed to `develop` | `develop` / `70dd3b2` | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
 | JAI-013 | Complete, merged and pushed to `develop` | `develop` / `36d389f` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
-| JAI-014 | Complete locally, pending commit/push | `feature/jai-014-pdf-text-scan-detection` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
+| JAI-014 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-014-pdf-text-scan-detection` / `8964272` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
 
 ## 2. Current decisions
 
@@ -134,6 +134,7 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 - The first targeted static pass found only formatting/export order plus narrow PyMuPDF and JSON-union typing boundaries; explicit type narrowing and the same limited third-party suppressions already established by the Spike resolved them. Behavior tests passed throughout.
 - Docker Desktop and the existing Compose database were initially stopped; starting the existing installation and `db` service restored the existing `jobagent_test` database without rebuilding or deleting data.
 - Final PostgreSQL-enabled `scripts/check.py` gate passed: Ruff format checked 111 files, Ruff lint passed, Mypy passed across 71 source files, all 147 tests passed, and coverage was 89.07%.
+- Normally pushed JAI-014 and verified local HEAD, `origin/feature/jai-014-pdf-text-scan-detection`, and GitHub `ls-remote` all matched `8964272973ef581ec3cc2ff36425810b7998e22e` at push time. A later pre-merge `ls-remote` retry was reset by the network; no repository state changed.
 
 ## 4. Verification and blockers
 
@@ -147,9 +148,9 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 
 ## 5. Next actions
 
-1. Complete final link/parity/diff checks, commit JAI-014, and normally push the feature branch.
-2. Verify local HEAD, its tracking branch, and GitHub `ls-remote` agree before merging.
-3. Merge JAI-014 into `develop`, normally push, then start JAI-015 from the latest synchronized `develop`.
+1. Commit and normally push this JAI-014 handoff-status update.
+2. Reconfirm GitHub state, merge JAI-014 into `develop`, and normally push the merge.
+3. Start JAI-015 from the latest synchronized `develop` and keep Excel parsing scoped to that Issue.
 4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
 
 ## 6. Update template

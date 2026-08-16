@@ -22,7 +22,7 @@
 | JAI-047 | 完成，已合并并推送到 `develop` | `develop` / `87cd753` | 存量迁移基线、独立双语工作日志和 JAI-048 清单 |
 | JAI-012 | 已完成、合并并推送到 `develop` | `develop` / `70dd3b2` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
 | JAI-013 | 已完成、合并并推送到 `develop` | `develop` / `36d389f` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
-| JAI-014 | 本地完成，待提交/推送 | `feature/jai-014-pdf-text-scan-detection` | 页级文本、元数据、确定性扫描判断、加密/损坏诊断、测试和双语文档已验证 |
+| JAI-014 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-014-pdf-text-scan-detection` / `8964272` | 页级文本、元数据、确定性扫描判断、加密/损坏诊断、测试和双语文档已验证 |
 
 ## 2. 当前决策
 
@@ -134,6 +134,7 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 首轮定向静态检查只发现格式/导出顺序，以及窄 PyMuPDF 和 JSON 联合类型边界；通过显式类型收窄和 Spike 已确立的同类有限第三方 suppression 解决，行为测试始终通过。
 - Docker Desktop 和既有 Compose 数据库最初未运行；启动现有安装与 `db` 服务后恢复既有 `jobagent_test`，没有重建或删除数据。
 - 最终启用 PostgreSQL 的 `scripts/check.py` 门禁通过：Ruff format 检查 111 个文件，Ruff lint 通过，71 个源文件的 Mypy 通过，147 项测试全部通过，覆盖率 89.07%。
+- 已普通推送 JAI-014；推送时本地 HEAD、`origin/feature/jai-014-pdf-text-scan-detection` 与 GitHub `ls-remote` 均为 `8964272973ef581ec3cc2ff36425810b7998e22e`。后续合并前重试 `ls-remote` 时连接被重置，仓库状态未发生变化。
 
 ## 4. 检查与阻塞
 
@@ -147,9 +148,9 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 完成最终链接/结构/差异检查，提交 JAI-014 并普通推送 feature 分支。
-2. 合并前核对本地 HEAD、跟踪分支与 GitHub `ls-remote` 一致。
-3. 把 JAI-014 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-015。
+1. 提交并普通推送本次 JAI-014 交接状态更新。
+2. 再次核对 GitHub 状态，把 JAI-014 合并到 `develop` 并普通推送合并提交。
+3. 从最新且已同步的 `develop` 开始 JAI-015，并把 Excel 解析严格限制在该 Issue 范围内。
 4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
 
 ## 6. 更新模板
