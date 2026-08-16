@@ -2,7 +2,7 @@
 
 > English: [Parser contracts and standard intermediate format](../PARSING.md)
 
-JAI-013 定义已存储来源内容与后续格式专用解析/抽取之间的公共边界。本 Issue 只增加契约和按 MIME 选择能力；PDF 提取、OCR 识别、Excel 启发式、持久化编排和字段抽取仍属于 JAI-014 及后续 Issue。
+JAI-013 定义已存储来源内容与后续格式专用解析/抽取之间的公共边界。JAI-014 和 JAI-015 在该边界上增加显式注册的 PDF 与 XLSX 实现。持久化编排和字段抽取仍属于后续 Issue；OCR 继续延期到 JAI-B01。
 
 ## 解析输入与选择
 
@@ -44,6 +44,19 @@ JAI-014 新增 `PdfTextParser`，并通过 `build_parser_registry()` 为 `applic
 
 该阈值有意保持保守并允许配置，以便后续固定样本评估。JAI-016 将建立更完整的黄金样本成功率指标；JAI-B01 仍是唯一规划中的 OCR 实现。
 
+## XLSX 岗位表解析器
+
+JAI-015 新增面向规范 XLSX MIME 类型的 `ExcelPositionTableParser`，并通过 `build_parser_registry()` 注册。它只在本地使用 `openpyxl`，不会执行工作簿宏、外部链接或网络请求。
+
+- 每个工作表最多扫描前 20 行。表头必须包含已识别的岗位名称标签和至少一个其他招聘标签；识别时合并表头的从属单元格继承锚点值，多个候选存在时确定性选择识别项最多且最靠前的一行。
+- 表头非空单元格的列范围定义表格列。全空数据行会跳过，但 `source_rows`、表头行、数据边界和跳过行数仍保存在块元数据中。
+- 每个输出单元格均携带工作表和 A1 格式的 `CellRangeLocation`。继承合并单元格值的位置指向完整原合并范围，不会把空白从属坐标伪造为证据来源。
+- 每个已识别且含数据的工作表生成一个 `TableBlock`；多个工作表按原顺序输出。无法识别的工作表生成 `parser.header_not_recognized` 和 `review_required=true`；若其他工作表成功，结果仍可为 `parsed` 并保留这些待复核警告。
+- 若没有任何工作表生成表格，结果为带复核诊断的 `failed`。这里刻意复用既有附件状态词汇，不提前新增计划外复核状态；后续复核流程属于 JAI-020。
+- 损坏、加密或无效 XLSX 字节返回 `parser.corrupt_document`；直接使用非 XLSX MIME 调用时返回 `parser.invalid_input`。
+
+旧版 XLS（`application/vnd.ms-excel`）有意不注册。既有环境没有可行的 XLS 读取器；在缺少代表性样本时新增 `xlrd` 或第二套 dataframe 依赖会无证据地扩大 Issue。注册表因此对 XLS 返回标准的显式 `unsupported` 结果；JAI-016 可用固定样本支撑后续依赖决策。
+
 ## 状态与错误码
 
 `ParseStatus` 与现有附件状态词汇一致：
@@ -64,6 +77,7 @@ JAI-014 新增 `PdfTextParser`，并通过 `build_parser_registry()` 为 `applic
 - `parser.corrupt_document`
 - `parser.encrypted_document`
 - `parser.ocr_required`
+- `parser.header_not_recognized`
 - `parser.failed`
 
 Issue 包含安全消息、是否可重试和可选的 JSON 兼容详情，不得包含文件正文、凭据或个人数据。

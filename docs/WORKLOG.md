@@ -8,7 +8,7 @@
 >
 > Last updated: 2026-08-16
 >
-> Active branch: `feature/jai-014-pdf-text-scan-detection`
+> Active branch: `feature/jai-015-excel-position-table-parsing`
 
 ## 1. Current status
 
@@ -22,7 +22,8 @@
 | JAI-047 | Complete, merged and pushed to `develop` | `develop` / `87cd753` | Legacy-document migration baseline, separate bilingual work logs, and JAI-048 inventory |
 | JAI-012 | Complete, merged and pushed to `develop` | `develop` / `70dd3b2` | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
 | JAI-013 | Complete, merged and pushed to `develop` | `develop` / `36d389f` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
-| JAI-014 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-014-pdf-text-scan-detection` / `8964272` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
+| JAI-014 | Complete, merged and pushed to `develop` | `develop` / `8f21745` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
+| JAI-015 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-015-excel-position-table-parsing` / `7a5f3a3` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
 
 ## 2. Current decisions
 
@@ -136,6 +137,22 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 - Final PostgreSQL-enabled `scripts/check.py` gate passed: Ruff format checked 111 files, Ruff lint passed, Mypy passed across 71 source files, all 147 tests passed, and coverage was 89.07%.
 - Normally pushed JAI-014 and verified local HEAD, `origin/feature/jai-014-pdf-text-scan-detection`, and GitHub `ls-remote` all matched `8964272973ef581ec3cc2ff36425810b7998e22e` at push time. A later pre-merge `ls-remote` retry was reset by the network; no repository state changed.
 
+### 2026-08-16 — JAI-015 Excel position-table parsing started
+
+- Pushed the JAI-014 handoff commit `028bbfb`, verified the local, tracking, and GitHub feature refs matched, then merged it into `develop` with non-fast-forward merge `8f21745` and normally pushed it. Local `develop`, `origin/develop`, and GitHub `ls-remote` all match `8f21745bf0d7f3b0ca6736c3bebe2db86e9fdf86`.
+- Created `feature/jai-015-excel-position-table-parsing` from that synchronized `develop`; no work started from `main` or an unmerged feature branch.
+- Scope is limited to XLSX worksheets, deterministic header/data-region recognition, blank rows, merged cells, traceable cell/row evidence, review diagnostics, tests, and synchronized documentation. Golden-fixture batch evaluation remains JAI-016; field extraction remains JAI-017.
+- The existing `.venv` contains no `openpyxl`, `xlrd`, or `pandas`. JAI-015 will use the minimum declared `openpyxl` dependency for XLSX; legacy XLS will remain explicitly unsupported rather than adding an unproven second parser dependency.
+- Added the declared `openpyxl>=3.1,<4` runtime dependency and installed version 3.1.5 into the existing `.venv`; no Python installation, `pandas`, or `xlrd` was downloaded.
+- Added `ExcelPositionTableParser`, bounded `ExcelTablePolicy`, XLSX production registration, and `parser.header_not_recognized`. A valid header requires a position label plus another known recruitment label; candidate choice is deterministic.
+- Each recognized worksheet emits a `TableBlock` whose cells preserve worksheet/A1 evidence. Blank data rows are skipped but recorded, and values inherited from merged cells point to the full original merged range. Multiple tables remain in workbook order.
+- Unrecognized or header-only worksheets carry `review_required=true`. If another worksheet parses, these remain issues on a `parsed` result; if no worksheet parses, the result is `failed`. This reuses the persisted status vocabulary until JAI-020 instead of adding an unplanned database state.
+- Legacy XLS is not registered because the environment has no existing XLS dependency and JAI-015 has no representative XLS fixture. Registry dispatch returns explicit `unsupported`; JAI-016 can supply evidence for a later dependency choice.
+- Added eight XLSX tests covering Chinese/English and two-level merged headers, multiple worksheets, blank rows, vertical merged cells, cell/range evidence, review diagnostics, corrupt/wrong inputs, policy validation, and XLS registry behavior. The initial targeted pass found only export ordering, JSON-union narrowing, date normalization, and the existing PDF registry expectation; all were corrected and 50 parser tests passed.
+- Synchronized the English/Chinese parsing docs, plan, backlog acceptance, and active work logs. Final PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 113 files, Ruff lint passed, Mypy passed across 73 source files, all 155 tests passed, and coverage was 89.51%.
+- Final documentation verification found no broken relative links across 37 Markdown files; heading counts match across the four modified bilingual pairs, the two backlogs preserve the same 161 Issue-ID occurrences in order, and `git diff --check` passed.
+- Normally pushed JAI-015 and verified local HEAD, `origin/feature/jai-015-excel-position-table-parsing`, and GitHub `ls-remote` all match `7a5f3a3d29d7bb40459dbaa10fb30ce6c2835f5b`.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -148,9 +165,9 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 
 ## 5. Next actions
 
-1. Commit and normally push this JAI-014 handoff-status update.
-2. Reconfirm GitHub state, merge JAI-014 into `develop`, and normally push the merge.
-3. Start JAI-015 from the latest synchronized `develop` and keep Excel parsing scoped to that Issue.
+1. Commit and normally push this JAI-015 handoff-status update.
+2. Merge JAI-015 into `develop`, normally push, and verify local/tracking/GitHub refs agree.
+3. Start JAI-016 from the latest synchronized `develop` and keep golden-sample regression work scoped to that Issue.
 4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
 
 ## 6. Update template

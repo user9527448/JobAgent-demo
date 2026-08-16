@@ -2,7 +2,7 @@
 
 > 简体中文：[解析器协议与标准中间格式](zh-CN/PARSING.md)
 
-JAI-013 defines the common boundary between stored source content and later format-specific parsing or extraction. It adds contracts and MIME-based selection only; PDF extraction, OCR detection, Excel heuristics, persistence orchestration, and field extraction remain JAI-014 and later Issues.
+JAI-013 defines the common boundary between stored source content and later format-specific parsing or extraction. JAI-014 and JAI-015 add the explicitly registered PDF and XLSX implementations on that boundary. Persistence orchestration and field extraction remain later Issues; OCR remains deferred to JAI-B01.
 
 ## Parser input and selection
 
@@ -44,6 +44,19 @@ JAI-014 adds `PdfTextParser` and registers it explicitly through `build_parser_r
 
 The threshold is intentionally conservative and configurable for later fixture evaluation. JAI-016 will establish the broader golden-sample success metric; JAI-B01 remains the only planned OCR implementation.
 
+## XLSX position-table parser
+
+JAI-015 adds `ExcelPositionTableParser` for the canonical XLSX MIME type and registers it through `build_parser_registry()`. It uses `openpyxl` locally and does not execute workbook macros, external links, or network requests.
+
+- Each worksheet scans at most the first 20 rows. A header must contain a recognized position-name label plus at least one other recognized recruitment label; merged-header subordinate cells inherit the anchor value during detection, and the strongest, earliest candidate wins deterministically.
+- The header's non-empty column span defines the table columns. Fully blank data rows are skipped, while `source_rows`, the header row, data bounds, and skipped-row count remain in block metadata.
+- Every emitted cell has a worksheet and A1 `CellRangeLocation`. Values inherited from a merged cell point to the complete original merged range, so evidence is not fabricated at empty subordinate coordinates.
+- A recognized worksheet with data produces one `TableBlock`. Multiple recognized worksheets produce ordered blocks. Unrecognized worksheets produce `parser.header_not_recognized` with `review_required=true`; parsed workbooks may retain these as review warnings for other sheets.
+- If no worksheet yields a table, the result is `failed` with review diagnostics. This deliberately reuses the persisted attachment status vocabulary instead of adding an unplanned review status; later review workflow is JAI-020.
+- Corrupt, encrypted, or invalid XLSX bytes return `parser.corrupt_document`. Direct non-XLSX calls return `parser.invalid_input`.
+
+Legacy XLS (`application/vnd.ms-excel`) is intentionally not registered. The existing environment had no feasible XLS reader, and adding `xlrd` or a second dataframe stack before representative fixtures would expand the Issue without evidence. The registry therefore returns the normal explicit `unsupported` result for XLS. JAI-016 can provide fixtures for a later dependency decision.
+
 ## Status and error codes
 
 `ParseStatus` matches the existing attachment state vocabulary:
@@ -64,6 +77,7 @@ Non-`parsed` results require at least one `ParseIssue`. Stable `ParseErrorCode` 
 - `parser.corrupt_document`
 - `parser.encrypted_document`
 - `parser.ocr_required`
+- `parser.header_not_recognized`
 - `parser.failed`
 
 An issue contains a safe message, retryability, and optional JSON-compatible details. It must not contain file contents, credentials, or personal data.
