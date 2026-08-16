@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-15
+> Last updated: 2026-08-16
 >
 > Active branch: `feature/jai-013-parser-protocol-intermediate-format`
 
@@ -21,7 +21,7 @@
 | JAI-046 | Complete, merged and pushed to `develop` | `develop` / `f07b6d5` | Separate bilingual-file rules and repository-local Git authorship policy |
 | JAI-047 | Complete, merged and pushed to `develop` | `develop` / `87cd753` | Legacy-document migration baseline, separate bilingual work logs, and JAI-048 inventory |
 | JAI-012 | Complete, merged and pushed to `develop` | `develop` / `70dd3b2` | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
-| JAI-013 | Complete locally, pending commit/push | `feature/jai-013-parser-protocol-intermediate-format` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
+| JAI-013 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-013-parser-protocol-intermediate-format` / `269648a` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
 
 ## 2. Current decisions
 
@@ -111,6 +111,7 @@ Text and table blocks retain a persisted source reference and a one-based page, 
 - Added paired English/Chinese parser documentation and index entries, and synchronized the attachment guide, development plan, backlog, and active logs.
 - The first unified gate exposed duplicate `test_contracts` module names; making `tests/parsers` a package resolved it. The second gate exposed narrow regex-group typing in the new A1 validator; passing explicit capture groups resolved it without suppression.
 - Final PostgreSQL-enabled `scripts/check.py` gate passed: Ruff format checked 108 files, Ruff lint passed, Mypy passed across 68 source files, all 136 tests passed, and coverage was 88.85%.
+- Normally pushed JAI-013 and verified local HEAD, `origin/feature/jai-013-parser-protocol-intermediate-format`, and GitHub `ls-remote` all match `269648a384027de772b2fa2c4dd5661cb183594c`.
 
 ## 4. Verification and blockers
 
@@ -124,10 +125,9 @@ Text and table blocks retain a persisted source reference and a one-based page, 
 
 ## 5. Next actions
 
-1. Complete final link/parity/diff checks, commit JAI-013, and normally push the feature branch.
-2. Verify local HEAD, its tracking branch, and GitHub `ls-remote` agree before merging.
-3. Merge JAI-013 into `develop`, normally push, then start JAI-014 from the latest synchronized `develop`.
-4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
+1. Commit and normally push this JAI-013 handoff-status update, then re-verify local, tracking, and GitHub branch hashes.
+2. Merge JAI-013 into `develop`, normally push, then start JAI-014 from the latest synchronized `develop`.
+3. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
 
 ## 6. Update template
 

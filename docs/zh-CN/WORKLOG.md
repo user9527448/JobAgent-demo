@@ -6,7 +6,7 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-15
+> 最后更新：2026-08-16
 >
 > 当前分支：`feature/jai-013-parser-protocol-intermediate-format`
 
@@ -21,7 +21,7 @@
 | JAI-046 | 完成，已合并并推送到 `develop` | `develop` / `f07b6d5` | 独立双语文件规则和仓库级 Git 作者身份规则 |
 | JAI-047 | 完成，已合并并推送到 `develop` | `develop` / `87cd753` | 存量迁移基线、独立双语工作日志和 JAI-048 清单 |
 | JAI-012 | 已完成、合并并推送到 `develop` | `develop` / `70dd3b2` | 手动运行、持久化计数、运行摘要和只重跑失败 URL 的幂等验收已通过 |
-| JAI-013 | 本地完成，待提交/推送 | `feature/jai-013-parser-protocol-intermediate-format` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
+| JAI-013 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-013-parser-protocol-intermediate-format` / `269648a` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
 
 ## 2. 当前决策
 
@@ -111,6 +111,7 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 新增配对的中英文解析文档和索引条目，并同步附件指南、开发计划、Backlog 和活动日志。
 - 第一轮统一门禁发现 `test_contracts` 测试模块重名；把 `tests/parsers` 设为包后解决。第二轮发现新 A1 校验器中的正则分组类型过宽；显式传递捕获组后解决，未使用 suppression。
 - 最终启用 PostgreSQL 的 `scripts/check.py` 门禁通过：Ruff format 检查 108 个文件，Ruff lint 通过，68 个源文件的 Mypy 通过，136 项测试全部通过，覆盖率 88.85%。
+- 已普通推送 JAI-013，并核对本地 HEAD、`origin/feature/jai-013-parser-protocol-intermediate-format` 与 GitHub `ls-remote` 均为 `269648a384027de772b2fa2c4dd5661cb183594c`。
 
 ## 4. 检查与阻塞
 
@@ -124,10 +125,9 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 完成最终链接/结构/差异检查，提交 JAI-013 并普通推送 feature 分支。
-2. 合并前核对本地 HEAD、跟踪分支与 GitHub `ls-remote` 一致。
-3. 把 JAI-013 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-014。
-4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
+1. 提交并普通推送本次 JAI-013 交接状态更新，再次核对本地、跟踪分支与 GitHub 分支哈希。
+2. 把 JAI-013 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-014。
+3. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
 
 ## 6. 更新模板
 
