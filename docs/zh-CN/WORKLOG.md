@@ -24,7 +24,7 @@
 | JAI-013 | 已完成、合并并推送到 `develop` | `develop` / `36d389f` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
 | JAI-014 | 已完成、合并并推送到 `develop` | `develop` / `8f21745` | 页级文本、元数据、确定性扫描判断、加密/损坏诊断、测试和双语文档已验证 |
 | JAI-015 | 已完成、合并并推送到 `develop` | `develop` / `fca197d` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
-| JAI-016 | 本地完成，待提交/推送 | `feature/jai-016-attachment-golden-samples-regression` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
+| JAI-016 | 已完成并推送 feature 分支，待合并到 `develop` | `feature/jai-016-attachment-golden-samples-regression` / `819c63f` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
 
 ## 2. 当前决策
 
@@ -166,6 +166,7 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 新增独立中英文固定样本说明，并同步两份文档索引、解析文档、计划、Backlog 验收和活动日志。
 - 最终离线评估为 10/10、成功率 100%、无差异。启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 119 个文件，Ruff lint 通过，77 个源文件的 Mypy 通过，157 项测试全部通过，覆盖率 89.30%。
 - 最终文档检查确认 39 份 Markdown 无失效相对链接；6 组本次修改的双语文档标题数量一致，两份 Backlog 中 161 次 Issue 编号出现顺序一致，且 `git diff --check` 通过。
+- 已普通推送 JAI-016；推送时本地 HEAD、`origin/feature/jai-016-attachment-golden-samples-regression` 与 GitHub `ls-remote` 均为 `819c63fa00d31225ad65723605e91c0b8366bc2d`。后续合并前重试 `ls-remote` 时 GitHub 443 超时，仓库状态未发生变化。
 
 ## 4. 检查与阻塞
 
@@ -179,9 +180,9 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 完成最终链接/结构/差异检查，提交 JAI-016 并普通推送 feature 分支。
-2. 合并前核对本地 HEAD、跟踪分支与 GitHub `ls-remote` 一致。
-3. 把 JAI-016 合并到 `develop` 并普通推送，再从最新且已同步的 `develop` 开始 JAI-017。
+1. 提交并普通推送本次 JAI-016 交接状态更新。
+2. 再次核对 GitHub 状态，把 JAI-016 合并到 `develop` 并普通推送合并提交。
+3. 从最新且已同步的 `develop` 开始 JAI-017，并把确定性字段抽取严格限制在该 Issue 范围内。
 4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
 
 ## 6. 更新模板
