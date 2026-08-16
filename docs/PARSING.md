@@ -57,6 +57,12 @@ JAI-015 adds `ExcelPositionTableParser` for the canonical XLSX MIME type and reg
 
 Legacy XLS (`application/vnd.ms-excel`) is intentionally not registered. The existing environment had no feasible XLS reader, and adding `xlrd` or a second dataframe stack before representative fixtures would expand the Issue without evidence. The registry therefore returns the normal explicit `unsupported` result for XLS. JAI-016 can provide fixtures for a later dependency decision.
 
+## Offline golden-fixture regression
+
+JAI-016 commits ten synthetic, sanitized PDF/XLSX fixtures and a reviewed `manifest.json`. `serialize_parse_result()` normalizes status, parser name, stable issue codes, complete intermediate blocks, and page/cell locations while excluding unstable source IDs and library metadata.
+
+`evaluate_golden_fixtures()` parses every local case through the production registry and returns total, matched, success rate, and full case-level expected/actual differences. `scripts/evaluate_attachment_fixtures.py` prints that report as stable JSON and exits non-zero on any difference. It performs no network access. Fixture regeneration is an explicit review action, not part of normal tests.
+
 ## Status and error codes
 
 `ParseStatus` matches the existing attachment state vocabulary:

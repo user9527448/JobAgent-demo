@@ -219,9 +219,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: prevent parser changes from breaking known formats.
 - **Scope**: at least ten sanitized PDF/Excel samples, expected intermediate output, batch evaluator.
 - **Acceptance**:
-  - [ ] Samples cover multiple pages, merged cells, blank rows, and date formats.
-  - [ ] CI runs the full regression offline.
-  - [ ] Report parsing success and differences.
+  - [x] Samples cover multiple pages, merged cells, blank rows, and date formats.
+  - [x] CI runs the full regression offline.
+  - [x] Report parsing success and differences.
 
 ### JAI-017 Implement deterministic field extraction and normalization
 

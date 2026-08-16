@@ -57,6 +57,12 @@ JAI-015 新增面向规范 XLSX MIME 类型的 `ExcelPositionTableParser`，并�
 
 旧版 XLS（`application/vnd.ms-excel`）有意不注册。既有环境没有可行的 XLS 读取器；在缺少代表性样本时新增 `xlrd` 或第二套 dataframe 依赖会无证据地扩大 Issue。注册表因此对 XLS 返回标准的显式 `unsupported` 结果；JAI-016 可用固定样本支撑后续依赖决策。
 
+## 离线黄金样本回归
+
+JAI-016 提交 10 份纯合成脱敏 PDF/XLSX 样本和已审查的 `manifest.json`。`serialize_parse_result()` 规范化状态、解析器名称、稳定错误码、完整中间块及页码/单元格位置，同时排除不稳定的来源 ID 和第三方库元数据。
+
+`evaluate_golden_fixtures()` 通过生产注册表解析全部本地样本，返回总数、匹配数、成功率和完整逐样本 expected/actual 差异。`scripts/evaluate_attachment_fixtures.py` 以稳定 JSON 输出报告，任何差异都会返回非零退出码；整个过程不访问网络。重新生成样本属于显式审查操作，不是常规测试步骤。
+
 ## 状态与错误码
 
 `ParseStatus` 与现有附件状态词汇一致：

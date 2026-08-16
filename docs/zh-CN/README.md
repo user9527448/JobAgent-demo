@@ -21,6 +21,7 @@
 | JAI-005 济宁来源技术验证 | [中文](spikes/JAI-005-JINING-SOURCE.md) | [English](../spikes/JAI-005-JINING-SOURCE.md) |
 | 数据库迁移说明 | [中文](MIGRATIONS.md) | [English](../../migrations/README.md) |
 | JAI-005 固定样本说明 | [中文](fixtures/JINING.md) | [English](../../tests/fixtures/jining/README.md) |
+| JAI-016 附件黄金样本 | [中文](fixtures/ATTACHMENTS.md) | [English](../../tests/fixtures/attachments/README.md) |
 
 ## 历史归档
 

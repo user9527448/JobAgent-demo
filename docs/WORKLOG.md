@@ -8,7 +8,7 @@
 >
 > Last updated: 2026-08-16
 >
-> Active branch: `feature/jai-015-excel-position-table-parsing`
+> Active branch: `feature/jai-016-attachment-golden-samples-regression`
 
 ## 1. Current status
 
@@ -23,7 +23,8 @@
 | JAI-012 | Complete, merged and pushed to `develop` | `develop` / `70dd3b2` | Manual source runs, persistence counters, run summaries, and failed-URL-only idempotent retries verified |
 | JAI-013 | Complete, merged and pushed to `develop` | `develop` / `36d389f` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
 | JAI-014 | Complete, merged and pushed to `develop` | `develop` / `8f21745` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
-| JAI-015 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-015-excel-position-table-parsing` / `7a5f3a3` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
+| JAI-015 | Complete, merged and pushed to `develop` | `develop` / `fca197d` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
+| JAI-016 | Complete locally, pending commit/push | `feature/jai-016-attachment-golden-samples-regression` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
 
 ## 2. Current decisions
 
@@ -153,6 +154,19 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 - Final documentation verification found no broken relative links across 37 Markdown files; heading counts match across the four modified bilingual pairs, the two backlogs preserve the same 161 Issue-ID occurrences in order, and `git diff --check` passed.
 - Normally pushed JAI-015 and verified local HEAD, `origin/feature/jai-015-excel-position-table-parsing`, and GitHub `ls-remote` all match `7a5f3a3d29d7bb40459dbaa10fb30ce6c2835f5b`.
 
+### 2026-08-16 — JAI-016 attachment golden samples and regression started
+
+- Pushed the JAI-015 handoff commit `633ebc1`, verified the local, tracking, and GitHub feature refs matched, then merged it into `develop` with non-fast-forward merge `fca197d` and normally pushed it. Local `develop`, `origin/develop`, and GitHub `ls-remote` all match `fca197de89634517a0aac6fbd84f1e63cc5573f0`.
+- Created `feature/jai-016-attachment-golden-samples-regression` from that synchronized `develop`; no work started from `main` or an unmerged feature branch.
+- Scope is limited to at least ten sanitized PDF/XLSX fixtures, committed expected intermediate output, an offline batch evaluator, regression tests, and synchronized documentation. Parser feature expansion and field extraction remain out of scope.
+- Added five synthetic PDF and five synthetic XLSX fixtures covering multiple pages, sparse/blank text, Chinese/English headers, multiple worksheets, merged cells, blank rows, three date representations, and unrecognized-header review. They contain no downloaded source material or real personal data.
+- Added a reviewed `manifest.json` with complete normalized text/table blocks and page/A1 evidence. `serialize_parse_result()` excludes unstable source IDs and library metadata while retaining behaviorally relevant parser output.
+- Added `evaluate_golden_fixtures()`, a stable aggregate/difference report, and `scripts/evaluate_attachment_fixtures.py`. The evaluator uses the production registry, performs no network access, reports total/matched/success rate plus full per-case expected/actual differences, and exits non-zero on regression.
+- Kept a separate explicit generator so synthetic binary provenance is reviewable; normal regression tests never regenerate or silently approve snapshots. Added tests proving all ten committed fixtures match and a tampered expectation produces one detailed difference and a 90% success rate.
+- Added separate English/Chinese fixture guides and updated both documentation indexes, parsing docs, plan, backlog acceptance, and active logs.
+- Final offline evaluator result was 10/10 with 100% success and no differences. PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 119 files, Ruff lint passed, Mypy passed across 77 source files, all 157 tests passed, and coverage was 89.30%.
+- Final documentation verification found no broken relative links across 39 Markdown files; heading counts match across all six modified bilingual pairs, both backlogs preserve the same 161 Issue-ID occurrences in order, and `git diff --check` passed.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -165,9 +179,9 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 
 ## 5. Next actions
 
-1. Commit and normally push this JAI-015 handoff-status update.
-2. Merge JAI-015 into `develop`, normally push, and verify local/tracking/GitHub refs agree.
-3. Start JAI-016 from the latest synchronized `develop` and keep golden-sample regression work scoped to that Issue.
+1. Complete final link/parity/diff checks, commit JAI-016, and normally push the feature branch.
+2. Verify local HEAD, its tracking branch, and GitHub `ls-remote` agree before merging.
+3. Merge JAI-016 into `develop`, normally push, then start JAI-017 from the latest synchronized `develop`.
 4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
 
 ## 6. Update template

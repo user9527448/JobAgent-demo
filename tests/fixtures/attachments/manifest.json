@@ -1,0 +1,595 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "location": {
+              "page_number": 1,
+              "type": "page"
+            },
+            "text": "Public recruitment notice. Public recruitment notice. Public recruitment notice. Public\nrecruitment notice. Public recruitment notice. Public recruitment notice. Public recruitment\nnotice. Public recruitment notice.",
+            "type": "text"
+          }
+        ],
+        "issues": [],
+        "parser_name": "pdf_text",
+        "status": "parsed"
+      },
+      "file": "pdf-basic.pdf",
+      "id": "pdf-basic",
+      "media_type": "application/pdf"
+    },
+    {
+      "expected": {
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "location": {
+              "page_number": 1,
+              "type": "page"
+            },
+            "text": "First page position details. First page position details. First page position details. First page\nposition details. First page position details. First page position details.",
+            "type": "text"
+          },
+          {
+            "kind": "paragraph",
+            "location": {
+              "page_number": 2,
+              "type": "page"
+            },
+            "text": "Second page requirements. Second page requirements. Second page requirements.\nSecond page requirements. Second page requirements. Second page requirements.",
+            "type": "text"
+          }
+        ],
+        "issues": [],
+        "parser_name": "pdf_text",
+        "status": "parsed"
+      },
+      "file": "pdf-multipage.pdf",
+      "id": "pdf-multipage",
+      "media_type": "application/pdf"
+    },
+    {
+      "expected": {
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "location": {
+              "page_number": 1,
+              "type": "page"
+            },
+            "text": "Position A Shanghai\nRequirements public sample Position A Shanghai\nRequirements public sample Position A Shanghai\nRequirements public sample Position A Shanghai\nRequirements public sample Position A Shanghai\nRequirements public sample",
+            "type": "text"
+          }
+        ],
+        "issues": [],
+        "parser_name": "pdf_text",
+        "status": "parsed"
+      },
+      "file": "pdf-line-normalization.pdf",
+      "id": "pdf-line-normalization",
+      "media_type": "application/pdf"
+    },
+    {
+      "expected": {
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "location": {
+              "page_number": 1,
+              "type": "page"
+            },
+            "text": "Role",
+            "type": "text"
+          }
+        ],
+        "issues": [
+          "parser.ocr_required"
+        ],
+        "parser_name": "pdf_text",
+        "status": "ocr_required"
+      },
+      "file": "pdf-sparse.pdf",
+      "id": "pdf-sparse",
+      "media_type": "application/pdf"
+    },
+    {
+      "expected": {
+        "blocks": [],
+        "issues": [
+          "parser.ocr_required"
+        ],
+        "parser_name": "pdf_text",
+        "status": "ocr_required"
+      },
+      "file": "pdf-blank.pdf",
+      "id": "pdf-blank",
+      "media_type": "application/pdf"
+    },
+    {
+      "expected": {
+        "blocks": [
+          {
+            "location": {
+              "end_cell": "D2",
+              "sheet_name": "岗位表",
+              "start_cell": "A1",
+              "type": "cells"
+            },
+            "rows": [
+              [
+                {
+                  "location": {
+                    "end_cell": "A1",
+                    "sheet_name": "岗位表",
+                    "start_cell": "A1",
+                    "type": "cells"
+                  },
+                  "value": "岗位名称"
+                },
+                {
+                  "location": {
+                    "end_cell": "B1",
+                    "sheet_name": "岗位表",
+                    "start_cell": "B1",
+                    "type": "cells"
+                  },
+                  "value": "招聘人数"
+                },
+                {
+                  "location": {
+                    "end_cell": "C1",
+                    "sheet_name": "岗位表",
+                    "start_cell": "C1",
+                    "type": "cells"
+                  },
+                  "value": "工作地点"
+                },
+                {
+                  "location": {
+                    "end_cell": "D1",
+                    "sheet_name": "岗位表",
+                    "start_cell": "D1",
+                    "type": "cells"
+                  },
+                  "value": "截止日期"
+                }
+              ],
+              [
+                {
+                  "location": {
+                    "end_cell": "A2",
+                    "sheet_name": "岗位表",
+                    "start_cell": "A2",
+                    "type": "cells"
+                  },
+                  "value": "软件工程师"
+                },
+                {
+                  "location": {
+                    "end_cell": "B2",
+                    "sheet_name": "岗位表",
+                    "start_cell": "B2",
+                    "type": "cells"
+                  },
+                  "value": "2"
+                },
+                {
+                  "location": {
+                    "end_cell": "C2",
+                    "sheet_name": "岗位表",
+                    "start_cell": "C2",
+                    "type": "cells"
+                  },
+                  "value": "上海"
+                },
+                {
+                  "location": {
+                    "end_cell": "D2",
+                    "sheet_name": "岗位表",
+                    "start_cell": "D2",
+                    "type": "cells"
+                  },
+                  "value": "2026-09-01"
+                }
+              ]
+            ],
+            "type": "table"
+          }
+        ],
+        "issues": [],
+        "parser_name": "xlsx_position_table",
+        "status": "parsed"
+      },
+      "file": "xlsx-basic-cn.xlsx",
+      "id": "xlsx-basic-cn",
+      "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "expected": {
+        "blocks": [
+          {
+            "location": {
+              "end_cell": "D2",
+              "sheet_name": "Roles",
+              "start_cell": "A1",
+              "type": "cells"
+            },
+            "rows": [
+              [
+                {
+                  "location": {
+                    "end_cell": "A1",
+                    "sheet_name": "Roles",
+                    "start_cell": "A1",
+                    "type": "cells"
+                  },
+                  "value": "Position"
+                },
+                {
+                  "location": {
+                    "end_cell": "B1",
+                    "sheet_name": "Roles",
+                    "start_cell": "B1",
+                    "type": "cells"
+                  },
+                  "value": "Department"
+                },
+                {
+                  "location": {
+                    "end_cell": "C1",
+                    "sheet_name": "Roles",
+                    "start_cell": "C1",
+                    "type": "cells"
+                  },
+                  "value": "Location"
+                },
+                {
+                  "location": {
+                    "end_cell": "D1",
+                    "sheet_name": "Roles",
+                    "start_cell": "D1",
+                    "type": "cells"
+                  },
+                  "value": "Application Date"
+                }
+              ],
+              [
+                {
+                  "location": {
+                    "end_cell": "A2",
+                    "sheet_name": "Roles",
+                    "start_cell": "A2",
+                    "type": "cells"
+                  },
+                  "value": "Analyst"
+                },
+                {
+                  "location": {
+                    "end_cell": "B2",
+                    "sheet_name": "Roles",
+                    "start_cell": "B2",
+                    "type": "cells"
+                  },
+                  "value": "Data"
+                },
+                {
+                  "location": {
+                    "end_cell": "C2",
+                    "sheet_name": "Roles",
+                    "start_cell": "C2",
+                    "type": "cells"
+                  },
+                  "value": "Beijing"
+                },
+                {
+                  "location": {
+                    "end_cell": "D2",
+                    "sheet_name": "Roles",
+                    "start_cell": "D2",
+                    "type": "cells"
+                  },
+                  "value": "2026/09/08"
+                }
+              ]
+            ],
+            "type": "table"
+          }
+        ],
+        "issues": [],
+        "parser_name": "xlsx_position_table",
+        "status": "parsed"
+      },
+      "file": "xlsx-english.xlsx",
+      "id": "xlsx-english",
+      "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "expected": {
+        "blocks": [
+          {
+            "location": {
+              "end_cell": "C2",
+              "sheet_name": "技术",
+              "start_cell": "A1",
+              "type": "cells"
+            },
+            "rows": [
+              [
+                {
+                  "location": {
+                    "end_cell": "A1",
+                    "sheet_name": "技术",
+                    "start_cell": "A1",
+                    "type": "cells"
+                  },
+                  "value": "岗位"
+                },
+                {
+                  "location": {
+                    "end_cell": "B1",
+                    "sheet_name": "技术",
+                    "start_cell": "B1",
+                    "type": "cells"
+                  },
+                  "value": "部门"
+                },
+                {
+                  "location": {
+                    "end_cell": "C1",
+                    "sheet_name": "技术",
+                    "start_cell": "C1",
+                    "type": "cells"
+                  },
+                  "value": "截止日期"
+                }
+              ],
+              [
+                {
+                  "location": {
+                    "end_cell": "A2",
+                    "sheet_name": "技术",
+                    "start_cell": "A2",
+                    "type": "cells"
+                  },
+                  "value": "开发"
+                },
+                {
+                  "location": {
+                    "end_cell": "B2",
+                    "sheet_name": "技术",
+                    "start_cell": "B2",
+                    "type": "cells"
+                  },
+                  "value": "研发"
+                },
+                {
+                  "location": {
+                    "end_cell": "C2",
+                    "sheet_name": "技术",
+                    "start_cell": "C2",
+                    "type": "cells"
+                  },
+                  "value": "2026年9月15日"
+                }
+              ]
+            ],
+            "type": "table"
+          },
+          {
+            "location": {
+              "end_cell": "B2",
+              "sheet_name": "运营",
+              "start_cell": "A1",
+              "type": "cells"
+            },
+            "rows": [
+              [
+                {
+                  "location": {
+                    "end_cell": "A1",
+                    "sheet_name": "运营",
+                    "start_cell": "A1",
+                    "type": "cells"
+                  },
+                  "value": "职位名称"
+                },
+                {
+                  "location": {
+                    "end_cell": "B1",
+                    "sheet_name": "运营",
+                    "start_cell": "B1",
+                    "type": "cells"
+                  },
+                  "value": "人数"
+                }
+              ],
+              [
+                {
+                  "location": {
+                    "end_cell": "A2",
+                    "sheet_name": "运营",
+                    "start_cell": "A2",
+                    "type": "cells"
+                  },
+                  "value": "运营专员"
+                },
+                {
+                  "location": {
+                    "end_cell": "B2",
+                    "sheet_name": "运营",
+                    "start_cell": "B2",
+                    "type": "cells"
+                  },
+                  "value": "1"
+                }
+              ]
+            ],
+            "type": "table"
+          }
+        ],
+        "issues": [],
+        "parser_name": "xlsx_position_table",
+        "status": "parsed"
+      },
+      "file": "xlsx-multiple-sheets.xlsx",
+      "id": "xlsx-multiple-sheets",
+      "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "expected": {
+        "blocks": [
+          {
+            "location": {
+              "end_cell": "C5",
+              "sheet_name": "计划",
+              "start_cell": "A1",
+              "type": "cells"
+            },
+            "rows": [
+              [
+                {
+                  "location": {
+                    "end_cell": "A1",
+                    "sheet_name": "计划",
+                    "start_cell": "A1",
+                    "type": "cells"
+                  },
+                  "value": "岗位名称"
+                },
+                {
+                  "location": {
+                    "end_cell": "B1",
+                    "sheet_name": "计划",
+                    "start_cell": "B1",
+                    "type": "cells"
+                  },
+                  "value": "部门"
+                },
+                {
+                  "location": {
+                    "end_cell": "C1",
+                    "sheet_name": "计划",
+                    "start_cell": "C1",
+                    "type": "cells"
+                  },
+                  "value": "招聘人数"
+                }
+              ],
+              [
+                {
+                  "location": {
+                    "end_cell": "A3",
+                    "sheet_name": "计划",
+                    "start_cell": "A2",
+                    "type": "cells"
+                  },
+                  "value": "工程师"
+                },
+                {
+                  "location": {
+                    "end_cell": "B2",
+                    "sheet_name": "计划",
+                    "start_cell": "B2",
+                    "type": "cells"
+                  },
+                  "value": "平台"
+                },
+                {
+                  "location": {
+                    "end_cell": "C2",
+                    "sheet_name": "计划",
+                    "start_cell": "C2",
+                    "type": "cells"
+                  },
+                  "value": "1"
+                }
+              ],
+              [
+                {
+                  "location": {
+                    "end_cell": "A3",
+                    "sheet_name": "计划",
+                    "start_cell": "A2",
+                    "type": "cells"
+                  },
+                  "value": "工程师"
+                },
+                {
+                  "location": {
+                    "end_cell": "B3",
+                    "sheet_name": "计划",
+                    "start_cell": "B3",
+                    "type": "cells"
+                  },
+                  "value": "数据"
+                },
+                {
+                  "location": {
+                    "end_cell": "C3",
+                    "sheet_name": "计划",
+                    "start_cell": "C3",
+                    "type": "cells"
+                  },
+                  "value": "2"
+                }
+              ],
+              [
+                {
+                  "location": {
+                    "end_cell": "A5",
+                    "sheet_name": "计划",
+                    "start_cell": "A5",
+                    "type": "cells"
+                  },
+                  "value": "设计师"
+                },
+                {
+                  "location": {
+                    "end_cell": "B5",
+                    "sheet_name": "计划",
+                    "start_cell": "B5",
+                    "type": "cells"
+                  },
+                  "value": "产品"
+                },
+                {
+                  "location": {
+                    "end_cell": "C5",
+                    "sheet_name": "计划",
+                    "start_cell": "C5",
+                    "type": "cells"
+                  },
+                  "value": "1"
+                }
+              ]
+            ],
+            "type": "table"
+          }
+        ],
+        "issues": [],
+        "parser_name": "xlsx_position_table",
+        "status": "parsed"
+      },
+      "file": "xlsx-merged-blank.xlsx",
+      "id": "xlsx-merged-blank",
+      "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "expected": {
+        "blocks": [],
+        "issues": [
+          "parser.header_not_recognized"
+        ],
+        "parser_name": "xlsx_position_table",
+        "status": "failed"
+      },
+      "file": "xlsx-review.xlsx",
+      "id": "xlsx-review",
+      "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    }
+  ],
+  "schema_version": 1
+}
