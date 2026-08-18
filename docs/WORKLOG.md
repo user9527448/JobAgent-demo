@@ -24,7 +24,7 @@
 | JAI-013 | Complete, merged and pushed to `develop` | `develop` / `36d389f` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
 | JAI-014 | Complete, merged and pushed to `develop` | `develop` / `8f21745` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
 | JAI-015 | Complete, merged and pushed to `develop` | `develop` / `fca197d` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
-| JAI-016 | Complete, feature branch pushed; pending `develop` merge | `feature/jai-016-attachment-golden-samples-regression` / `819c63f` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
+| JAI-016 | Complete, merged and pushed to `develop` | `develop` / `76ecd4b` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
 
 ## 2. Current decisions
 
@@ -167,6 +167,7 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 - Final offline evaluator result was 10/10 with 100% success and no differences. PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 119 files, Ruff lint passed, Mypy passed across 77 source files, all 157 tests passed, and coverage was 89.30%.
 - Final documentation verification found no broken relative links across 39 Markdown files; heading counts match across all six modified bilingual pairs, both backlogs preserve the same 161 Issue-ID occurrences in order, and `git diff --check` passed.
 - Normally pushed JAI-016 and verified local HEAD, `origin/feature/jai-016-attachment-golden-samples-regression`, and GitHub `ls-remote` all matched `819c63fa00d31225ad65723605e91c0b8366bc2d` at push time. A later pre-merge `ls-remote` retry timed out on GitHub port 443; no repository state changed.
+- Pushed the JAI-016 handoff commit `7bb600e`, merged the verified feature branch into `develop` with non-fast-forward merge `76ecd4b`, and normally pushed it after a temporary GitHub 443 outage. Local `develop`, `origin/develop`, and GitHub `ls-remote` all matched `76ecd4b8bd087a277b4cc0ecc55135f0e11ae86d`; JAI-016 is its ancestor and the worktree was clean.
 
 ## 4. Verification and blockers
 
@@ -180,9 +181,9 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 
 ## 5. Next actions
 
-1. Commit and normally push this JAI-016 handoff-status update.
-2. Reconfirm GitHub state, merge JAI-016 into `develop`, and normally push the merge.
-3. Start JAI-017 from the latest synchronized `develop` and keep deterministic field extraction scoped to that Issue.
+1. Stop after JAI-016; do not create or start JAI-017 in this work session.
+2. In the next authorized session, reverify `develop`, then create the dedicated JAI-017 branch for deterministic field extraction.
+3. Keep OCR deferred to JAI-B01 and field extraction out of the completed JAI-016 scope.
 4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
 
 ## 6. Update template
