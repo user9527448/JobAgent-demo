@@ -25,7 +25,7 @@
 | JAI-014 | Complete, merged and pushed to `develop` | `develop` / `8f21745` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
 | JAI-015 | Complete, merged and pushed to `develop` | `develop` / `fca197d` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
 | JAI-016 | Complete, merged and pushed to `develop` | `develop` / `1dc7a10` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
-| JAI-017 | Complete; implementation pushed, final handoff log pending | `feature/jai-017-deterministic-field-extraction` / `c1da6ce` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
+| JAI-017 | Complete and normally pushed | `feature/jai-017-deterministic-field-extraction` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
 
 ## 2. Current decisions
 
@@ -193,6 +193,7 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 - Created feature commit `c1da6cec5969cdb40952fd2c0205b5ce196f6554` with repository-local author `user9527448 <2537759248@qq.com>`; the worktree was clean immediately after the commit.
 - Two normal HTTPS push attempts and one read-only `git ls-remote` check each failed after about 21 seconds because GitHub port 443 was unreachable. No remote URL, protocol, branch history, or commit was changed; retry the same non-force push after connectivity recovers.
 - The third identical normal push succeeded, created the remote JAI-017 branch, and established its tracking reference. Local HEAD and `origin/feature/jai-017-deterministic-field-extraction` both matched `c1da6cec5969cdb40952fd2c0205b5ce196f6554`; the immediate `ls-remote` verification then hit another port 443 connection failure, so final three-way verification remains required after the handoff-log commit.
+- Normally pushed recovery-log commit `35f657e62f557182fc1af3590a820177a7e1a185`; after one more transient `ls-remote` failure, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit. This final status-only log update closes the JAI-017 feature handoff; no merge to `develop` was performed.
 
 ## 4. Verification and blockers
 
@@ -206,10 +207,9 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 
 ## 5. Next actions
 
-1. Commit and normally push this final bilingual handoff log, then verify local HEAD, its tracking reference, and GitHub `ls-remote` match despite the intermittent 443 failures.
-2. Merge JAI-017 into a freshly verified `develop` only in the authorized integration step; do not commit directly to `develop`.
-3. Start JAI-018 only after JAI-017 merges. Keep LLM provider/prompt/budget behavior out of JAI-017 and JAI-019 merge/persistence behavior out of JAI-018.
-4. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
+1. Merge JAI-017 into a freshly verified `develop` only in the authorized integration step; do not commit directly to `develop`.
+2. Start JAI-018 only after JAI-017 merges. Keep LLM provider/prompt/budget behavior out of JAI-017 and JAI-019 merge/persistence behavior out of JAI-018.
+3. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
 
