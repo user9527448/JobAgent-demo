@@ -8,7 +8,7 @@
 >
 > 最后更新：2026-08-22
 >
-> 当前分支：`feature/jai-017-deterministic-field-extraction`
+> 当前分支：`feature/jai-018-replaceable-llm-extraction`
 
 ## 1. 当前状态
 
@@ -25,7 +25,8 @@
 | JAI-014 | 已完成、合并并推送到 `develop` | `develop` / `8f21745` | 页级文本、元数据、确定性扫描判断、加密/损坏诊断、测试和双语文档已验证 |
 | JAI-015 | 已完成、合并并推送到 `develop` | `develop` / `fca197d` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
 | JAI-016 | 已完成、合并并推送到 `develop` | `develop` / `1dc7a10` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
-| JAI-017 | 已完成并普通推送 | `feature/jai-017-deterministic-field-extraction` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
+| JAI-017 | 已完成、合并并推送到 `develop` | `develop` / `c7a2ebe` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
+| JAI-018 | 实施完成，等待提交/推送 | `feature/jai-018-replaceable-llm-extraction` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
 
 ## 2. 当前决策
 
@@ -195,6 +196,19 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 第三次相同的普通推送成功，已创建远端 JAI-017 分支并建立跟踪引用。本地 HEAD 与 `origin/feature/jai-017-deterministic-field-extraction` 均为 `c1da6cec5969cdb40952fd2c0205b5ce196f6554`；紧接着的 `ls-remote` 核验再次遇到 443 连接失败，因此最终交接日志提交后仍须完成三端核验。
 - 已普通推送恢复日志提交 `35f657e62f557182fc1af3590a820177a7e1a185`；又一次短暂 `ls-remote` 失败后，本地 HEAD、跟踪引用与 GitHub `ls-remote` 均核对为该提交。这次仅状态更新的最终日志关闭 JAI-017 feature 交接；没有合并到 `develop`。
 
+### 2026-08-22 — JAI-018 可替换 LLM 抽取服务启动
+
+- 已用非快进合并 `c7a2ebe1082588257fd0353c04c650a698fd6e06` 把核验后的 JAI-017 feature 分支纳入 `develop`，并在 GitHub 443 临时故障后完成普通推送。本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 均为该提交，且 JAI-017 是其祖先。
+- 已从同步后的 `develop` HEAD 创建 `feature/jai-018-replaceable-llm-extraction`，仓库本地作者仍为 `user9527448 <2537759248@qq.com>`。
+- 范围仅限可配置 provider 边界、严格 JSON Schema 输出校验、Prompt 版本、超时/重试、token/成本调用记录、测试替身和单日预算排队。正文/附件结果合并及数据库 `field_evidence` 持久化仍属于 JAI-019。
+- 下一步：定义内存契约和 provider 适配器，实现基于 mock transport 的定向测试，再同步双语文档并运行相称的质量门禁。
+- 新增严格 Pydantic candidate/payload 契约、单一来源解析器片段、与 provider 无关的协议，以及复用现有 `httpx` 依赖的 `OpenAIResponsesProvider`。适配器发送严格 `text.format` JSON Schema，防御性解析输出和用量，区分可重试失败，且不暴露 provider 响应正文或 API key。
+- 新增 `LlmExtractionService`，实现显式 Prompt 版本、原值/引文/来源片段逐字校验、有界指数退避、逐请求模型/Prompt/token/成本/状态记录、并发安全的最大成本预留，以及将会跨过单日预算的请求送入待处理队列。非法输出保留用量/成本元数据，但不暴露候选 payload，也不能写入业务表。
+- 调用记录与待处理任务均保留在协议之后，当前只提供进程内默认实现。没有新增数据库迁移、`field_evidence` 持久化、正文/附件合并、优先级、冲突解决、真实 provider 请求、新 SDK 依赖、凭据或硬编码的 provider 价格/模型。
+- 新增 12 项 provider/契约测试和 7 项服务测试，使用脚本化 provider 与 `httpx.MockTransport`。首次完整测试为 181 项通过、7 项 PostgreSQL 跳过，但覆盖率 84.90%，未达到保持不变的 85% 门槛；补充错误/配置边界测试后覆盖率提高。后续组合检查的 Pytest 已在 85.58% 通过，但暴露一处仅 Mypy 发现的动态测试字典类型错误，已改为显式类型参数。
+- 最终 `scripts/check.py` 通过：Ruff format 检查 136 个文件，Ruff lint 通过，90 个源文件的 Mypy 通过，189 项测试通过；Docker 未运行，因此 7 项仅 PostgreSQL 测试按既有机制跳过；覆盖率为 85.58%。JAI-018 不新增数据库或迁移行为，该环境限制已如实记录，不把跳过项当作通过。
+- 文档检查通过：42 份 Markdown 无失效相对链接；开发计划标题 45/45、Backlog 70/70、活动日志 29/29、索引 5/5、新 LLM 指南 6/6；两份 Backlog 的 161 次 Issue 编号出现顺序一致，且 `git diff --check` 通过。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -207,8 +221,8 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 只能在获得授权的集成步骤中把 JAI-017 合并到重新核验后的 `develop`；不得直接提交到 `develop`。
-2. 只有 JAI-017 合并后才能开始 JAI-018。JAI-017 不加入 LLM provider/Prompt/预算行为，JAI-018 不加入 JAI-019 的合并/持久化行为。
+1. 提交并普通推送 JAI-018，再核对本地 HEAD、跟踪引用与 GitHub `ls-remote` 一致。
+2. 只在下一次获授权的集成步骤合并 JAI-018；合并后再从同步的 `develop` 启动 JAI-019。
 3. OCR 继续延期至 JAI-B01，JAI-048 使用独立文档 Issue 执行。
 
 ## 6. 更新模板
