@@ -211,6 +211,7 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建实现提交 `d70b8a98fdc70fd65e9754451e563d33c5cd7336`，并普通推送到新建的跟踪分支。紧接着的 `ls-remote` 核验遇到一次 GitHub 443 瞬时连接失败；重试已成功，在本次仅状态交接更新之前，本地 HEAD、跟踪引用与 GitHub 均为 `d70b8a98fdc70fd65e9754451e563d33c5cd7336`。
 - 用户启动 Docker Desktop 后，已启动仓库既有 `db` Compose 服务，未重建容器或删除数据卷；服务进入 healthy，隔离的 `jobagent_test` 数据库已存在。将 `JOBAGENT_TEST_DATABASE_URL` 指向该 `_test` 数据库后，完整 `scripts/check.py` 再次通过：Ruff format 检查 136 个文件，Ruff lint 通过，90 个源文件的 Mypy 通过，包含 7 项 PostgreSQL 集成测试在内的 196 项测试全部通过、无跳过，覆盖率为 88.64%。
 - 已创建 PostgreSQL 验证提交 `0aa57178e962b81d355d8edd7a0a927a8f77690e`。随后三次普通推送和两次只读 `ls-remote` 均因 GitHub 443 持续不可达而失败，其中包含一次 15 秒退避后的重试。工作区与已发布历史均未改变；本地 feature 分支安全领先跟踪分支，须在 HTTPS 连通性恢复后继续普通推送。
+- 后续系统 TCP 探测确认 GitHub 443 已恢复。保持不变的普通 HTTPS 推送随即把远程 feature 分支推进到故障日志提交 `ccc64a14bcd59df7d8d1677906e55f0ad9739705`；又一次瞬时读取失败后，第二次 TCP 探测与 `ls-remote` 已确认在本次最终状态更新之前，本地 HEAD、跟踪引用与 GitHub 均为该提交。
 
 ## 4. 检查与阻塞
 
@@ -224,7 +225,7 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. GitHub 连通性恢复后重试相同的普通 HTTPS 推送，再核对本地 HEAD、跟踪引用与 GitHub `ls-remote` 一致。
+1. 普通推送这次最终的仅状态验证更新，并确认 feature 三端引用一致。
 2. 只在下一次获授权的集成步骤合并 JAI-018；合并后再从同步的 `develop` 启动 JAI-019。
 3. OCR 继续延期至 JAI-B01，JAI-048 使用独立文档 Issue 执行。
 
