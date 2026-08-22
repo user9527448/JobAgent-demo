@@ -25,7 +25,7 @@
 | JAI-014 | 已完成、合并并推送到 `develop` | `develop` / `8f21745` | 页级文本、元数据、确定性扫描判断、加密/损坏诊断、测试和双语文档已验证 |
 | JAI-015 | 已完成、合并并推送到 `develop` | `develop` / `fca197d` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
 | JAI-016 | 已完成、合并并推送到 `develop` | `develop` / `1dc7a10` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
-| JAI-017 | 已完成，待普通推送 feature 分支 | `feature/jai-017-deterministic-field-extraction` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
+| JAI-017 | 已完成；实现提交已推送，待最终交接日志 | `feature/jai-017-deterministic-field-extraction` / `c1da6ce` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
 
 ## 2. 当前决策
 
@@ -190,6 +190,9 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 新增配对的中英文抽取文档和两份文档索引条目。没有新增依赖、配置字段、数据库迁移、LLM 行为、正文/附件合并、持久化代码、OCR、凭据、个人数据、运行数据或线上来源请求。
 - 完整 `scripts/check.py` 门禁通过：Ruff format 检查 128 个文件，Ruff lint 通过，84 个源文件的 Mypy 通过，166 项测试通过；Docker 未运行，因此 7 项仅 PostgreSQL 测试按既有机制跳过；覆盖率为 85.27%。本 Issue 没有数据库或迁移改动；该 Docker 限制已如实记录，不把跳过项当作通过。
 - 文档检查通过：开发计划标题 45/45、Backlog 70/70、新抽取文档 6/6、活动日志 28/28、索引 5/5；两份 Backlog 的 161 次 Issue 编号出现顺序一致，所有 Markdown 相对链接有效，`git diff --check` 通过。
+- 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建 feature 提交 `c1da6cec5969cdb40952fd2c0205b5ce196f6554`；提交后工作区干净。
+- 两次 HTTPS 普通推送和一次只读 `git ls-remote` 均在约 21 秒后因 GitHub 443 无法连接而失败。远程 URL、协议、分支历史和提交均未改变；网络恢复后继续重试同一非强制推送。
+- 第三次相同的普通推送成功，已创建远端 JAI-017 分支并建立跟踪引用。本地 HEAD 与 `origin/feature/jai-017-deterministic-field-extraction` 均为 `c1da6cec5969cdb40952fd2c0205b5ce196f6554`；紧接着的 `ls-remote` 核验再次遇到 443 连接失败，因此最终交接日志提交后仍须完成三端核验。
 
 ## 4. 检查与阻塞
 
@@ -203,7 +206,7 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 提交并普通推送已完成的 JAI-017 feature 分支，然后核对本地 HEAD、跟踪引用和 GitHub `ls-remote` 一致。
+1. 提交并普通推送这份最终双语交接日志，然后在 GitHub 443 间歇故障下核对本地 HEAD、跟踪引用和 `ls-remote` 一致。
 2. 只能在获得授权的集成步骤中把 JAI-017 合并到重新核验后的 `develop`；不得直接提交到 `develop`。
 3. 只有 JAI-017 合并后才能开始 JAI-018。JAI-017 不加入 LLM provider/Prompt/预算行为，JAI-018 不加入 JAI-019 的合并/持久化行为。
 4. OCR 继续延期至 JAI-B01，JAI-048 使用独立文档 Issue 执行。
