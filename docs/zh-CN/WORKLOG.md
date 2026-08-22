@@ -6,9 +6,9 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-16
+> 最后更新：2026-08-22
 >
-> 当前分支：`feature/jai-016-attachment-golden-samples-regression`
+> 当前分支：`feature/jai-017-deterministic-field-extraction`
 
 ## 1. 当前状态
 
@@ -24,7 +24,8 @@
 | JAI-013 | 已完成、合并并推送到 `develop` | `develop` / `36d389f` | MIME 注册表、可追溯文本/表格 Schema、状态、错误码、测试和双语文档已验证 |
 | JAI-014 | 已完成、合并并推送到 `develop` | `develop` / `8f21745` | 页级文本、元数据、确定性扫描判断、加密/损坏诊断、测试和双语文档已验证 |
 | JAI-015 | 已完成、合并并推送到 `develop` | `develop` / `fca197d` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
-| JAI-016 | 已完成、合并并推送到 `develop` | `develop` / `76ecd4b` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
+| JAI-016 | 已完成、合并并推送到 `develop` | `develop` / `1dc7a10` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
+| JAI-017 | 已完成，待普通推送 feature 分支 | `feature/jai-017-deterministic-field-extraction` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
 
 ## 2. 当前决策
 
@@ -67,6 +68,14 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 ### D-024 PDF 失败返回安全状态对象，不暴露第三方异常
 
 密码保护 PDF 返回 `parser.encrypted_document`；空、无效、损坏或不可读 PDF 返回 `parser.corrupt_document`；错误 MIME 输入返回 `parser.invalid_input`。结果只包含安全固定消息，不包含文件正文、密码或原始 PyMuPDF 异常文本。
+
+### D-025 JAI-017 抽取保持可追溯的纯内存边界
+
+确定性抽取按解析器文本块或表格行对输出分组。每个字段都携带原值、规范值、来源引文和解析器位置。跨块/正文/附件合并及数据库 `field_evidence` 持久化继续属于 JAI-019，避免 JAI-017 在不同来源之间静默取舍。
+
+### D-026 有证据但矛盾或不支持的值生成诊断
+
+无效日期、倒置日期范围、没有显式 base 的相对 URL、非精确招聘人数，以及未知地区/学历/类别值都不会生成规范字段。安全的 `ExtractionIssue` 保留原值和证据；没有标签但看似关键的正文会被忽略，而不是猜测填充。
 
 ## 3. 当前工作记录
 
@@ -169,6 +178,19 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 已普通推送 JAI-016；推送时本地 HEAD、`origin/feature/jai-016-attachment-golden-samples-regression` 与 GitHub `ls-remote` 均为 `819c63fa00d31225ad65723605e91c0b8366bc2d`。后续合并前重试 `ls-remote` 时 GitHub 443 超时，仓库状态未发生变化。
 - 已推送 JAI-016 交接提交 `7bb600e`，以非快进合并 `76ecd4b` 把已核验 feature 分支纳入 `develop`，并在 GitHub 443 临时故障恢复后普通推送。本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 均为 `76ecd4b8bd087a277b4cc0ecc55135f0e11ae86d`；JAI-016 是其祖先，工作区干净。
 
+### 2026-08-22 — JAI-017 确定性字段抽取与规范化启动
+
+- 已核验干净的 `develop` 位于 `1dc7a100d7dfb8b17ac33a2d03ee2255e4500b65`；本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 一致，JAI-016 feature 提交 `05bac9cf4fba48330fbab3424535a90422b17a4b` 已合并。
+- 已核验仓库本地作者为 `user9527448 <2537759248@qq.com>`，并保留现有 HTTPS origin。
+- 已从同步后的 `develop` HEAD 创建 `feature/jai-017-deterministic-field-extraction`。
+- 范围仅限确定性日期/时区、地区字典匹配、URL、招聘人数、学历/枚举，以及同时保留原值、规范值和来源证据的输出。LLM provider/Prompt/预算、正文与附件合并、数据库 `field_evidence` 持久化仍分别属于 JAI-018/JAI-019。
+- 下一步：检查解析器中间契约与黄金样本，定义抽取契约，再先实现定向测试，最后运行完整质量门禁。
+- 新增 `jobagent.extraction` 契约、有界地区/学历/类别字典和确定性正文/表格规则。只有日期的边界使用配置时区的当地日期，所有日期时间统一规范为 UTC；无效/倒置日期保留为有证据诊断。
+- 新增 16 项定向测试，包括实际解析已提交 XLSX 黄金样本中的 `YYYY-MM-DD`、`YYYY/MM/DD`、`YYYY年M月D日`，显式/默认时区、报名 URL 规范化、不支持值诊断和无证据/无标签行为。
+- 新增配对的中英文抽取文档和两份文档索引条目。没有新增依赖、配置字段、数据库迁移、LLM 行为、正文/附件合并、持久化代码、OCR、凭据、个人数据、运行数据或线上来源请求。
+- 完整 `scripts/check.py` 门禁通过：Ruff format 检查 128 个文件，Ruff lint 通过，84 个源文件的 Mypy 通过，166 项测试通过；Docker 未运行，因此 7 项仅 PostgreSQL 测试按既有机制跳过；覆盖率为 85.27%。本 Issue 没有数据库或迁移改动；该 Docker 限制已如实记录，不把跳过项当作通过。
+- 文档检查通过：开发计划标题 45/45、Backlog 70/70、新抽取文档 6/6、活动日志 28/28、索引 5/5；两份 Backlog 的 161 次 Issue 编号出现顺序一致，所有 Markdown 相对链接有效，`git diff --check` 通过。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -181,10 +203,10 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 本次工作停在 JAI-016；不要创建或开始 JAI-017。
-2. 下一次获得授权后先复核 `develop`，再为确定性字段抽取创建独立 JAI-017 分支。
-3. OCR 继续延期到 JAI-B01，字段抽取不得混入已完成的 JAI-016 范围。
-4. 使用独立文档 Issue 执行 JAI-048；不得把大规模存量文档迁移混入功能开发。
+1. 提交并普通推送已完成的 JAI-017 feature 分支，然后核对本地 HEAD、跟踪引用和 GitHub `ls-remote` 一致。
+2. 只能在获得授权的集成步骤中把 JAI-017 合并到重新核验后的 `develop`；不得直接提交到 `develop`。
+3. 只有 JAI-017 合并后才能开始 JAI-018。JAI-017 不加入 LLM provider/Prompt/预算行为，JAI-018 不加入 JAI-019 的合并/持久化行为。
+4. OCR 继续延期至 JAI-B01，JAI-048 使用独立文档 Issue 执行。
 
 ## 6. 更新模板
 

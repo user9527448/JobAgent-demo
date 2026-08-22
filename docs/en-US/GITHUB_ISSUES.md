@@ -230,9 +230,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: reliably extract dates, regions, organizations, application links, and related fields with rules.
 - **Scope**: date ranges/timezones, region dictionary, URLs, headcount, education, enums.
 - **Acceptance**:
-  - [ ] Date parsing covers golden formats and start never follows deadline.
-  - [ ] Preserve raw and normalized values.
-  - [ ] Never guess unsupported critical fields.
+  - [x] Date parsing covers golden formats and start never follows deadline.
+  - [x] Preserve raw and normalized values.
+  - [x] Never guess unsupported critical fields.
 
 ### JAI-018 Implement a replaceable LLM extraction service
 
