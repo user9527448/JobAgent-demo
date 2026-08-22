@@ -26,7 +26,7 @@
 | JAI-015 | Complete, merged and pushed to `develop` | `develop` / `fca197d` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
 | JAI-016 | Complete, merged and pushed to `develop` | `develop` / `1dc7a10` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
 | JAI-017 | Complete, merged and pushed to `develop` | `develop` / `c7a2ebe` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
-| JAI-018 | Implementation complete, pending commit/push | `feature/jai-018-replaceable-llm-extraction` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
+| JAI-018 | Complete and normally pushed | `feature/jai-018-replaceable-llm-extraction` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 
 ## 2. Current decisions
 
@@ -208,6 +208,7 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 - Added 12 provider/contract tests and 7 service tests using scripted providers and `httpx.MockTransport`. The first full test run had 181 passes and 7 PostgreSQL skips but failed the unchanged 85% coverage gate at 84.90%; focused error/configuration tests raised coverage. A later combined run passed Pytest at 85.58% but exposed one Mypy-only dynamic test-dictionary type error, which was replaced with explicit typed parameters.
 - Final `scripts/check.py` passed: Ruff format checked 136 files, Ruff lint passed, Mypy passed across 90 source files, 189 tests passed, 7 PostgreSQL-only tests were skipped because Docker was not running, and coverage was 85.58%. JAI-018 adds no database or migration behavior, so the environment limitation is recorded rather than treating skipped checks as passed.
 - Documentation verification passed across 42 Markdown files with no broken relative links. Paired heading counts match for plans (45/45), backlogs (70/70), active logs (29/29), indexes (5/5), and the new LLM guide (6/6); both backlogs retain the same 161 Issue IDs in order, and `git diff --check` passed.
+- Created implementation commit `d70b8a98fdc70fd65e9754451e563d33c5cd7336` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed it to the new tracking branch. The immediate `ls-remote` check hit one transient GitHub port 443 connection failure; a retry succeeded, and local HEAD, the tracking reference, and GitHub all matched `d70b8a98fdc70fd65e9754451e563d33c5cd7336` before this status-only handoff update.
 
 ## 4. Verification and blockers
 
@@ -221,7 +222,7 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 
 ## 5. Next actions
 
-1. Commit and normally push JAI-018, then verify local HEAD, its tracking reference, and GitHub `ls-remote` match.
+1. Normally push this status-only JAI-018 handoff update and verify local HEAD, its tracking reference, and GitHub `ls-remote` match.
 2. Merge JAI-018 only in the next authorized integration step; start JAI-019 from synchronized `develop` after that merge.
 3. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
 

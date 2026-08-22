@@ -26,7 +26,7 @@
 | JAI-015 | 已完成、合并并推送到 `develop` | `develop` / `fca197d` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
 | JAI-016 | 已完成、合并并推送到 `develop` | `develop` / `1dc7a10` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
 | JAI-017 | 已完成、合并并推送到 `develop` | `develop` / `c7a2ebe` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
-| JAI-018 | 实施完成，等待提交/推送 | `feature/jai-018-replaceable-llm-extraction` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
+| JAI-018 | 已完成并普通推送 | `feature/jai-018-replaceable-llm-extraction` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
 
 ## 2. 当前决策
 
@@ -208,6 +208,7 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 新增 12 项 provider/契约测试和 7 项服务测试，使用脚本化 provider 与 `httpx.MockTransport`。首次完整测试为 181 项通过、7 项 PostgreSQL 跳过，但覆盖率 84.90%，未达到保持不变的 85% 门槛；补充错误/配置边界测试后覆盖率提高。后续组合检查的 Pytest 已在 85.58% 通过，但暴露一处仅 Mypy 发现的动态测试字典类型错误，已改为显式类型参数。
 - 最终 `scripts/check.py` 通过：Ruff format 检查 136 个文件，Ruff lint 通过，90 个源文件的 Mypy 通过，189 项测试通过；Docker 未运行，因此 7 项仅 PostgreSQL 测试按既有机制跳过；覆盖率为 85.58%。JAI-018 不新增数据库或迁移行为，该环境限制已如实记录，不把跳过项当作通过。
 - 文档检查通过：42 份 Markdown 无失效相对链接；开发计划标题 45/45、Backlog 70/70、活动日志 29/29、索引 5/5、新 LLM 指南 6/6；两份 Backlog 的 161 次 Issue 编号出现顺序一致，且 `git diff --check` 通过。
+- 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建实现提交 `d70b8a98fdc70fd65e9754451e563d33c5cd7336`，并普通推送到新建的跟踪分支。紧接着的 `ls-remote` 核验遇到一次 GitHub 443 瞬时连接失败；重试已成功，在本次仅状态交接更新之前，本地 HEAD、跟踪引用与 GitHub 均为 `d70b8a98fdc70fd65e9754451e563d33c5cd7336`。
 
 ## 4. 检查与阻塞
 
@@ -221,7 +222,7 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 提交并普通推送 JAI-018，再核对本地 HEAD、跟踪引用与 GitHub `ls-remote` 一致。
+1. 普通推送这次仅状态的 JAI-018 交接更新，并核对本地 HEAD、跟踪引用与 GitHub `ls-remote` 一致。
 2. 只在下一次获授权的集成步骤合并 JAI-018；合并后再从同步的 `develop` 启动 JAI-019。
 3. OCR 继续延期至 JAI-B01，JAI-048 使用独立文档 Issue 执行。
 
