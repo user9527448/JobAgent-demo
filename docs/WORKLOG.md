@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-16
+> Last updated: 2026-08-22
 >
-> Active branch: `feature/jai-016-attachment-golden-samples-regression`
+> Active branch: `feature/jai-017-deterministic-field-extraction`
 
 ## 1. Current status
 
@@ -24,7 +24,8 @@
 | JAI-013 | Complete, merged and pushed to `develop` | `develop` / `36d389f` | MIME registry, traceable text/table schemas, statuses, error codes, tests, and bilingual documentation verified |
 | JAI-014 | Complete, merged and pushed to `develop` | `develop` / `8f21745` | Page text, metadata, deterministic scan detection, encrypted/corrupt diagnostics, tests, and bilingual docs verified |
 | JAI-015 | Complete, merged and pushed to `develop` | `develop` / `fca197d` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
-| JAI-016 | Complete, merged and pushed to `develop` | `develop` / `76ecd4b` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
+| JAI-016 | Complete, merged and pushed to `develop` | `develop` / `1dc7a10` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
+| JAI-017 | Complete and normally pushed | `feature/jai-017-deterministic-field-extraction` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
 
 ## 2. Current decisions
 
@@ -67,6 +68,14 @@ Text and table blocks retain a persisted source reference and a one-based page, 
 ### D-024 PDF failures return safe status objects instead of third-party exceptions
 
 Password-protected PDFs return `parser.encrypted_document`; empty, invalid, damaged, or unreadable PDFs return `parser.corrupt_document`; wrong MIME input returns `parser.invalid_input`. Results contain safe fixed messages without file content, passwords, or raw PyMuPDF exception text.
+
+### D-025 JAI-017 extraction remains an evidence-preserving in-memory boundary
+
+Deterministic extraction groups output by parser text block or table row. Every field carries its raw value, normalized value, source quote, and parser location. Cross-block/body/attachment merging and database `field_evidence` persistence remain JAI-019 so JAI-017 cannot silently choose between sources.
+
+### D-026 Contradictory or unsupported evidenced values become diagnostics
+
+Invalid dates, inverted date ranges, relative URLs without an explicit base, non-exact headcounts, and unknown region/education/category values do not produce normalized fields. Safe `ExtractionIssue` objects retain raw values and evidence; unlabeled critical-looking text is ignored rather than guessed.
 
 ## 3. Active work history
 
@@ -169,6 +178,23 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 - Normally pushed JAI-016 and verified local HEAD, `origin/feature/jai-016-attachment-golden-samples-regression`, and GitHub `ls-remote` all matched `819c63fa00d31225ad65723605e91c0b8366bc2d` at push time. A later pre-merge `ls-remote` retry timed out on GitHub port 443; no repository state changed.
 - Pushed the JAI-016 handoff commit `7bb600e`, merged the verified feature branch into `develop` with non-fast-forward merge `76ecd4b`, and normally pushed it after a temporary GitHub 443 outage. Local `develop`, `origin/develop`, and GitHub `ls-remote` all matched `76ecd4b8bd087a277b4cc0ecc55135f0e11ae86d`; JAI-016 is its ancestor and the worktree was clean.
 
+### 2026-08-22 — JAI-017 deterministic field extraction and normalization started
+
+- Verified a clean `develop` at `1dc7a100d7dfb8b17ac33a2d03ee2255e4500b65`; local `develop`, `origin/develop`, and GitHub `ls-remote` matched, and JAI-016 feature commit `05bac9cf4fba48330fbab3424535a90422b17a4b` is merged.
+- Verified repository-local authorship as `user9527448 <2537759248@qq.com>` and retained the existing HTTPS origin.
+- Created `feature/jai-017-deterministic-field-extraction` from the synchronized `develop` head.
+- Scope is limited to deterministic dates/timezones, region dictionary matching, URLs, headcount, education/enums, and outputs that retain raw values, normalized values, and source evidence. LLM providers/prompts/budgets, body/attachment merging, and database `field_evidence` persistence remain JAI-018/JAI-019.
+- Next: inspect the parser intermediate contracts and golden fixtures, define the extraction contract, then implement focused tests before the full quality gate.
+- Added `jobagent.extraction` contracts, bounded region/education/category dictionaries, and deterministic text/table rules. Date-only boundaries use the configured local day and all date-times normalize to UTC; invalid/inverted dates remain evidenced diagnostics.
+- Added 16 focused tests, including real parsing of the committed XLSX golden fixtures with `YYYY-MM-DD`, `YYYY/MM/DD`, and `YYYY年M月D日` dates, explicit/default timezone handling, application URL normalization, unsupported-value diagnostics, and no-evidence/no-label behavior.
+- Added paired English/Chinese extraction documentation and both documentation-index entries. No dependency, configuration field, database migration, LLM behavior, body/attachment merge, persistence code, OCR, credential, personal data, runtime data, or live-source request was added.
+- The complete `scripts/check.py` gate passed: Ruff format checked 128 files, Ruff lint passed, Mypy passed across 84 source files, 166 tests passed, 7 PostgreSQL-only tests were skipped because Docker was not running, and coverage was 85.27%. This Issue has no database or migration change; the Docker limitation is recorded rather than treating skipped checks as passed.
+- Documentation verification passed: plans have 45/45 headings, backlogs 70/70, the new extraction pair 6/6, active logs 28/28, and indexes 5/5; both backlogs preserve the same 161 Issue-ID occurrences in order, all Markdown relative links resolve, and `git diff --check` passed.
+- Created feature commit `c1da6cec5969cdb40952fd2c0205b5ce196f6554` with repository-local author `user9527448 <2537759248@qq.com>`; the worktree was clean immediately after the commit.
+- Two normal HTTPS push attempts and one read-only `git ls-remote` check each failed after about 21 seconds because GitHub port 443 was unreachable. No remote URL, protocol, branch history, or commit was changed; retry the same non-force push after connectivity recovers.
+- The third identical normal push succeeded, created the remote JAI-017 branch, and established its tracking reference. Local HEAD and `origin/feature/jai-017-deterministic-field-extraction` both matched `c1da6cec5969cdb40952fd2c0205b5ce196f6554`; the immediate `ls-remote` verification then hit another port 443 connection failure, so final three-way verification remains required after the handoff-log commit.
+- Normally pushed recovery-log commit `35f657e62f557182fc1af3590a820177a7e1a185`; after one more transient `ls-remote` failure, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit. This final status-only log update closes the JAI-017 feature handoff; no merge to `develop` was performed.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -181,10 +207,9 @@ Password-protected PDFs return `parser.encrypted_document`; empty, invalid, dama
 
 ## 5. Next actions
 
-1. Stop after JAI-016; do not create or start JAI-017 in this work session.
-2. In the next authorized session, reverify `develop`, then create the dedicated JAI-017 branch for deterministic field extraction.
-3. Keep OCR deferred to JAI-B01 and field extraction out of the completed JAI-016 scope.
-4. Execute JAI-048 as a separate documentation Issue; do not mix broad legacy-document migration into feature work.
+1. Merge JAI-017 into a freshly verified `develop` only in the authorized integration step; do not commit directly to `develop`.
+2. Start JAI-018 only after JAI-017 merges. Keep LLM provider/prompt/budget behavior out of JAI-017 and JAI-019 merge/persistence behavior out of JAI-018.
+3. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
 

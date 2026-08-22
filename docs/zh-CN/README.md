@@ -18,6 +18,7 @@
 | 原始公告规范化与版本化 | [中文](RAW_DOCUMENTS.md) | [English](../RAW_DOCUMENTS.md) |
 | 附件发现与存储 | [中文](ATTACHMENTS.md) | [English](../ATTACHMENTS.md) |
 | 解析器协议与标准中间格式 | [中文](PARSING.md) | [English](../PARSING.md) |
+| 确定性字段抽取与规范化 | [中文](EXTRACTION.md) | [English](../EXTRACTION.md) |
 | JAI-005 济宁来源技术验证 | [中文](spikes/JAI-005-JINING-SOURCE.md) | [English](../spikes/JAI-005-JINING-SOURCE.md) |
 | 数据库迁移说明 | [中文](MIGRATIONS.md) | [English](../../migrations/README.md) |
 | JAI-005 固定样本说明 | [中文](fixtures/JINING.md) | [English](../../tests/fixtures/jining/README.md) |

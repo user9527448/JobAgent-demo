@@ -18,6 +18,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | Raw announcement normalization and versioning | [English](../RAW_DOCUMENTS.md) | [中文](../zh-CN/RAW_DOCUMENTS.md) |
 | Attachment discovery and storage | [English](../ATTACHMENTS.md) | [中文](../zh-CN/ATTACHMENTS.md) |
 | Parser contracts and intermediate format | [English](../PARSING.md) | [中文](../zh-CN/PARSING.md) |
+| Deterministic field extraction and normalization | [English](../EXTRACTION.md) | [中文](../zh-CN/EXTRACTION.md) |
 | JAI-005 Jining source Spike | [English](../spikes/JAI-005-JINING-SOURCE.md) | [中文](../zh-CN/spikes/JAI-005-JINING-SOURCE.md) |
 | Database migration guide | [English](../../migrations/README.md) | [中文](../zh-CN/MIGRATIONS.md) |
 | JAI-005 fixture guide | [English](../../tests/fixtures/jining/README.md) | [中文](../zh-CN/fixtures/JINING.md) |
