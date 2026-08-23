@@ -241,10 +241,10 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: supplement irregular announcements while controlling cost and hallucination.
 - **Scope**: provider interface, strict JSON Schema, prompt version, timeout/retry, token/cost metrics, mocks.
 - **Acceptance**:
-  - [ ] Provider is configurable.
-  - [ ] Invalid output never enters business tables directly.
-  - [ ] Record model, prompt version, token use, and result status.
-  - [ ] Stop new calls at daily budget and queue remaining work.
+  - [x] Provider is configurable.
+  - [x] Invalid output never enters business tables directly.
+  - [x] Record model, prompt version, token use, and result status.
+  - [x] Stop new calls at daily budget and queue remaining work.
 
 ### JAI-019 Merge body/attachment results and preserve field evidence
 
