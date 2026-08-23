@@ -27,7 +27,7 @@
 | JAI-016 | Complete, merged and pushed to `develop` | `develop` / `1dc7a10` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
 | JAI-017 | Complete, merged and pushed to `develop` | `develop` / `c7a2ebe` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
-| JAI-019 | Implementation and final gate complete, pending commit/push | `feature/jai-019-field-evidence-merging` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
+| JAI-019 | Complete and committed; push blocked by GitHub 443 | `feature/jai-019-field-evidence-merging` / `a2c41fe` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 
 ## 2. Current decisions
 
@@ -231,6 +231,7 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 - Added paired English/Chinese merge/evidence documentation and index entries, and synchronized database docs, plans, backlog acceptance, and active logs. Documentation verification found no broken relative links across 44 Markdown files; heading counts match for plans (45/45), backlogs (70/70), logs (30/30), indexes (5/5), database docs (6/6), and the new guide (6/6); both backlogs retain the same 161 Issue IDs in order, and `git diff --check` passed.
 - A post-documentation gate first ran without `JOBAGENT_TEST_DATABASE_URL`: 194 tests passed, nine PostgreSQL tests were skipped, and coverage fell to 83.51%, so the gate correctly failed. After supplying the repository-documented test database URL, the final `scripts/check.py` passed with Ruff format over 143 files, Ruff lint, Mypy across 94 source files, all 203 tests with no skips, and 88.07% coverage.
 - No JAI-020 validation severity, review state, recommendation eligibility, correction workflow, or reparse command/API was added. No live source/provider request, credential, personal data, downloaded file, or runtime data was committed.
+- Created JAI-019 feature commit `a2c41fee65bfcbf0374af96f5b028ab40bf565a6` with the verified repository-local author. Three normal HTTPS push attempts failed at the network layer (two GitHub port 443 connection timeouts and one connection reset), including retries after TCP probes temporarily reported recovery. No remote, protocol, published history, or commit author was changed; the local feature commit remains safe and must be normally pushed when connectivity recovers.
 
 ## 4. Verification and blockers
 
@@ -244,7 +245,7 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 
 ## 5. Next actions
 
-1. Commit and normally push the verified JAI-019 changes, then verify all three feature refs match.
+1. Normally push the verified JAI-019 feature commits when GitHub 443 recovers, then verify all three feature refs match.
 2. Merge JAI-019 only in the next authorized integration step; start JAI-020 from synchronized `develop` afterward.
 3. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
 
