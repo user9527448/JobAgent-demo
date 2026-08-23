@@ -6,9 +6,9 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-22
+> 最后更新：2026-08-23
 >
-> 当前分支：`feature/jai-018-replaceable-llm-extraction`
+> 当前分支：`feature/jai-019-field-evidence-merging`
 
 ## 1. 当前状态
 
@@ -26,7 +26,8 @@
 | JAI-015 | 已完成、合并并推送到 `develop` | `develop` / `fca197d` | XLSX 多工作表/表头/数据解析、合并单元格证据、复核诊断、测试和双语文档已验证 |
 | JAI-016 | 已完成、合并并推送到 `develop` | `develop` / `1dc7a10` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
 | JAI-017 | 已完成、合并并推送到 `develop` | `develop` / `c7a2ebe` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
-| JAI-018 | 已完成并普通推送 | `feature/jai-018-replaceable-llm-extraction` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
+| JAI-018 | 已完成、合并并推送到 `develop` | `develop` / `c013544` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
+| JAI-019 | 实施和最终门禁完成，等待提交/推送 | `feature/jai-019-field-evidence-merging` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
 
 ## 2. 当前决策
 
@@ -213,6 +214,24 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 已创建 PostgreSQL 验证提交 `0aa57178e962b81d355d8edd7a0a927a8f77690e`。随后三次普通推送和两次只读 `ls-remote` 均因 GitHub 443 持续不可达而失败，其中包含一次 15 秒退避后的重试。工作区与已发布历史均未改变；本地 feature 分支安全领先跟踪分支，须在 HTTPS 连通性恢复后继续普通推送。
 - 后续系统 TCP 探测确认 GitHub 443 已恢复。保持不变的普通 HTTPS 推送随即把远程 feature 分支推进到故障日志提交 `ccc64a14bcd59df7d8d1677906e55f0ad9739705`；又一次瞬时读取失败后，第二次 TCP 探测与 `ls-remote` 已确认在本次最终状态更新之前，本地 HEAD、跟踪引用与 GitHub 均为该提交。
 
+### 2026-08-23 — JAI-019 字段证据合并与持久化启动
+
+- 已重新核验干净的 JAI-018 feature 分支为 `3da9ccad55aeb9eb0962f220e3c500288208ed93`，`develop` 为 `c7a2ebe1082588257fd0353c04c650a698fd6e06`；GitHub 443 临时故障恢复后，本地、跟踪与 GitHub 引用一致。
+- 已用非快进合并 `c013544f3339efd776121c6792978f83d958062f` 把 JAI-018 纳入 `develop`，完成普通推送，并核验本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 一致。仓库本地作者仍为 `user9527448 <2537759248@qq.com>`。
+- 已从同步后的 `develop` HEAD 创建 `feature/jai-019-field-evidence-merging`。
+- 范围仅限确定性正文/附件优先级、显式保留冲突、置信度与抽取版本元数据、`job_posts`/`job_positions` 实体化和持久 `field_evidence`。JAI-020 的校验/复核/重解析 API 及所有后续来源接入不在范围内。
+- 下一步：基于现有抽取模型和 PostgreSQL Schema 定义合并与持久化契约，新增保留版本历史所需的最小迁移，再先实现单元和数据库验收测试，最后运行完整门禁。
+- 新增 `ExtractionMergeInput`、LLM 片段绑定、按字段目标区分的确定性优先级、LLM 值语义校验、稳定候选去重、显式落选冲突证据、部分岗位记录和 SHA-256 合并结果哈希。规则证据使用置信度 1.0000，LLM 方法使用 0.6000；不信任模型自评分数。
+- 公告字段优先使用确定性正文证据，岗位字段优先使用确定性附件证据；确定性候选始终先于 LLM 候选。所有矛盾规范值和精确坐标保持可查询。没有证据能证明不同来源岗位相同时，各岗位行保持独立；不会虚构占位名称。
+- 新增迁移 `0004_versioned_field_evidence`：为 `job_posts` 增加版本/哈希/当前/前序元数据和逐版本唯一约束；为 `job_positions` 增加稳定记录 key 并允许无证据名称为空；为 `field_evidence` 增加原值/规范值、方法/版本、选中/冲突标记和页/行/工作表/单元格坐标。既有行回填为 `legacy-v1`。
+- 新增 `SqlAlchemyExtractionRepository`，实现逐公告 advisory lock、附件归属校验、公告/岗位/证据原子写入、相同版本/哈希复用、同版本哈希漂移拒绝，以及保留旧实体与证据的追加式新版本。
+- 新增 5 项合并单元测试、1 项 PostgreSQL 仓库验收测试和 1 项旧数据迁移测试，覆盖正文/附件冲突、确定性优先于 LLM、非法 LLM 语义、与输入顺序无关的哈希、岗位/证据坐标、幂等重跑、版本链、历史保留、空 Schema 升级/检查/降级和 0003 数据回填。
+- 早期迁移测试期间 Docker Desktop 停止，两次重复 Pytest 调用仍在等待同一个测试 Schema。已确认进程命令行，仅终止这些测试进程，通过系统注册项重新启动 Docker Desktop，并在不重建/删除数据卷的情况下恢复既有 `db` 服务；随后先逐项重跑数据库测试，再运行完整门禁。
+- 首次启用 PostgreSQL 的完整 `scripts/check.py` 通过：Ruff format 检查 141 个文件，Ruff lint 通过，94 个源文件的 Mypy 通过，203 项测试全部通过、无跳过，覆盖率为 88.07%。
+- 新增配对的中英文合并/证据文档和索引条目，并同步数据库文档、计划、Backlog 验收与活动日志。文档检查确认 44 份 Markdown 无失效相对链接；开发计划标题 45/45、Backlog 70/70、活动日志 30/30、索引 5/5、数据库文档 6/6、新指南 6/6；两份 Backlog 的 161 次 Issue 编号出现顺序一致，且 `git diff --check` 通过。
+- 文档同步后的首次门禁未设置 `JOBAGENT_TEST_DATABASE_URL`：194 项测试通过、9 项 PostgreSQL 测试跳过，覆盖率降至 83.51%，因此门禁按预期失败。补入仓库文档登记的测试库 URL 后，最终 `scripts/check.py` 通过：Ruff format 检查 143 个文件，Ruff lint 通过，94 个源文件的 Mypy 通过，203 项测试全部通过、无跳过，覆盖率为 88.07%。
+- 没有新增 JAI-020 的校验严重度、复核状态、推荐资格、修正流程或重解析命令/API；也没有线上来源/provider 请求、凭据、个人数据、下载文件或运行数据进入提交。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -225,8 +244,8 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 普通推送这次最终的仅状态验证更新，并确认 feature 三端引用一致。
-2. 只在下一次获授权的集成步骤合并 JAI-018；合并后再从同步的 `develop` 启动 JAI-019。
+1. 提交并普通推送已验证的 JAI-019 改动，再核验 feature 三端引用一致。
+2. 只在下一次获授权的集成步骤合并 JAI-019；随后再从同步的 `develop` 启动 JAI-020。
 3. OCR 继续延期至 JAI-B01，JAI-048 使用独立文档 Issue 执行。
 
 ## 6. 更新模板

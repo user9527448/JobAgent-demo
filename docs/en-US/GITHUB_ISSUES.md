@@ -253,9 +253,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: create announcement/position entities and explain every critical field.
 - **Scope**: precedence, conflicts, confidence, extraction version, `field_evidence`.
 - **Acceptance**:
-  - [ ] Critical fields retain source type and evidence location.
-  - [ ] Body/attachment conflicts are never silently overwritten.
-  - [ ] Re-extraction preserves history and is deterministic.
+  - [x] Critical fields retain source type and evidence location.
+  - [x] Body/attachment conflicts are never silently overwritten.
+  - [x] Re-extraction preserves history and is deterministic.
 
 ### JAI-020 Implement validation, review, and reparsing
 

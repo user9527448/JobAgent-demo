@@ -2,7 +2,7 @@
 
 > 简体中文：[JOBAGENT 核心数据库模型](zh-CN/DATABASE.md)
 
-This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md) and JAI-010 [attachment storage policy](ATTACHMENTS.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
+This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), and JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
 
 ## Tables
 
@@ -12,9 +12,9 @@ This document describes the PostgreSQL schema established in JAI-006 and extende
 | `crawl_runs` | One source execution | Restricted status values; `finished_at` cannot precede `started_at`; JSONB statistics |
 | `raw_documents` | Immutable source announcement version | Unique `(source_id, canonical_url, version)`; one current version per source URL; SHA-256 content hash; optional ETag/Last-Modified; HTML or text must be present |
 | `attachments` | Files discovered from an announcement | Unique `(document_id, url)`; validated download status and metadata; separate parse status |
-| `job_posts` | Announcement-level structured result | At most one current post per document; deadline cannot precede start |
-| `job_positions` | Optional position rows below a post | Positive headcount when known; a post may have zero positions |
-| `field_evidence` | Field-level traceability | Points to exactly one document or attachment; quote/page/cell locator required; confidence from 0 to 1 |
+| `job_posts` | Versioned announcement-level structured result | Unique document/extraction version; one current version; version/supersedes/hash chain; deadline cannot precede start |
+| `job_positions` | Optional position records below one post version | Stable record key; evidenced name may be absent; positive headcount when known |
+| `field_evidence` | Field-level traceability | Raw/normalized values, method/version, selection/conflict, exactly one source, quote/page/line/sheet/cell locator, confidence from 0 to 1 |
 
 ## Relationships and deletion policy
 
@@ -32,7 +32,7 @@ sources
 
 All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do not use delete cascades. A source with history cannot be accidentally removed. Normal source retirement changes `sources.enabled` to false, preserving runs, documents, attachments and extracted data.
 
-`field_evidence.entity_type/entity_id` is intentionally a validated polymorphic reference to either `job_posts` or `job_positions`. The database also maintains a real foreign key to the source document or attachment that supplied the evidence.
+`field_evidence.entity_type/entity_id` is intentionally a validated polymorphic reference to either `job_posts` or `job_positions`. The extraction repository validates that entity target while the database maintains a real foreign key to the source document or attachment that supplied the evidence. New extraction versions append post/position/evidence rows; old versions remain deletion-resistant.
 
 ## Time handling
 
@@ -51,6 +51,8 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 - Status and evidence type fields have explicit check constraints rather than unconstrained free text.
 - Common source/date, status, deadline, location/education and evidence lookup paths are indexed.
 - Incomplete structured fields remain nullable so raw evidence is retained and can enter later review workflows.
+- A document/extraction-version pair is idempotent by result hash. A partial unique index allows only one current post per document, while `supersedes_id` preserves the complete post-version chain.
+- Field evidence stores original and normalized values together and retains conflicting candidates instead of overwriting them. Line and worksheet/cell coordinates complement existing page/quote locators.
 
 ## Migrations
 

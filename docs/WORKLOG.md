@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-22
+> Last updated: 2026-08-23
 >
-> Active branch: `feature/jai-018-replaceable-llm-extraction`
+> Active branch: `feature/jai-019-field-evidence-merging`
 
 ## 1. Current status
 
@@ -26,7 +26,8 @@
 | JAI-015 | Complete, merged and pushed to `develop` | `develop` / `fca197d` | XLSX multi-sheet/header/data parsing, merged-cell evidence, review diagnostics, tests, and bilingual docs verified |
 | JAI-016 | Complete, merged and pushed to `develop` | `develop` / `1dc7a10` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
 | JAI-017 | Complete, merged and pushed to `develop` | `develop` / `c7a2ebe` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
-| JAI-018 | Complete and normally pushed | `feature/jai-018-replaceable-llm-extraction` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
+| JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
+| JAI-019 | Implementation and final gate complete, pending commit/push | `feature/jai-019-field-evidence-merging` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 
 ## 2. Current decisions
 
@@ -213,6 +214,24 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 - Created PostgreSQL verification commit `0aa57178e962b81d355d8edd7a0a927a8f77690e`. Three normal push attempts and two read-only `ls-remote` probes then failed because GitHub port 443 remained unreachable, including after a 15-second backoff. The worktree and published history were not changed; the local feature branch remains safely ahead of its tracking branch and must be normally pushed when HTTPS connectivity recovers.
 - A system TCP probe later confirmed GitHub port 443 was reachable. The unchanged normal HTTPS push then advanced the remote feature branch through outage-log commit `ccc64a14bcd59df7d8d1677906e55f0ad9739705`; after one more transient read failure, a second TCP probe and `ls-remote` confirmed local HEAD, the tracking reference, and GitHub all matched that commit before this final status-only update.
 
+### 2026-08-23 — JAI-019 field evidence merging and persistence started
+
+- Reverified the clean JAI-018 feature branch at `3da9ccad55aeb9eb0962f220e3c500288208ed93` and `develop` at `c7a2ebe1082588257fd0353c04c650a698fd6e06`; local, tracking, and GitHub refs matched after transient port 443 failures.
+- Merged JAI-018 into `develop` with non-fast-forward merge `c013544f3339efd776121c6792978f83d958062f`, normally pushed it, and verified local `develop`, `origin/develop`, and GitHub `ls-remote` all match. Repository-local authorship remains `user9527448 <2537759248@qq.com>`.
+- Created `feature/jai-019-field-evidence-merging` from the synchronized `develop` head.
+- Scope is limited to deterministic body/attachment precedence, explicit conflict retention, confidence and extraction-version metadata, `job_posts`/`job_positions` materialization, and durable `field_evidence`. JAI-020 validation/review/reparse APIs and all later source integration remain out of scope.
+- Next: define merge and persistence contracts against the existing extraction models and PostgreSQL schema, add the minimal migration needed for versioned history, then implement unit and database acceptance tests before the complete gate.
+- Added `ExtractionMergeInput`, LLM fragment binding, deterministic field-target precedence, semantic validation of LLM values, stable candidate deduplication, explicit losing conflict evidence, partial position records, and a SHA-256 merged-result hash. Rule evidence uses confidence 1.0000 and LLM method confidence 0.6000; no model self-score is trusted.
+- Announcement fields prefer deterministic body evidence while position fields prefer deterministic attachment evidence; deterministic candidates always precede LLM candidates. All contradictory normalized values and exact coordinates remain queryable. Position rows from different sources remain separate when no evidenced identity can prove they are the same; no placeholder name is invented.
+- Added migration `0004_versioned_field_evidence`: version/hash/current/supersedes metadata and per-version uniqueness for `job_posts`; stable record keys and nullable evidenced names for `job_positions`; raw/normalized values, method/version, selection/conflict flags, and page/line/sheet/cell coordinates for `field_evidence`. Existing rows are backfilled as `legacy-v1`.
+- Added `SqlAlchemyExtractionRepository` with a per-document advisory lock, attachment-parent validation, atomic post/position/evidence writes, unchanged reuse for identical version/hash, rejection of same-version hash drift, and append-only new versions that retain prior entities and evidence.
+- Added five merge unit tests, one PostgreSQL repository acceptance test, and one legacy-data migration test. They cover body/attachment conflicts, deterministic-over-LLM precedence, invalid LLM semantics, input-order-independent hashes, position/evidence coordinates, idempotent reruns, version chains, history retention, empty-schema upgrade/check/downgrade, and 0003 data backfill.
+- During an early migration run Docker Desktop stopped and two repeated Pytest invocations remained waiting for the same test schema. Confirmed their command lines, terminated only those test processes, relaunched the registered Docker Desktop app, restarted the existing `db` service without rebuilding/deleting its volume, and reran each database test singly before the complete gate.
+- The first complete PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 141 files, Ruff lint passed, Mypy passed across 94 source files, all 203 tests passed with no skips, and coverage was 88.07%.
+- Added paired English/Chinese merge/evidence documentation and index entries, and synchronized database docs, plans, backlog acceptance, and active logs. Documentation verification found no broken relative links across 44 Markdown files; heading counts match for plans (45/45), backlogs (70/70), logs (30/30), indexes (5/5), database docs (6/6), and the new guide (6/6); both backlogs retain the same 161 Issue IDs in order, and `git diff --check` passed.
+- A post-documentation gate first ran without `JOBAGENT_TEST_DATABASE_URL`: 194 tests passed, nine PostgreSQL tests were skipped, and coverage fell to 83.51%, so the gate correctly failed. After supplying the repository-documented test database URL, the final `scripts/check.py` passed with Ruff format over 143 files, Ruff lint, Mypy across 94 source files, all 203 tests with no skips, and 88.07% coverage.
+- No JAI-020 validation severity, review state, recommendation eligibility, correction workflow, or reparse command/API was added. No live source/provider request, credential, personal data, downloaded file, or runtime data was committed.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -225,8 +244,8 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 
 ## 5. Next actions
 
-1. Normally push this final status-only verification update and confirm all three feature refs match.
-2. Merge JAI-018 only in the next authorized integration step; start JAI-019 from synchronized `develop` after that merge.
+1. Commit and normally push the verified JAI-019 changes, then verify all three feature refs match.
+2. Merge JAI-019 only in the next authorized integration step; start JAI-020 from synchronized `develop` afterward.
 3. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
 
 ## 6. Update template

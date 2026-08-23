@@ -48,6 +48,95 @@ def test_empty_database_upgrade_constraints_utc_and_downgrade() -> None:
         engine.dispose()
 
 
+def test_jai_019_upgrade_backfills_existing_structured_rows() -> None:
+    database_url = _test_database_url()
+    engine = create_engine(database_url)
+    alembic_config = _alembic_config(database_url)
+    _reset_test_schema(engine)
+
+    try:
+        command.upgrade(alembic_config, "0003_attachment_storage")
+        with engine.begin() as connection:
+            source_id = connection.scalar(
+                text(
+                    "INSERT INTO sources (name, base_url, category, adapter) "
+                    "VALUES ('legacy extraction source', 'https://example.invalid', "
+                    "'test', 'legacy') RETURNING id"
+                )
+            )
+            document_id = connection.scalar(
+                text(
+                    "INSERT INTO raw_documents "
+                    "(source_id, canonical_url, title, raw_text, content_hash) "
+                    "VALUES (:source_id, 'https://example.invalid/legacy', 'Legacy', "
+                    "'Legacy evidence', :content_hash) RETURNING id"
+                ),
+                {"source_id": source_id, "content_hash": "b" * 64},
+            )
+            post_id = connection.scalar(
+                text(
+                    "INSERT INTO job_posts (document_id, organization) "
+                    "VALUES (:document_id, 'Legacy organization') RETURNING id"
+                ),
+                {"document_id": document_id},
+            )
+            position_id = connection.scalar(
+                text(
+                    "INSERT INTO job_positions (post_id, name) "
+                    "VALUES (:post_id, 'Legacy position') RETURNING id"
+                ),
+                {"post_id": post_id},
+            )
+            evidence_id = connection.scalar(
+                text(
+                    "INSERT INTO field_evidence "
+                    "(entity_type, entity_id, field_name, source_type, source_document_id, "
+                    "quote_text, confidence) VALUES "
+                    "('job_post', :post_id, 'organization', 'document', :document_id, "
+                    "'Legacy organization', 1.0) RETURNING id"
+                ),
+                {"post_id": post_id, "document_id": document_id},
+            )
+
+        command.upgrade(alembic_config, "head")
+        command.check(alembic_config)
+
+        with engine.connect() as connection:
+            post = connection.execute(
+                text(
+                    "SELECT extraction_version, version, is_current, result_hash "
+                    "FROM job_posts WHERE id = :id"
+                ),
+                {"id": post_id},
+            ).one()
+            position = connection.execute(
+                text("SELECT record_key, name FROM job_positions WHERE id = :id"),
+                {"id": position_id},
+            ).one()
+            evidence = connection.execute(
+                text(
+                    "SELECT raw_value, normalized_value, extraction_method, "
+                    "extraction_version, is_selected, conflict "
+                    "FROM field_evidence WHERE id = :id"
+                ),
+                {"id": evidence_id},
+            ).one()
+
+        assert post == ("legacy-v1", 1, True, "0" * 64)
+        assert position == (f"legacy:{position_id}", "Legacy position")
+        assert evidence == (
+            "Legacy organization",
+            None,
+            "legacy",
+            "legacy-v1",
+            True,
+            False,
+        )
+    finally:
+        _reset_test_schema(engine)
+        engine.dispose()
+
+
 def _test_database_url() -> URL:
     raw_url = os.getenv("JOBAGENT_TEST_DATABASE_URL")
     if raw_url is None:
