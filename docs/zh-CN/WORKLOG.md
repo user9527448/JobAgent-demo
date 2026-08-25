@@ -6,9 +6,9 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-23
+> 最后更新：2026-08-25
 >
-> 当前分支：`feature/jai-019-field-evidence-merging`
+> 当前分支：`feature/jai-020-validation-review-reparse`
 
 ## 1. 当前状态
 
@@ -27,7 +27,8 @@
 | JAI-016 | 已完成、合并并推送到 `develop` | `develop` / `1dc7a10` | 10 份脱敏 PDF/XLSX 样本、已审查中间快照、离线评估、测试和双语文档已验证 |
 | JAI-017 | 已完成、合并并推送到 `develop` | `develop` / `c7a2ebe` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
 | JAI-018 | 已完成、合并并推送到 `develop` | `develop` / `c013544` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
-| JAI-019 | 已完成并普通推送 | `feature/jai-019-field-evidence-merging` / `a2c41fe` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
+| JAI-019 | 已完成、合并并推送到 `develop` | `develop` / `82797d1` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
+| JAI-020 | 已完成并普通推送 | `feature/jai-020-validation-review-reparse` / `6712010` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
 
 ## 2. 当前决策
 
@@ -78,6 +79,14 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 ### D-026 有证据但矛盾或不支持的值生成诊断
 
 无效日期、倒置日期范围、没有显式 base 的相对 URL、非精确招聘人数，以及未知地区/学历/类别值都不会生成规范字段。安全的 `ExtractionIssue` 保留原值和证据；没有标签但看似关键的正文会被忽略，而不是猜测填充。
+
+### D-027 复核与推荐资格由持久化校验结果推导
+
+JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结果。警告需要复核但仍可推荐；任何错误都会阻止自动推荐。旧数据显式标记为 `legacy-unvalidated` 且不可推荐，不会被静默批准。
+
+### D-028 重解析版本是显式幂等 key
+
+同一文档/抽取版本只有在合并结果哈希不变时才能重复。规则修正使用新版本，并追加公告、岗位、证据和校验历史。默认已存文档流水线不发起线上来源或 LLM 请求。
 
 ## 3. 当前工作记录
 
@@ -234,6 +243,26 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 - 已使用核验无误的仓库本地作者创建 JAI-019 功能提交 `a2c41fee65bfcbf0374af96f5b028ab40bf565a6`。三次普通 HTTPS 推送均在网络层失败（两次 GitHub 443 连接超时、一次连接重置），其中已在 TCP 探测暂时恢复后重试。没有改变远程地址、协议、已发布历史或提交作者；本地 feature 提交安全保留，须在网络恢复后继续普通推送。
 - 再次有界退避且 TCP 探测成功后，保持不变的普通 HTTPS 推送已发布功能提交和阻塞日志提交，推进至 `a7d5e17f44832acc774e86752be0421fdacb3adc`。后续网络恢复时，`ls-remote` 已确认在本次最终状态更新之前，本地 HEAD、跟踪引用和 GitHub 均为该提交；GitHub `develop` 仍为 `c013544f3339efd776121c6792978f83d958062f`。
 
+### 2026-08-25 — JAI-020 数据校验、待复核与重解析启动
+
+- GitHub 连通性恢复后，已普通推送 JAI-019 最终交接提交。本地 HEAD、跟踪引用与 GitHub `ls-remote` 均为 `01417b89256f8730f78317c17bb1101ed3707818`。
+- 已用非快进合并 `82797d1fa91b1f5e77296d04e3138a9fabe7b499` 把 JAI-019 纳入 `develop`，在一次 GitHub 443 瞬时超时后完成普通推送，并核验本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 一致。仓库本地作者仍为 `user9527448 <2537759248@qq.com>`。
+- 已从同步后的 `develop` HEAD 创建 `feature/jai-020-validation-review-reparse`。两份 Backlog 的下一项未完成 Issue 均为 JAI-020。
+- 范围仅限必填、时间逻辑、URL、枚举和冲突校验；记录原因/严重度；复核与自动推荐资格；以及规则修正后对指定文档执行幂等重解析的命令/API。新增来源、评分/匹配、OCR、调度扩展和绕过来源限制均不在范围内。
+- 下一步：检查 JAI-019 版本化实体及既有 CLI/API 模式，定义最小校验/重解析契约和持久化改动，再先实现定向单元/数据库/API 测试，最后运行完整的 PostgreSQL 门禁。
+- 新增确定性 `ExtractionValidator` 问题，包含稳定 issue key、`warning`/`error` 严重度、推导出的 `approved`/`review_required`/`blocked` 状态和自动推荐资格。缺少关键字段、非法日期/URL/枚举及严重冲突会阻止推荐；非关键不完整/冲突保留为复核警告，不猜测值。
+- 新增迁移 `0005_validation_review_reparse`：`job_posts` 保存校验/复核元数据，`validation_issues` 通过受限外键保存逐版本安全原因和严重度。旧公告回填为 `review_required`、不可推荐和 `legacy-unvalidated`。
+- 扩展 `SqlAlchemyExtractionRepository`，使每个新抽取版本在同一事务写入校验与问题；幂等重复复用相同实体和计数。新增 `StoredDocumentReparsePipeline`、共享 `ReparseService`、`POST /extraction/documents/{document_id}/reparse` 和带显式安全版本标识符的 `scripts/manage_extraction.py reparse`。
+- 重解析使用已存 `raw_text` 或从已存 HTML 清理出的文本，并在解析前核验每个持久附件的路径、字节数和 SHA-256。附件缺失/无法解析时显式失败。默认流水线只执行确定性解析/抽取/合并，不访问来源或调用 LLM。
+- 102 个源文件的静态检查通过，11 项定向校验/API/命令测试通过。Docker Desktop 未运行，因此启动了已安装应用和既有 `db` Compose 服务，未重建或删除数据卷；`jobagent_test` 健康。
+- 首轮 PostgreSQL 测试为 1 项通过、3 项失败：两项 Alembic 漂移失败暴露校验约束误挂到 `raw_documents`；一项仓库预期使用了旧式手工值 `CN-11`/`CN-31`，与当前 `beijing`/`shanghai` 字典不一致。已把约束移至 `job_posts`，并让测试对齐生产字典而不放宽校验；随后 4 项迁移/仓库/重解析数据库测试全部通过。
+- 首轮启用 PostgreSQL 的完整 `scripts/check.py` 通过：Ruff format 检查 152 个文件，Ruff lint 通过，102 个源文件的 Mypy 通过，215 项测试全部通过、无跳过，覆盖率为 88.06%。
+- 新增配对的校验/重解析文档和索引条目，并同步数据库文档、计划、Backlog 验收与活动日志。没有新增来源 4/5、匹配/评分、OCR、调度、手工改值/审批 API、凭据、个人数据、下载来源文件或运行数据。
+- 文档核验确认仓库 46 份 Markdown 无失效相对链接；开发计划标题 45/45、Backlog 70/70、活动日志 33/33、索引 5/5、数据库文档 6/6、新指南 7/7；两份 Backlog 的 161 个 Issue ID 顺序一致，且 `git diff --check` 通过。首次全仓库链接检查命令存在 PowerShell 变量插值语法错误；修正后的只读命令通过，未修改文件。
+- 畸形 URL 防御测试通过，但首次组合静态检查发现仅为触发校验而访问 `parsed.port` 的 Ruff `B018`；已改为显式接收校验值，未增加忽略规则。
+- 所有文档和防御性测试完成后，最终启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 154 个文件，Ruff lint 通过，102 个源文件的 Mypy 通过，216 项测试全部通过、无跳过，覆盖率为 88.07%。
+- 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `67120101ea0c926f327b781a6e69c05350d41df7`，并普通推送新 feature 分支。在本次最终状态更新之前，本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为该提交；GitHub `develop` 仍为 `82797d1fa91b1f5e77296d04e3138a9fabe7b499`。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -246,8 +275,8 @@ JAI-013 定义不可变的 `ParseSource`、定位、块、Issue 和结果契约�
 
 ## 5. 下一步
 
-1. 只在下一次获授权的集成步骤合并 JAI-019，并随后核验 `develop` 同步状态。
-2. 从同步后的 `develop` 启动 JAI-020；保持其校验/复核/重解析范围与 JAI-019 分离。
+1. 只在下一次获授权的集成步骤合并 JAI-020，并随后核验 `develop` 同步状态。
+2. 从同步后的 `develop` 启动 JAI-021；保持其来源 4/5 和三日稳定性范围与 JAI-020 分离。
 3. OCR 继续延期至 JAI-B01，JAI-048 使用独立文档 Issue 执行。
 
 ## 6. 更新模板

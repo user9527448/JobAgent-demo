@@ -15,6 +15,7 @@ EXPECTED_TABLES = {
     "job_posts",
     "raw_documents",
     "sources",
+    "validation_issues",
 }
 
 

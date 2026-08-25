@@ -264,9 +264,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: prevent bad data from silently entering recommendations.
 - **Scope**: required fields, date/link/enum/conflict validation, review state, reparse command/API.
 - **Acceptance**:
-  - [ ] Validation failures record reason and severity.
-  - [ ] Severe errors do not enter automatic recommendations.
-  - [ ] Reparse selected documents idempotently after rule fixes.
+  - [x] Validation failures record reason and severity.
+  - [x] Severe errors do not enter automatic recommendations.
+  - [x] Reparse selected documents idempotently after rule fixes.
 
 ### JAI-021 Integrate sources 4–5 and verify three-day stability
 

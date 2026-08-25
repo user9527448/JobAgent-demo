@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 
 from sqlalchemy import func, select
@@ -11,7 +11,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from jobagent.core.exceptions import PermanentJobAgentError, TransientJobAgentError
-from jobagent.db.models import Attachment, FieldEvidence, JobPosition, JobPost, RawDocument
+from jobagent.db.models import (
+    Attachment,
+    FieldEvidence,
+    JobPosition,
+    JobPost,
+    RawDocument,
+    ValidationIssue,
+)
 from jobagent.extraction.contracts import FieldName
 from jobagent.extraction.merging import (
     MergedEntityType,
@@ -21,6 +28,8 @@ from jobagent.extraction.merging import (
     normalized_json_value,
 )
 from jobagent.parsers import CellRangeLocation, LineRangeLocation, PageLocation, ParseSourceType
+
+from .validation import ExtractionValidator, ReviewStatus, ValidationResult
 
 
 class ExtractionWriteStatus(StrEnum):
@@ -41,18 +50,29 @@ class ExtractionWriteResult:
     result_hash: str
     status: ExtractionWriteStatus
     previous_post_id: int | None
+    review_status: ReviewStatus
+    recommendation_eligible: bool
+    validation_version: str
+    validation_error_count: int
+    validation_warning_count: int
 
 
 class SqlAlchemyExtractionRepository:
     """Append extraction versions atomically while retaining prior evidence."""
 
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+    def __init__(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+        validator: ExtractionValidator | None = None,
+    ) -> None:
         self._session_factory = session_factory
+        self._validator = validator or ExtractionValidator()
 
     async def save(self, merged: MergedExtraction) -> ExtractionWriteResult:
         """Create or idempotently reuse one merged extraction version."""
         post_values = _post_values(merged.post_fields)
         _validate_date_range(post_values)
+        validation = self._validator.validate(merged)
         try:
             async with self._session_factory() as session, session.begin():
                 await session.execute(select(func.pg_advisory_xact_lock(merged.document_id)))
@@ -88,6 +108,7 @@ class SqlAlchemyExtractionRepository:
                             .order_by(JobPosition.record_key)
                         )
                     )
+                    counts = await _validation_counts(session, existing.id)
                     return ExtractionWriteResult(
                         post_id=existing.id,
                         position_ids=position_ids,
@@ -96,6 +117,11 @@ class SqlAlchemyExtractionRepository:
                         result_hash=existing.result_hash,
                         status=ExtractionWriteStatus.UNCHANGED,
                         previous_post_id=existing.supersedes_id,
+                        review_status=ReviewStatus(existing.review_status),
+                        recommendation_eligible=existing.recommendation_eligible,
+                        validation_version=existing.validation_version,
+                        validation_error_count=counts[0],
+                        validation_warning_count=counts[1],
                     )
 
                 current = await session.scalar(
@@ -118,10 +144,15 @@ class SqlAlchemyExtractionRepository:
                     is_current=True,
                     supersedes_id=previous_post_id,
                     result_hash=merged.result_hash,
+                    review_status=validation.review_status.value,
+                    recommendation_eligible=validation.recommendation_eligible,
+                    validation_version=validation.validation_version,
+                    validated_at=datetime.now(UTC),
                     **post_values,
                 )
                 session.add(post)
                 await session.flush()
+                _add_validation_issues(session, post.id, validation)
 
                 position_rows: list[tuple[JobPosition, tuple[MergedField, ...]]] = []
                 for position in merged.positions:
@@ -157,6 +188,11 @@ class SqlAlchemyExtractionRepository:
                     result_hash=merged.result_hash,
                     status=ExtractionWriteStatus.CREATED,
                     previous_post_id=previous_post_id,
+                    review_status=validation.review_status,
+                    recommendation_eligible=validation.recommendation_eligible,
+                    validation_version=validation.validation_version,
+                    validation_error_count=validation.error_count,
+                    validation_warning_count=validation.warning_count,
                 )
         except SQLAlchemyError as error:
             raise TransientJobAgentError(
@@ -280,6 +316,39 @@ def _add_evidence(
                     **location_values,
                 )
             )
+
+
+def _add_validation_issues(
+    session: AsyncSession,
+    post_id: int,
+    validation: ValidationResult,
+) -> None:
+    for finding in validation.findings:
+        session.add(
+            ValidationIssue(
+                post_id=post_id,
+                issue_key=finding.issue_key,
+                code=finding.code.value,
+                severity=finding.severity.value,
+                entity_type=finding.entity_type.value,
+                entity_key=finding.entity_key,
+                field_name=None if finding.field_name is None else finding.field_name.value,
+                reason=finding.reason,
+            )
+        )
+
+
+async def _validation_counts(session: AsyncSession, post_id: int) -> tuple[int, int]:
+    rows = (
+        await session.execute(
+            select(ValidationIssue.severity, func.count())
+            .where(ValidationIssue.post_id == post_id)
+            .group_by(ValidationIssue.severity)
+        )
+    ).all()
+    error_count = sum(count for severity, count in rows if severity == "error")
+    warning_count = sum(count for severity, count in rows if severity == "warning")
+    return error_count, warning_count
 
 
 def _location_values(evidence: MergedEvidence) -> dict[str, object]:

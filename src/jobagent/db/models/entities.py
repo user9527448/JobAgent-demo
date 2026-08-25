@@ -296,6 +296,14 @@ class JobPost(TimestampMixin, Base):
             "supersedes_id IS NULL OR supersedes_id <> id",
             name="supersedes_other_version",
         ),
+        CheckConstraint(
+            "review_status IN ('approved', 'review_required', 'blocked')",
+            name="review_status_valid",
+        ),
+        CheckConstraint(
+            "length(validation_version) > 0",
+            name="validation_version_present",
+        ),
         Index(
             "uq_job_posts_document_current",
             "document_id",
@@ -305,6 +313,11 @@ class JobPost(TimestampMixin, Base):
         Index("ix_job_posts_category_region", "category", "region"),
         Index("ix_job_posts_deadline", "deadline"),
         Index("ix_job_posts_supersedes_id", "supersedes_id"),
+        Index(
+            "ix_job_posts_current_recommendation_eligible",
+            "is_current",
+            "recommendation_eligible",
+        ),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
@@ -324,6 +337,10 @@ class JobPost(TimestampMixin, Base):
         ForeignKey("job_posts.id", ondelete="RESTRICT")
     )
     result_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    review_status: Mapped[str] = mapped_column(String(32), nullable=False)
+    recommendation_eligible: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    validation_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    validated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
     organization: Mapped[str | None] = mapped_column(String(300))
     category: Mapped[str | None] = mapped_column(String(50))
     region: Mapped[str | None] = mapped_column(String(100))
@@ -337,6 +354,10 @@ class JobPost(TimestampMixin, Base):
         foreign_keys=[supersedes_id],
     )
     positions: Mapped[list[JobPosition]] = relationship(
+        back_populates="post",
+        passive_deletes=True,
+    )
+    validation_issues: Mapped[list[ValidationIssue]] = relationship(
         back_populates="post",
         passive_deletes=True,
     )
@@ -373,6 +394,49 @@ class JobPosition(Base):
     )
 
     post: Mapped[JobPost] = relationship(back_populates="positions")
+
+
+class ValidationIssue(Base):
+    """A persisted quality reason that blocks or flags one extraction version."""
+
+    __tablename__ = "validation_issues"
+    __table_args__ = (
+        UniqueConstraint("post_id", "issue_key", name="uq_validation_issues_post_key"),
+        CheckConstraint(
+            "severity IN ('warning', 'error')",
+            name="severity_valid",
+        ),
+        CheckConstraint(
+            "entity_type IN ('job_post', 'job_position')",
+            name="entity_type_valid",
+        ),
+        CheckConstraint(
+            "issue_key ~ '^[0-9a-f]{64}$'",
+            name="issue_key_sha256",
+        ),
+        Index("ix_validation_issues_post_severity", "post_id", "severity"),
+        Index("ix_validation_issues_code", "code"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    post_id: Mapped[int] = mapped_column(
+        ForeignKey("job_posts.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    issue_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    code: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(16), nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    entity_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    field_name: Mapped[str | None] = mapped_column(String(100))
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        UTCDateTime(),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    post: Mapped[JobPost] = relationship(back_populates="validation_issues")
 
 
 class FieldEvidence(Base):
