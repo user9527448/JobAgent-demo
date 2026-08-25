@@ -68,10 +68,25 @@ from jobagent.extraction.persistence import (
     ExtractionWriteStatus,
     SqlAlchemyExtractionRepository,
 )
+from jobagent.extraction.reparse import (
+    ReparseOperations,
+    ReparsePipeline,
+    ReparseService,
+    StoredDocumentReparsePipeline,
+)
 from jobagent.extraction.rules import (
     EXTRACTOR_VERSION,
     DeterministicFieldExtractor,
     ExtractionPolicy,
+)
+from jobagent.extraction.validation import (
+    VALIDATION_VERSION,
+    ExtractionValidator,
+    ReviewStatus,
+    ValidationCode,
+    ValidationFinding,
+    ValidationResult,
+    ValidationSeverity,
 )
 
 __all__ = [
@@ -84,6 +99,7 @@ __all__ = [
     "POST_FIELDS",
     "REGION_ALIASES",
     "SYSTEM_INSTRUCTIONS",
+    "VALIDATION_VERSION",
     "DailyLlmBudget",
     "DeterministicFieldExtractor",
     "ExtractedField",
@@ -96,6 +112,7 @@ __all__ = [
     "ExtractionPolicy",
     "ExtractionRecord",
     "ExtractionResult",
+    "ExtractionValidator",
     "ExtractionWriteResult",
     "ExtractionWriteStatus",
     "FieldName",
@@ -126,7 +143,16 @@ __all__ = [
     "NormalizedValue",
     "OpenAIResponsesProvider",
     "ProviderFactory",
+    "ReparseOperations",
+    "ReparsePipeline",
+    "ReparseService",
+    "ReviewStatus",
     "SqlAlchemyExtractionRepository",
+    "StoredDocumentReparsePipeline",
+    "ValidationCode",
+    "ValidationFinding",
+    "ValidationResult",
+    "ValidationSeverity",
     "build_llm_provider",
     "normalize_category",
     "normalize_education",

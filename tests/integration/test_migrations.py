@@ -27,6 +27,7 @@ CORE_TABLES = {
     "job_posts",
     "raw_documents",
     "sources",
+    "validation_issues",
 }
 
 
@@ -48,7 +49,7 @@ def test_empty_database_upgrade_constraints_utc_and_downgrade() -> None:
         engine.dispose()
 
 
-def test_jai_019_upgrade_backfills_existing_structured_rows() -> None:
+def test_jai_019_and_jai_020_upgrades_backfill_existing_structured_rows() -> None:
     database_url = _test_database_url()
     engine = create_engine(database_url)
     alembic_config = _alembic_config(database_url)
@@ -104,7 +105,9 @@ def test_jai_019_upgrade_backfills_existing_structured_rows() -> None:
         with engine.connect() as connection:
             post = connection.execute(
                 text(
-                    "SELECT extraction_version, version, is_current, result_hash "
+                    "SELECT extraction_version, version, is_current, result_hash, "
+                    "review_status, recommendation_eligible, validation_version, "
+                    "validated_at IS NOT NULL "
                     "FROM job_posts WHERE id = :id"
                 ),
                 {"id": post_id},
@@ -121,8 +124,21 @@ def test_jai_019_upgrade_backfills_existing_structured_rows() -> None:
                 ),
                 {"id": evidence_id},
             ).one()
+            validation_issue_count = connection.scalar(
+                text("SELECT count(*) FROM validation_issues WHERE post_id = :post_id"),
+                {"post_id": post_id},
+            )
 
-        assert post == ("legacy-v1", 1, True, "0" * 64)
+        assert post == (
+            "legacy-v1",
+            1,
+            True,
+            "0" * 64,
+            "review_required",
+            False,
+            "legacy-unvalidated",
+            True,
+        )
         assert position == (f"legacy:{position_id}", "Legacy position")
         assert evidence == (
             "Legacy organization",
@@ -132,6 +148,7 @@ def test_jai_019_upgrade_backfills_existing_structured_rows() -> None:
             True,
             False,
         )
+        assert validation_issue_count == 0
     finally:
         _reset_test_schema(engine)
         engine.dispose()

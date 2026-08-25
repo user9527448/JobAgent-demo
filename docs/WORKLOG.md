@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-23
+> Last updated: 2026-08-25
 >
-> Active branch: `feature/jai-019-field-evidence-merging`
+> Active branch: `feature/jai-020-validation-review-reparse`
 
 ## 1. Current status
 
@@ -27,7 +27,8 @@
 | JAI-016 | Complete, merged and pushed to `develop` | `develop` / `1dc7a10` | Ten sanitized PDF/XLSX fixtures, reviewed intermediate snapshots, offline evaluation, tests, and bilingual docs verified |
 | JAI-017 | Complete, merged and pushed to `develop` | `develop` / `c7a2ebe` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
-| JAI-019 | Complete and normally pushed | `feature/jai-019-field-evidence-merging` / `a2c41fe` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
+| JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
+| JAI-020 | Implementation and final gate complete, pending commit/push | `feature/jai-020-validation-review-reparse` | Validation severity, review eligibility, and idempotent document reparsing verified |
 
 ## 2. Current decisions
 
@@ -78,6 +79,14 @@ Deterministic extraction groups output by parser text block or table row. Every 
 ### D-026 Contradictory or unsupported evidenced values become diagnostics
 
 Invalid dates, inverted date ranges, relative URLs without an explicit base, non-exact headcounts, and unknown region/education/category values do not produce normalized fields. Safe `ExtractionIssue` objects retain raw values and evidence; unlabeled critical-looking text is ignored rather than guessed.
+
+### D-027 Review and recommendation eligibility are derived from persisted validation
+
+JAI-020 uses `approved`, `review_required`, and `blocked` as deterministic outcomes. Warnings require review but remain eligible; any error blocks automatic recommendation. Legacy rows are explicitly `legacy-unvalidated` and ineligible rather than silently approved.
+
+### D-028 Reparse versions are explicit idempotency keys
+
+The same document/extraction version may be repeated only when its merged result hash is unchanged. A rule correction uses a new version and appends post, position, evidence, and validation history. The default stored-document pipeline performs no live-source or LLM request.
 
 ## 3. Active work history
 
@@ -234,6 +243,25 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 - Created JAI-019 feature commit `a2c41fee65bfcbf0374af96f5b028ab40bf565a6` with the verified repository-local author. Three normal HTTPS push attempts failed at the network layer (two GitHub port 443 connection timeouts and one connection reset), including retries after TCP probes temporarily reported recovery. No remote, protocol, published history, or commit author was changed; the local feature commit remains safe and must be normally pushed when connectivity recovers.
 - After another bounded backoff and successful TCP probe, the unchanged normal HTTPS push published the feature and blocker-log commits through `a7d5e17f44832acc774e86752be0421fdacb3adc`. A later recovered `ls-remote` confirmed local HEAD, the tracking reference, and GitHub all matched that commit before this final status-only update; GitHub `develop` remained at `c013544f3339efd776121c6792978f83d958062f`.
 
+### 2026-08-25 — JAI-020 validation, review, and reparsing started
+
+- Recovered GitHub connectivity and normally pushed the final JAI-019 handoff commit. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched `01417b89256f8730f78317c17bb1101ed3707818`.
+- Merged JAI-019 into `develop` with non-fast-forward merge `82797d1fa91b1f5e77296d04e3138a9fabe7b499`, normally pushed after one transient port 443 timeout, and verified local `develop`, `origin/develop`, and GitHub `ls-remote` all match. Repository-local authorship remains `user9527448 <2537759248@qq.com>`.
+- Created `feature/jai-020-validation-review-reparse` from the synchronized `develop` head. JAI-020 is the next incomplete Issue in both backlogs.
+- Scope is limited to required-field, temporal, URL, enum, and conflict validation; recorded reason/severity; review and automatic-recommendation eligibility; and an idempotent command/API for reparsing a specified document after rule correction. New source integration, scoring/matching, OCR, scheduler expansion, and bypassing source restrictions remain out of scope.
+- Next: inspect the JAI-019 versioned entities and existing CLI/API patterns, define the minimum validation/reparse contracts and persistence changes, then implement focused unit/database/API tests before the complete PostgreSQL-enabled gate.
+- Added deterministic `ExtractionValidator` findings with stable issue keys, warning/error severity, derived `approved`/`review_required`/`blocked` state, and automatic-recommendation eligibility. Missing critical fields, invalid dates/URLs/enums, and severe conflicts block recommendations; noncritical incompleteness/conflicts remain review warnings without guessed values.
+- Added migration `0005_validation_review_reparse`: `job_posts` now stores validation/review metadata, while `validation_issues` stores version-specific safe reasons and severity under restricted foreign keys. Legacy posts are backfilled as `review_required`, ineligible, and `legacy-unvalidated`.
+- Extended `SqlAlchemyExtractionRepository` so validation and issue rows are written atomically with every new extraction version; idempotent repeats reuse the same entities and counts. Added `StoredDocumentReparsePipeline`, shared `ReparseService`, `POST /extraction/documents/{document_id}/reparse`, and `scripts/manage_extraction.py reparse` with explicit safe version identifiers.
+- Reparse uses stored `raw_text` or sanitized text from stored HTML and verifies every persisted attachment path, size, and SHA-256 before parsing. Missing/unparseable attachments fail explicitly. The default pipeline performs deterministic parsing/extraction/merging only and makes no source or LLM request.
+- Static checks passed across 102 source files, and 11 focused validation/API/command tests passed. Docker Desktop was not running, so the installed application and existing `db` Compose service were started without rebuilding or deleting volumes; `jobagent_test` was healthy.
+- The first PostgreSQL set had one pass and three failures: two Alembic drift failures exposed validation constraints accidentally attached to `raw_documents`, and one repository expectation used obsolete hand-built `CN-11`/`CN-31` values instead of the current `beijing`/`shanghai` dictionary. The constraints were moved to `job_posts` and tests aligned to the production dictionary without weakening validation; all four migration/repository/reparse database tests then passed.
+- The first complete PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 152 files, Ruff lint passed, Mypy passed across 102 source files, all 215 tests passed with no skips, and coverage was 88.06%.
+- Added paired validation/reparse documentation and index entries, synchronized database docs, plans, backlog acceptance, and active logs. No source 4/5 integration, matching/scoring, OCR, scheduling, manual value-editing/approval API, credentials, personal data, downloaded source file, or runtime data was added.
+- Documentation verification found no broken relative links across 46 repository Markdown files; heading counts match for plans (45/45), backlogs (70/70), logs (33/33), indexes (5/5), database docs (6/6), and the new guide (7/7). Both backlogs retain the same 161 Issue IDs in order and `git diff --check` passed. The first repository-wide link-check command had a PowerShell variable-interpolation syntax error; the corrected read-only command passed without changing files.
+- The malformed-URL defense test passed, while its first combined static command reported Ruff `B018` for accessing `parsed.port` only to trigger validation. The expression was changed to an explicit checked assignment; no suppression was added.
+- The final PostgreSQL-enabled `scripts/check.py` passed after all documentation and defensive tests: Ruff format checked 154 files, Ruff lint passed, Mypy passed across 102 source files, all 216 tests passed with no skips, and coverage was 88.07%.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -246,8 +274,8 @@ Invalid dates, inverted date ranges, relative URLs without an explicit base, non
 
 ## 5. Next actions
 
-1. Merge JAI-019 only in the next authorized integration step and verify synchronized `develop` afterward.
-2. Start JAI-020 from that synchronized `develop`; keep its validation/review/reparse scope separate from JAI-019.
+1. Commit and normally push the verified JAI-020 changes, then verify local, tracking, and GitHub feature refs match.
+2. Merge JAI-020 only in the next authorized integration step; start JAI-021 from synchronized `develop` afterward.
 3. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
