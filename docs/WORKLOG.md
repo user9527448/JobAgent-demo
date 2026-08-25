@@ -28,7 +28,7 @@
 | JAI-017 | Complete, merged and pushed to `develop` | `develop` / `c7a2ebe` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
-| JAI-020 | Implementation and final gate complete, pending commit/push | `feature/jai-020-validation-review-reparse` | Validation severity, review eligibility, and idempotent document reparsing verified |
+| JAI-020 | Complete and normally pushed | `feature/jai-020-validation-review-reparse` / `6712010` | Validation severity, review eligibility, and idempotent document reparsing verified |
 
 ## 2. Current decisions
 
@@ -261,6 +261,7 @@ The same document/extraction version may be repeated only when its merged result
 - Documentation verification found no broken relative links across 46 repository Markdown files; heading counts match for plans (45/45), backlogs (70/70), logs (33/33), indexes (5/5), database docs (6/6), and the new guide (7/7). Both backlogs retain the same 161 Issue IDs in order and `git diff --check` passed. The first repository-wide link-check command had a PowerShell variable-interpolation syntax error; the corrected read-only command passed without changing files.
 - The malformed-URL defense test passed, while its first combined static command reported Ruff `B018` for accessing `parsed.port` only to trigger validation. The expression was changed to an explicit checked assignment; no suppression was added.
 - The final PostgreSQL-enabled `scripts/check.py` passed after all documentation and defensive tests: Ruff format checked 154 files, Ruff lint passed, Mypy passed across 102 source files, all 216 tests passed with no skips, and coverage was 88.07%.
+- Created feature commit `67120101ea0c926f327b781a6e69c05350d41df7` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the new feature branch. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit before this final status-only update; GitHub `develop` remained at `82797d1fa91b1f5e77296d04e3138a9fabe7b499`.
 
 ## 4. Verification and blockers
 
@@ -274,8 +275,8 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Commit and normally push the verified JAI-020 changes, then verify local, tracking, and GitHub feature refs match.
-2. Merge JAI-020 only in the next authorized integration step; start JAI-021 from synchronized `develop` afterward.
+1. Merge JAI-020 only in the next authorized integration step and verify synchronized `develop` afterward.
+2. Start JAI-021 from that synchronized `develop`; keep its source 4/5 and three-day stability scope separate from JAI-020.
 3. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
 
 ## 6. Update template

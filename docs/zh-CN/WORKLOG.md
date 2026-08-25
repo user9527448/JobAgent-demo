@@ -28,7 +28,7 @@
 | JAI-017 | 已完成、合并并推送到 `develop` | `develop` / `c7a2ebe` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
 | JAI-018 | 已完成、合并并推送到 `develop` | `develop` / `c013544` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
 | JAI-019 | 已完成、合并并推送到 `develop` | `develop` / `82797d1` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
-| JAI-020 | 实施和最终门禁完成，等待提交/推送 | `feature/jai-020-validation-review-reparse` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
+| JAI-020 | 已完成并普通推送 | `feature/jai-020-validation-review-reparse` / `6712010` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
 
 ## 2. 当前决策
 
@@ -261,6 +261,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 文档核验确认仓库 46 份 Markdown 无失效相对链接；开发计划标题 45/45、Backlog 70/70、活动日志 33/33、索引 5/5、数据库文档 6/6、新指南 7/7；两份 Backlog 的 161 个 Issue ID 顺序一致，且 `git diff --check` 通过。首次全仓库链接检查命令存在 PowerShell 变量插值语法错误；修正后的只读命令通过，未修改文件。
 - 畸形 URL 防御测试通过，但首次组合静态检查发现仅为触发校验而访问 `parsed.port` 的 Ruff `B018`；已改为显式接收校验值，未增加忽略规则。
 - 所有文档和防御性测试完成后，最终启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 154 个文件，Ruff lint 通过，102 个源文件的 Mypy 通过，216 项测试全部通过、无跳过，覆盖率为 88.07%。
+- 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `67120101ea0c926f327b781a6e69c05350d41df7`，并普通推送新 feature 分支。在本次最终状态更新之前，本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为该提交；GitHub `develop` 仍为 `82797d1fa91b1f5e77296d04e3138a9fabe7b499`。
 
 ## 4. 检查与阻塞
 
@@ -274,8 +275,8 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 提交并普通推送已验证的 JAI-020 改动，再核验本地、跟踪和 GitHub feature 引用一致。
-2. 只在下一次获授权的集成步骤合并 JAI-020；随后再从同步的 `develop` 启动 JAI-021。
+1. 只在下一次获授权的集成步骤合并 JAI-020，并随后核验 `develop` 同步状态。
+2. 从同步后的 `develop` 启动 JAI-021；保持其来源 4/5 和三日稳定性范围与 JAI-020 分离。
 3. OCR 继续延期至 JAI-B01，JAI-048 使用独立文档 Issue 执行。
 
 ## 6. 更新模板
