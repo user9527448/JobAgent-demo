@@ -2,7 +2,7 @@
 
 > 英文原文：[JOBAGENT core database model](../DATABASE.md)。修改原文时必须在同一提交中同步更新本镜像。
 
-本文描述 JAI-006 建立的 PostgreSQL Schema，以及 JAI-009 的[原始公告版本策略](RAW_DOCUMENTS.md)和 JAI-010 的[附件存储策略](ATTACHMENTS.md)带来的扩展。JAI-007 增加的采集运行仓库和编排见[采集编排文档](COLLECTION.md)。
+本文描述 JAI-006 建立的 PostgreSQL Schema，以及 JAI-009 的[原始公告版本策略](RAW_DOCUMENTS.md)、JAI-010 的[附件存储策略](ATTACHMENTS.md)和 JAI-019 的[版本化抽取/证据策略](MERGING_AND_EVIDENCE.md)带来的扩展。JAI-007 增加的采集运行仓库和编排见[采集编排文档](COLLECTION.md)。
 
 ## 数据表
 
@@ -12,9 +12,9 @@
 | `crawl_runs` | 一次来源运行 | 状态值受限；`finished_at` 不得早于 `started_at`；JSONB 统计 |
 | `raw_documents` | 不可变的来源公告版本 | `(source_id, canonical_url, version)` 唯一；每个来源 URL 只有一个当前版本；SHA-256 内容哈希；可选 ETag/Last-Modified；HTML 或文本至少一个存在 |
 | `attachments` | 从公告发现的文件 | `(document_id, url)` 唯一；下载状态和元数据受校验；解析状态独立 |
-| `job_posts` | 公告级结构化结果 | 每个文档至多一个当前公告；截止时间不得早于开始时间 |
-| `job_positions` | 公告下可选的岗位行 | 已知人数必须为正；公告可以没有岗位行 |
-| `field_evidence` | 字段级可追溯证据 | 必须且只能指向一个文档或附件；必须有引文/页码/单元格定位；置信度为 0 到 1 |
+| `job_posts` | 版本化公告级结构化结果 | 公告/抽取版本唯一；只有一个当前版本；版本/前序/哈希链；截止时间不得早于开始时间 |
+| `job_positions` | 一个公告版本下的可选岗位记录 | 稳定记录 key；没有证据时岗位名称可空；已知人数必须为正 |
+| `field_evidence` | 字段级可追溯证据 | 原值/规范值、方法/版本、选中/冲突、且仅一个来源、引文/页/行/工作表/单元格定位，置信度为 0 到 1 |
 
 ## 关系与删除策略
 
@@ -32,7 +32,7 @@ sources
 
 所有历史外键使用 `ON DELETE RESTRICT`，ORM 关系不使用删除级联。有历史记录引用的来源不能被意外删除。正常停用来源只把 `sources.enabled` 改为 false，从而保留运行、文档、附件和抽取数据。
 
-`field_evidence.entity_type/entity_id` 有意采用经过校验的多态引用，可指向 `job_posts` 或 `job_positions`。数据库同时保留真实外键，指向提供证据的来源文档或附件。
+`field_evidence.entity_type/entity_id` 有意采用经过校验的多态引用，可指向 `job_posts` 或 `job_positions`。抽取仓库会校验该实体目标，数据库则保留真实外键，指向提供证据的来源文档或附件。新抽取版本会追加公告/岗位/证据行，旧版本保持抗删除。
 
 ## 时间处理
 
@@ -51,6 +51,8 @@ sources
 - 状态和证据类型字段使用显式检查约束，而不是不受限制的自由文本。
 - 来源/日期、状态、截止日期、地区/学历和证据查询等常见路径均建立索引。
 - 不完整的结构化字段保持可空，以便保留原始证据并进入后续复核流程。
+- 公告/抽取版本组合通过结果哈希实现幂等；部分唯一索引保证每个公告只有一个当前 post，`supersedes_id` 保留完整 post 版本链。
+- 字段证据同时保存原值与规范值，并保留冲突候选而不是覆盖；行范围和工作表/单元格坐标补充既有页码/引文定位。
 
 ## 迁移
 

@@ -188,7 +188,7 @@ class RawDocument(Base):
         back_populates="document",
         passive_deletes=True,
     )
-    job_post: Mapped[JobPost | None] = relationship(
+    job_posts: Mapped[list[JobPost]] = relationship(
         back_populates="document",
         passive_deletes=True,
     )
@@ -278,20 +278,52 @@ class JobPost(TimestampMixin, Base):
 
     __tablename__ = "job_posts"
     __table_args__ = (
+        UniqueConstraint(
+            "document_id",
+            "extraction_version",
+            name="uq_job_posts_document_extraction_version",
+        ),
         CheckConstraint(
             "deadline IS NULL OR start_at IS NULL OR deadline >= start_at",
             name="deadline_after_start",
         ),
+        CheckConstraint("version > 0", name="version_positive"),
+        CheckConstraint(
+            "result_hash ~ '^[0-9a-f]{64}$'",
+            name="result_hash_sha256",
+        ),
+        CheckConstraint(
+            "supersedes_id IS NULL OR supersedes_id <> id",
+            name="supersedes_other_version",
+        ),
+        Index(
+            "uq_job_posts_document_current",
+            "document_id",
+            unique=True,
+            postgresql_where=text("is_current"),
+        ),
         Index("ix_job_posts_category_region", "category", "region"),
         Index("ix_job_posts_deadline", "deadline"),
+        Index("ix_job_posts_supersedes_id", "supersedes_id"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     document_id: Mapped[int] = mapped_column(
         ForeignKey("raw_documents.id", ondelete="RESTRICT"),
         nullable=False,
-        unique=True,
     )
+    extraction_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_current: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=text("true"),
+    )
+    supersedes_id: Mapped[int | None] = mapped_column(
+        ForeignKey("job_posts.id", ondelete="RESTRICT")
+    )
+    result_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     organization: Mapped[str | None] = mapped_column(String(300))
     category: Mapped[str | None] = mapped_column(String(50))
     region: Mapped[str | None] = mapped_column(String(100))
@@ -299,7 +331,11 @@ class JobPost(TimestampMixin, Base):
     start_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     deadline: Mapped[datetime | None] = mapped_column(UTCDateTime())
 
-    document: Mapped[RawDocument] = relationship(back_populates="job_post")
+    document: Mapped[RawDocument] = relationship(back_populates="job_posts")
+    supersedes: Mapped[JobPost | None] = relationship(
+        remote_side="JobPost.id",
+        foreign_keys=[supersedes_id],
+    )
     positions: Mapped[list[JobPosition]] = relationship(
         back_populates="post",
         passive_deletes=True,
@@ -311,6 +347,7 @@ class JobPosition(Base):
 
     __tablename__ = "job_positions"
     __table_args__ = (
+        UniqueConstraint("post_id", "record_key", name="uq_job_positions_post_record_key"),
         CheckConstraint("headcount IS NULL OR headcount > 0", name="headcount_positive"),
         Index("ix_job_positions_post", "post_id"),
         Index("ix_job_positions_location_education", "location", "education"),
@@ -321,7 +358,8 @@ class JobPosition(Base):
         ForeignKey("job_posts.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    name: Mapped[str] = mapped_column(String(300), nullable=False)
+    record_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    name: Mapped[str | None] = mapped_column(String(300))
     department: Mapped[str | None] = mapped_column(String(300))
     location: Mapped[str | None] = mapped_column(String(100))
     education: Mapped[str | None] = mapped_column(String(100))
@@ -358,12 +396,22 @@ class FieldEvidence(Base):
             name="source_reference_matches_type",
         ),
         CheckConstraint(
-            "quote_text IS NOT NULL OR page_number IS NOT NULL OR cell_reference IS NOT NULL",
+            "quote_text IS NOT NULL OR page_number IS NOT NULL OR line_start IS NOT NULL "
+            "OR cell_reference IS NOT NULL",
             name="locator_present",
         ),
         CheckConstraint(
             "page_number IS NULL OR page_number > 0",
             name="page_number_positive",
+        ),
+        CheckConstraint(
+            "(line_start IS NULL AND line_end IS NULL) OR "
+            "(line_start > 0 AND line_end >= line_start)",
+            name="line_range_valid",
+        ),
+        CheckConstraint(
+            "extraction_method IN ('legacy', 'deterministic', 'llm')",
+            name="extraction_method_valid",
         ),
         CheckConstraint(
             "confidence >= 0 AND confidence <= 1",
@@ -372,6 +420,7 @@ class FieldEvidence(Base):
         Index("ix_field_evidence_entity", "entity_type", "entity_id", "field_name"),
         Index("ix_field_evidence_document", "source_document_id"),
         Index("ix_field_evidence_attachment", "source_attachment_id"),
+        Index("ix_field_evidence_extraction_version", "extraction_version"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
@@ -385,9 +434,18 @@ class FieldEvidence(Base):
     source_attachment_id: Mapped[int | None] = mapped_column(
         ForeignKey("attachments.id", ondelete="RESTRICT")
     )
+    raw_value: Mapped[str] = mapped_column(Text, nullable=False)
+    normalized_value: Mapped[JsonValue] = mapped_column(JSONB, nullable=False)
+    extraction_method: Mapped[str] = mapped_column(String(32), nullable=False)
+    extraction_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_selected: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    conflict: Mapped[bool] = mapped_column(Boolean, nullable=False)
     quote_text: Mapped[str | None] = mapped_column(Text)
     page_number: Mapped[int | None] = mapped_column(Integer)
-    cell_reference: Mapped[str | None] = mapped_column(String(50))
+    line_start: Mapped[int | None] = mapped_column(Integer)
+    line_end: Mapped[int | None] = mapped_column(Integer)
+    sheet_name: Mapped[str | None] = mapped_column(String(200))
+    cell_reference: Mapped[str | None] = mapped_column(String(100))
     confidence: Mapped[Decimal] = mapped_column(Numeric(5, 4), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         UTCDateTime(),
