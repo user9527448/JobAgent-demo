@@ -21,7 +21,13 @@ CATALOG_PATH = Path(__file__).parents[2] / "config" / "source_catalog.toml"
 
 @pytest.mark.parametrize(
     "source_key",
-    ["sasac-recruitment", "jiangsu-personnel-exam", "shanghai-firstjob"],
+    [
+        "sasac-recruitment",
+        "ncss-jobs",
+        "jiangsu-personnel-exam",
+        "shanghai-firstjob",
+        "shanghai-public-institution",
+    ],
 )
 def test_runnable_catalog_sources_have_explicit_manual_wiring(source_key: str) -> None:
     catalog = load_source_catalog(CATALOG_PATH)

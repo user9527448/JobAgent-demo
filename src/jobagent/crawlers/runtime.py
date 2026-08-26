@@ -8,8 +8,10 @@ from jobagent.crawlers.contracts import SourceDefinition
 from jobagent.crawlers.firstjob import ShanghaiFirstjobAdapter
 from jobagent.crawlers.http import SourceHttpClient
 from jobagent.crawlers.jiangsu import JiangsuPersonnelExamAdapter
+from jobagent.crawlers.ncss import NcssJobsAdapter
 from jobagent.crawlers.registry import AdapterRegistry
 from jobagent.crawlers.sasac import SasacRecruitmentAdapter
+from jobagent.crawlers.shanghai_rsj import ShanghaiPublicInstitutionAdapter
 
 
 def match_catalog_entry(
@@ -58,6 +60,16 @@ def build_adapter_registry(
         registry.register(
             entry.adapter,
             lambda resolved: ShanghaiFirstjobAdapter(resolved, entry, http_client),
+        )
+    elif entry.adapter == "ncss_jobs":
+        registry.register(
+            entry.adapter,
+            lambda resolved: NcssJobsAdapter(resolved, entry, http_client),
+        )
+    elif entry.adapter == "shanghai_public_institution":
+        registry.register(
+            entry.adapter,
+            lambda resolved: ShanghaiPublicInstitutionAdapter(resolved, entry, http_client),
         )
     else:
         raise ConfigurationError(

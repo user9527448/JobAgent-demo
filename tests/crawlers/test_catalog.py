@@ -29,8 +29,10 @@ def test_repository_catalog_is_valid_and_has_required_coverage() -> None:
     assert {"jiangsu", "zhejiang", "shanghai"} <= public_exam_regions
     assert [entry.key for entry in catalog.runnable_entries()] == [
         "sasac-recruitment",
+        "ncss-jobs",
         "shanghai-firstjob",
         "jiangsu-personnel-exam",
+        "shanghai-public-institution",
     ]
     assert catalog.get("sasac-recruitment").include_keywords
     assert catalog.get("apple-china-careers").implementation_status == "planned"

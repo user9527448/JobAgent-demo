@@ -13,7 +13,9 @@ from jobagent.crawlers.contracts import SourceAdapter, SourceDefinition
 from jobagent.crawlers.firstjob import ShanghaiFirstjobAdapter
 from jobagent.crawlers.http import HttpSourcePolicy, SourceHttpClient
 from jobagent.crawlers.jiangsu import JiangsuPersonnelExamAdapter
+from jobagent.crawlers.ncss import NcssJobsAdapter
 from jobagent.crawlers.sasac import SasacRecruitmentAdapter
+from jobagent.crawlers.shanghai_rsj import ShanghaiPublicInstitutionAdapter
 
 DEFAULT_CATALOG = Path("config/source_catalog.toml")
 USER_AGENT = "JOBAGENT/0.1 (+personal recruitment intelligence; low-frequency preview)"
@@ -90,6 +92,10 @@ async def _preview(
             adapter = JiangsuPersonnelExamAdapter(source, entry, client)
         elif entry.adapter == "shanghai_firstjob":
             adapter = ShanghaiFirstjobAdapter(source, entry, client)
+        elif entry.adapter == "ncss_jobs":
+            adapter = NcssJobsAdapter(source, entry, client)
+        elif entry.adapter == "shanghai_public_institution":
+            adapter = ShanghaiPublicInstitutionAdapter(source, entry, client)
         else:
             raise RuntimeError(f"No preview runner is registered for '{entry.adapter}'.")
         items = tuple(await adapter.discover(None))[:limit]

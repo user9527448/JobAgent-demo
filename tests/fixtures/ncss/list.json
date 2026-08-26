@@ -1,0 +1,53 @@
+{
+  "flag": true,
+  "global": {},
+  "errors": [],
+  "data": {
+    "list": [
+      {
+        "jobId": "SyntheticJob000001",
+        "jobName": "2027届校园招聘软件工程师",
+        "recName": "合成甲科技有限公司",
+        "areaCodeName": "上海",
+        "degreeName": "本科及以上",
+        "major": "计算机类",
+        "headCount": 5,
+        "publishDate": 1787529600000,
+        "recruitType": "0"
+      },
+      {
+        "jobId": "SyntheticJob000002",
+        "jobName": "应届毕业生数据分析岗",
+        "recName": "合成乙研究中心",
+        "areaCodeName": "江苏",
+        "degreeName": "硕士及以上",
+        "major": "统计学类",
+        "headCount": 2,
+        "publishDate": 1787443200000,
+        "recruitType": "0"
+      },
+      {
+        "jobId": "SyntheticJob000003",
+        "jobName": "校招机械设计工程师",
+        "recName": "合成丙制造有限公司",
+        "areaCodeName": "浙江",
+        "degreeName": "本科",
+        "major": "机械类",
+        "headCount": 3,
+        "updateDate": 1787356800000,
+        "recruitType": "0"
+      },
+      {
+        "jobId": "SyntheticJob000004",
+        "jobName": "暑期实习测试岗",
+        "recName": "合成丁服务有限公司",
+        "areaCodeName": "北京",
+        "degreeName": "本科",
+        "headCount": 1,
+        "publishDate": 1787270400000,
+        "recruitType": "0"
+      }
+    ],
+    "pagenation": {"count": 4, "offset": 1, "limit": 30}
+  }
+}

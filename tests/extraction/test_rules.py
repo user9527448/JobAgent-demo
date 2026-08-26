@@ -163,6 +163,23 @@ def test_explicit_timezone_offset_is_normalized_to_utc() -> None:
     assert _values(result, FieldName.DEADLINE) == [datetime(2026, 9, 1, 9, 30, tzinfo=UTC)]
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "报名截止时间为2026年9月8日",
+        "报名截止时间\uff1a\n2026年9月8日",
+        "报名时间\uff1a\n即日起至2026年9月8日17:00止",
+        "报名时间\uff1a自公告发布之日起至2026年9月8日17:00止",
+    ],
+)
+def test_public_notice_deadline_connectors_keep_only_evidenced_date(text: str) -> None:
+    result = DeterministicFieldExtractor().extract(_text_result(text))
+
+    assert len(_values(result, FieldName.DEADLINE)) == 1
+    assert not _values(result, FieldName.START_AT)
+    assert not result.issues
+
+
 def test_relative_application_url_requires_and_uses_explicit_base_url() -> None:
     parsed = _text_result("报名链接\uff1a/apply?id=2&utm_source=fixture")
 

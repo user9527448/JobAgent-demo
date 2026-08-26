@@ -22,10 +22,14 @@
 | 可替换 LLM 抽取服务 | [中文](LLM_EXTRACTION.md) | [English](../LLM_EXTRACTION.md) |
 | 抽取结果合并与字段证据 | [中文](MERGING_AND_EVIDENCE.md) | [English](../MERGING_AND_EVIDENCE.md) |
 | 数据校验、待复核与重解析 | [中文](VALIDATION_AND_REPARSING.md) | [English](../VALIDATION_AND_REPARSING.md) |
+| 来源 4、5 与稳定性验证 | [中文](SOURCE_STABILITY.md) | [English](../SOURCE_STABILITY.md) |
+| 招聘信息目标网站库 | [中文](../SOURCE_CATALOG.md) | [English](../en-US/SOURCE_CATALOG.md) |
 | JAI-005 济宁来源技术验证 | [中文](spikes/JAI-005-JINING-SOURCE.md) | [English](../spikes/JAI-005-JINING-SOURCE.md) |
 | 数据库迁移说明 | [中文](MIGRATIONS.md) | [English](../../migrations/README.md) |
 | JAI-005 固定样本说明 | [中文](fixtures/JINING.md) | [English](../../tests/fixtures/jining/README.md) |
 | JAI-016 附件黄金样本 | [中文](fixtures/ATTACHMENTS.md) | [English](../../tests/fixtures/attachments/README.md) |
+| JAI-021 NCSS 固定样本 | [中文](fixtures/NCSS.md) | [English](../../tests/fixtures/ncss/README.md) |
+| JAI-021 上海人社固定样本 | [中文](fixtures/SHANGHAI_RSJ.md) | [English](../../tests/fixtures/shanghai_rsj/README.md) |
 
 ## 历史归档
 
@@ -40,7 +44,6 @@
 |---|---|---|
 | [项目 README](../../README.md) | 简体中文 | English |
 | [配置、日志与错误约定](../CONFIGURATION.md) | 简体中文 | English |
-| [招聘信息目标网站库](../SOURCE_CATALOG.md) | 简体中文 | English |
 | [非官方招聘信息参考源](../REFERENCE_SOURCES.md) | 简体中文 | English |
 | [Firstjob 固定样本说明](../../tests/fixtures/firstjob/README.md) | English | 简体中文 |
 | [江苏人事考试固定样本说明](../../tests/fixtures/jiangsu/README.md) | 简体中文 | English |

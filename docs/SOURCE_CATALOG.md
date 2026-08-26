@@ -1,6 +1,6 @@
 # 招聘信息目标网站库
 
-本文档记录 JAI-011 的目标来源、接入状态和人工维护规则。机器可读配置以 [`config/source_catalog.toml`](../config/source_catalog.toml) 为准；本文档解释为什么收录、当前能否运行以及后续接入约束。
+本文档记录 JAI-011/JAI-021 的目标来源、接入状态和人工维护规则。English mirror: [`en-US/SOURCE_CATALOG.md`](en-US/SOURCE_CATALOG.md)。机器可读配置以 [`config/source_catalog.toml`](../config/source_catalog.toml) 为准；本文档解释为什么收录、当前能否运行以及后续接入约束。
 
 ## 1. 覆盖目标
 
@@ -14,12 +14,12 @@
 
 | 类别 | 地区 | 官方来源 | 公开入口 | 状态 | 说明 |
 |---|---|---|---|---|---|
-| 校招 | 全国 | 国家大学生就业服务平台 | [职位信息](https://www.ncss.cn/student/jobs/index.html) | 待接入 | 教育部学生服务与素质发展中心公共平台；先验证无登录列表稳定性 |
+| 校招 | 全国 | 国家大学生就业服务平台 | [职位信息](https://www.ncss.cn/student/jobs/index.html) | 已启用 | 来源 4；使用公开页面自身的免登录 GET 列表与公开详情，不访问投递功能 |
 | 校招 | 上海/长三角 | 上海学生就业创业服务网 | [招聘会](https://www.firstjob.shec.edu.cn/jobfair) | 已启用 | 来源 3；上海市学生事务中心公开招聘会和时间安排，仅调用官网公开只读查询 |
 | 公职考试 | 江苏 | 江苏省人事考试网 | [考试专题列表](https://jshrss.jiangsu.gov.cn/col/col57253/index.html) | 已启用 | 来源 2；采集公务员、事业单位、“三支一扶”等公开公告和时间安排，不进入报名系统 |
 | 公职考试 | 浙江 | 浙江省公务员考试录用网 | [首页](https://gwy.zjks.gov.cn/) | 待接入 | 招考公告、报名统计和考试安排 |
 | 公职考试 | 上海 | 上海市公务员局 | [首页](https://www.shacs.gov.cn/) | 待接入 | 只采集公开招录公告；不访问报名表单 |
-| 公职考试 | 上海 | 上海市人力资源和社会保障局 | [通知公告](https://rsj.sh.gov.cn/tgsgg_17341/) | 待接入 | 事业单位公开招聘、报名确认与考试时间 |
+| 公职考试 | 上海 | 上海市人力资源和社会保障局 | [事业单位公开招聘](https://rsj.sh.gov.cn/tsydwgkzp_17406/index.html) | 已启用 | 来源 5；只采集招聘公告路径，排除拟聘公示，不进入报名系统 |
 | 央国企 | 全国 | 国务院国资委 | [公开招聘栏目](https://www.sasac.gov.cn/n2588035/n2588325/n2588350/index.html) | 已启用 | JAI-011 首个 Adapter；聚合中央企业校园和社会招聘公告 |
 | 央国企 | 全国/江浙沪 | 国家电网 | [招聘平台](https://zhaopin.sgcc.com.cn/) | 待接入 | 动态门户，需先验证公开接口、服务条款和页面稳定性 |
 | 央国企 | 全国/江浙沪 | 中国移动 | [招聘平台](https://job.10086.cn/) | 待接入 | 只接入无需登录的校招公告 |
@@ -33,7 +33,7 @@
 
 “待接入”只表示已登记候选来源，不表示当前程序会访问它。机器配置要求此类来源为 `implementation_status = "planned"` 且 `enabled = false`。
 
-现有 11 个官方候选站全部进入实施路线：JAI-011 已启用其中 3 个，JAI-021 将补足 MVP 的来源 4、5，JAI-038～JAI-043 逐站处理其余 6 个。动态门户无法在无需登录、无需验证码且条款允许的条件下稳定读取时，必须保持 `planned` 或改为 `blocked`，并优先寻找同一官方主体的公开公告入口；“全部纳入目标”不等于允许绕过限制强行启用。
+现有 11 个官方候选站全部进入实施路线：JAI-011/JAI-021 已启用其中 5 个，JAI-038～JAI-043 逐站处理其余 6 个。动态门户无法在无需登录、无需验证码且条款允许的条件下稳定读取时，必须保持 `planned` 或改为 `blocked`，并优先寻找同一官方主体的公开公告入口；“全部纳入目标”不等于允许绕过限制强行启用。
 
 BOSS 直聘等非官方平台不进入本可执行网站库；其人工参考用途和合规边界单独记录在[非官方招聘信息参考源](REFERENCE_SOURCES.md)。
 
@@ -64,6 +64,8 @@ BOSS 直聘等非官方平台不进入本可执行网站库；其人工参考用
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source sasac-recruitment --limit 10
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source jiangsu-personnel-exam --limit 10 --fetch-first-detail
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source shanghai-firstjob --limit 10 --fetch-first-detail
+.\.venv\Scripts\python.exe scripts/run_source_preview.py --source ncss-jobs --limit 3 --fetch-first-detail
+.\.venv\Scripts\python.exe scripts/run_source_preview.py --source shanghai-public-institution --limit 3 --fetch-first-detail
 ```
 
 ## 4. 新来源上线检查
@@ -76,4 +78,4 @@ BOSS 直聘等非官方平台不进入本可执行网站库；其人工参考用
 
 ## 5. 当前环境限制
 
-2026-08-11，江苏省人事考试网与上海学生就业招聘会的低频线上只读冒烟已经通过。国务院国资委公开招聘栏目在获准的沙箱外请求中仍连续重试并最终发生 TLS/连接池超时，因此尚未把该来源的线上冒烟标记为通过。它的 Adapter、三组固定样本和 PostgreSQL 幂等验收已经通过，但进入定时运行前仍须在网络恢复后优先补做线上检查；禁止通过更换非官方入口、绕过 TLS 或规避访问控制获取页面。
+2026-08-26，NCSS 与上海人社事业单位招聘的低频线上只读冒烟通过；江苏省人事考试网也可访问，上海学生就业招聘会当日无匹配条目。国务院国资委公开招聘栏目仍在三次有界重试后发生可重试 `PoolTimeout`，因此当日全来源观测不计为合格稳定日。五个 Adapter、固定样本和 PostgreSQL 幂等验收均已通过；不得通过更换非官方入口、绕过 TLS 或规避访问控制换取线上成功。

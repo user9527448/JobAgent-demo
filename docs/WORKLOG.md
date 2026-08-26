@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-25
+> Last updated: 2026-08-26
 >
-> Active branch: `feature/jai-020-validation-review-reparse`
+> Active branch: `feature/jai-021-sources-four-five-stability`
 
 ## 1. Current status
 
@@ -28,7 +28,8 @@
 | JAI-017 | Complete, merged and pushed to `develop` | `develop` / `c7a2ebe` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
-| JAI-020 | Complete and normally pushed | `feature/jai-020-validation-review-reparse` / `6712010` | Validation severity, review eligibility, and idempotent document reparsing verified |
+| JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
+| JAI-021 | In progress | `feature/jai-021-sources-four-five-stability` | Sources 4–5 integration and three-consecutive-day stability verification started |
 
 ## 2. Current decisions
 
@@ -263,6 +264,25 @@ The same document/extraction version may be repeated only when its merged result
 - The final PostgreSQL-enabled `scripts/check.py` passed after all documentation and defensive tests: Ruff format checked 154 files, Ruff lint passed, Mypy passed across 102 source files, all 216 tests passed with no skips, and coverage was 88.07%.
 - Created feature commit `67120101ea0c926f327b781a6e69c05350d41df7` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the new feature branch. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit before this final status-only update; GitHub `develop` remained at `82797d1fa91b1f5e77296d04e3138a9fabe7b499`.
 
+### 2026-08-26 — JAI-021 sources 4–5 and three-day stability started
+
+- Reverified the clean JAI-020 feature branch at `9c86cad8eb621b20fa70e1e6a07a377f929608a3`; its local HEAD, tracking reference, and GitHub reference matched, and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
+- Merged JAI-020 into `develop` with non-fast-forward merge `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`, normally pushed it, and verified local `develop`, `origin/develop`, and GitHub `ls-remote` all match that commit.
+- Confirmed JAI-021 is the next incomplete Issue in both language plans and backlogs, then created `feature/jai-021-sources-four-five-stability` from the synchronized `develop` head.
+- Scope is limited to adding sources 4 and 5, bringing all five sources under Adapter contract tests, and recording success, duplicate, and core-field completeness metrics on three consecutive calendar days. Preferred sources are the National College Student Employment Service Platform and Shanghai public-institution announcements; only stable, public, read-only official endpoints may be used.
+- Dynamic pages that require login, CAPTCHA, application-system access, browser automation, or access-control evasion will be marked blocked or replaced by a stable endpoint owned by the same official body. No JAI-022 matching/preferences or later scheduling and operations features will be added.
+- The three-day acceptance period cannot be pre-recorded. Next: inspect the current catalog and Adapter contracts, verify official public endpoints, implement offline fixtures/contracts and proportional tests, then record day 1 only after a real bounded run succeeds.
+- Verified the official public boundary with low-frequency reads. NCSS exposes the same unauthenticated GET list used by its public page plus public details; login prompts belong only to application actions and are never invoked. Shanghai exposes a narrower public-institution column; the Adapter accepts only recruitment paths and excludes proposed-hire notices.
+- Added `NcssJobsAdapter` and `ShanghaiPublicInstitutionAdapter`, explicit manual/preview runtime wiring, active catalog entries, and three hand-authored synthetic detail contracts per source. No downloaded page, credential, applicant data, or runtime output was committed.
+- Added bounded JSON-only daily evaluation for source-run/detail success, canonical-URL/content-fingerprint duplicates, and evidence-backed organization/title/region/deadline/source-link completeness. It uses concurrency 1, the shared pacing/retry policy, at most 1-10 details per source, and performs no database/file write.
+- Extended deterministic dates only for directly evidenced official-notice formats: colon or `为`, a value on the next line, and a single explicit deadline after `即日起`/`自公告发布之日起`. The relative start remains absent. Shanghai organization is taken only from the exact title before a fixed recruitment suffix, with that title retained as evidence.
+- The first 2026-08-26 all-source observation is not a qualified stability day: SASAC exhausted three retries with retryable `PoolTimeout`; four of five source runs and all 8 attempted details succeeded, duplicate rate was 0%, and pre-correction completeness was 55%. Diagnostic reruns showed NCSS 80%, Jiangsu 60%, and corrected Shanghai 100%; the comparable post-correction composite is 82.5%, not one all-source run.
+- Registered JAI-049 as the explicit remediation Issue required by JAI-021 acceptance. It forbids treating publication time as deadline or publisher as hiring organization and must close the evidence-backed gap before the MVP release gate; JAI-022 remains the next main-line feature after JAI-021.
+- Focused Adapter/extraction/stability tests passed, and the PostgreSQL JAI-021 acceptance passed: six synthetic source-4/5 documents were `created` on the first write, `unchanged` on the second, and remained six version-1 rows. The first database invocation used the obsolete example password and failed authentication; rerunning with the repository-documented `jobagent-dev-only` test URL passed. One Ruff EN DASH finding in the new test docstring was also corrected.
+- The first complete PostgreSQL-enabled gate passed Ruff format/lint but stopped at one Mypy test narrowing error for `JsonValue`. After adding an explicit string check, the final `scripts/check.py` passed: Ruff format checked 168 files, Ruff lint passed, Mypy passed across 110 source files, all 238 tests passed with no skips, and coverage was 87.79%.
+- Because JAI-021 substantively changed the legacy Chinese source catalog, the repository rule required its English counterpart in this same commit. Added `docs/en-US/SOURCE_CATALOG.md`, synchronized the five-source state and current environment limitation, updated both indexes, and removed only this document from the bounded JAI-048 inventory; no other legacy migration was mixed into the feature.
+- Documentation verification passed across 54 Markdown files with no broken relative links. Paired heading counts match for plans (45/45), backlogs (71/71), active logs (34/34), indexes (5/5), the stability guide (7/7), and the source catalog (6/6). Both backlogs contain the same 168 Issue IDs in order, and `git diff --check` passed.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -275,9 +295,9 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Merge JAI-020 only in the next authorized integration step and verify synchronized `develop` afterward.
-2. Start JAI-021 from that synchronized `develop`; keep its source 4/5 and three-day stability scope separate from JAI-020.
-3. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
+1. Run the complete PostgreSQL-enabled repository gate and bilingual documentation checks, then commit and normally push the safe JAI-021 implementation baseline without marking the Issue complete.
+2. Continue daily all-source observations until three consecutive qualified calendar days exist; a failed/pre-observation day does not start or extend the sequence.
+3. Keep OCR deferred to JAI-B01, JAI-022 matching/preferences out of scope until JAI-021 closes, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
 

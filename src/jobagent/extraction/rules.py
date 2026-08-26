@@ -54,6 +54,10 @@ _RANGE_LABELS: Final = (
     "application period",
     "registration period",
 )
+_RELATIVE_RANGE_START_PATTERN: Final = re.compile(
+    r"(?:即日起|自(?:本)?公告发布之日(?:起)?|自发布之日(?:起)?)\s*(?:至|到)",
+    re.IGNORECASE,
+)
 _TEXT_LABELS: Final[dict[FieldName, tuple[str, ...]]] = {
     FieldName.START_AT: ("报名开始时间", "报名开始", "开始日期", "start date", "application start"),
     FieldName.DEADLINE: (
@@ -169,6 +173,20 @@ class DeterministicFieldExtractor:
             if len(matches) < 2:
                 if matches:
                     evidence = _text_evidence(block, label_match.start(), matches[0].end())
+                    relative_prefix = block.text[value_start : matches[0].start()]
+                    if _RELATIVE_RANGE_START_PATTERN.search(relative_prefix) is not None:
+                        outcome = self._date_field(
+                            FieldName.DEADLINE,
+                            matches[0].group(0),
+                            evidence,
+                            rule_id="date.range.relative_start.deadline",
+                        )
+                        if isinstance(outcome, ExtractedField):
+                            fields.append(outcome)
+                        else:
+                            issues.append(outcome)
+                        consumed_date_spans.add(matches[0].span())
+                        continue
                     issues.append(
                         ExtractionIssue(
                             code=ExtractionErrorCode.AMBIGUOUS_DATE_RANGE,
@@ -497,10 +515,10 @@ def _label_value_start(text: str, label_match: re.Match[str]) -> int | None:
     value_start = label_match.end()
     while value_start < len(text) and text[value_start] in " \t":
         value_start += 1
-    if value_start >= len(text) or text[value_start] not in ":\uff1a":
+    if value_start >= len(text) or text[value_start] not in ":\uff1a为":
         return None
     value_start += 1
-    while value_start < len(text) and text[value_start] in " \t":
+    while value_start < len(text) and text[value_start] in " \t\r\n":
         value_start += 1
     return value_start
 
