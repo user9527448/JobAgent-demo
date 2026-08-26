@@ -282,6 +282,7 @@ The same document/extraction version may be repeated only when its merged result
 - The first complete PostgreSQL-enabled gate passed Ruff format/lint but stopped at one Mypy test narrowing error for `JsonValue`. After adding an explicit string check, the final `scripts/check.py` passed: Ruff format checked 168 files, Ruff lint passed, Mypy passed across 110 source files, all 238 tests passed with no skips, and coverage was 87.79%.
 - Because JAI-021 substantively changed the legacy Chinese source catalog, the repository rule required its English counterpart in this same commit. Added `docs/en-US/SOURCE_CATALOG.md`, synchronized the five-source state and current environment limitation, updated both indexes, and removed only this document from the bounded JAI-048 inventory; no other legacy migration was mixed into the feature.
 - Documentation verification passed across 54 Markdown files with no broken relative links. Paired heading counts match for plans (45/45), backlogs (71/71), active logs (34/34), indexes (5/5), the stability guide (7/7), and the source catalog (6/6). Both backlogs contain the same 168 Issue IDs in order, and `git diff --check` passed.
+- Created implementation baseline commit `52d435f35b8fb2a7ac013ac3f7d783261a97e0e5` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the new feature branch. Before this status-only handoff update, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit; the worktree was clean. JAI-021 remains in progress because no qualified three-consecutive-calendar-day sequence exists yet.
 
 ## 4. Verification and blockers
 
@@ -295,8 +296,8 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Run the complete PostgreSQL-enabled repository gate and bilingual documentation checks, then commit and normally push the safe JAI-021 implementation baseline without marking the Issue complete.
-2. Continue daily all-source observations until three consecutive qualified calendar days exist; a failed/pre-observation day does not start or extend the sequence.
+1. Normally push this status-only bilingual handoff update and verify local HEAD, the tracking reference, and GitHub `ls-remote` agree.
+2. Continue daily all-source observations until three consecutive qualified calendar days exist; a failed/pre-observation day does not start or extend the sequence. Commit each evidence-backed observation without marking JAI-021 complete early.
 3. Keep OCR deferred to JAI-B01, JAI-022 matching/preferences out of scope until JAI-021 closes, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
