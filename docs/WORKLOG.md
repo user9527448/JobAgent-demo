@@ -283,6 +283,7 @@ The same document/extraction version may be repeated only when its merged result
 - Because JAI-021 substantively changed the legacy Chinese source catalog, the repository rule required its English counterpart in this same commit. Added `docs/en-US/SOURCE_CATALOG.md`, synchronized the five-source state and current environment limitation, updated both indexes, and removed only this document from the bounded JAI-048 inventory; no other legacy migration was mixed into the feature.
 - Documentation verification passed across 54 Markdown files with no broken relative links. Paired heading counts match for plans (45/45), backlogs (71/71), active logs (34/34), indexes (5/5), the stability guide (7/7), and the source catalog (6/6). Both backlogs contain the same 168 Issue IDs in order, and `git diff --check` passed.
 - Created implementation baseline commit `52d435f35b8fb2a7ac013ac3f7d783261a97e0e5` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the new feature branch. Before this status-only handoff update, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit; the worktree was clean. JAI-021 remains in progress because no qualified three-consecutive-calendar-day sequence exists yet.
+- Created status-only bilingual handoff commit `da2d3c68f47a012177be1fdd9d5311c5baa32e8d`. Two unchanged normal HTTPS push attempts then failed because GitHub port 443 could not be reached after about 21 seconds; a direct read-only TCP probe also returned `TcpTestSucceeded=False`. No remote URL, protocol, branch history, or commit was changed. Retry the same non-force push after connectivity returns.
 
 ## 4. Verification and blockers
 
@@ -296,7 +297,7 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Normally push this status-only bilingual handoff update and verify local HEAD, the tracking reference, and GitHub `ls-remote` agree.
+1. When GitHub port 443 is reachable, normally push the pending JAI-021 handoff commits and verify local HEAD, the tracking reference, and GitHub `ls-remote` agree.
 2. Continue daily all-source observations until three consecutive qualified calendar days exist; a failed/pre-observation day does not start or extend the sequence. Commit each evidence-backed observation without marking JAI-021 complete early.
 3. Keep OCR deferred to JAI-B01, JAI-022 matching/preferences out of scope until JAI-021 closes, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
