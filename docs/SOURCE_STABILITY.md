@@ -45,7 +45,7 @@ An observation with a failed source is not a qualified stability day. Empty succ
 | 2026-08-26 | Pre-observation; not a qualified day | 80% (4/5) | 100% (8/8) | 0% | 55% before rule correction | SASAC exhausted three retries with retryable `PoolTimeout`; no data or history changed |
 | 2026-08-26 | Diagnostic reruns; not a qualified day | 100% for four reachable sources | 100% (8/8) | 0% | 67.5% before the Shanghai evidence correction | NCSS 80%, Jiangsu 60%, Shanghai 60%; Firstjob returned zero matching fairs |
 | 2026-08-26 | Shanghai correction verification | 100% (1/1) | 100% (3/3) | 0% | 100% (15/15) | Direct title organization and explicit deadline formats only |
-| 2026-08-26 | Same-day bounded re-observation; not a qualified day | 80% (4/5) | 100% (7/7) | 0% | 82.86% (29/35) | SASAC again exhausted three retries with `PoolTimeout`; a no-body IPv4 `curl` diagnostic also failed to connect to official port 443 and returned HTTP `000` |
+| 2026-08-26 | Same-day bounded re-observation; not a qualified day | 80% (4/5) | 100% (7/7) | 0% | 82.86% (29/35) | SASAC again exhausted three retries with `PoolTimeout`; a no-body IPv4 `curl` diagnostic also failed to connect to official port 443 and returned HTTP `000`; the user independently confirmed the same public URL would not open in a normal browser |
 
 The comparable post-correction diagnostic composite is 82.5% across NCSS (12/15), Jiangsu (6/10), and Shanghai (15/15). It is not a single all-source run and is not counted as day 1. Three consecutive qualified calendar-day observations remain outstanding.
 
