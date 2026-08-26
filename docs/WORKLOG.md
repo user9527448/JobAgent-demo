@@ -287,6 +287,7 @@ The same document/extraction version may be repeated only when its merged result
 - A final TCP probe returned `True`; the unchanged normal HTTPS push then succeeded through outage-record commit `5d67be09bc294d15af325c9279446a40ed7bfa81`. Before this final status-only update, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit and the worktree was clean.
 - Normally pushed final baseline-status commit `a2e3a15da994c97439d449b4be54a3248f236267` and verified local HEAD, its tracking reference, and GitHub `ls-remote` matched. A later same-day bounded all-source re-observation still did not qualify: SASAC exhausted three `PoolTimeout` retries, while the other four source runs and all 7 attempted details succeeded; duplicate rate was 0% and evidence-backed completeness was 82.86% (29/35). A no-body IPv4 `curl` diagnostic independently failed to connect to the official SASAC port 443 after about 21 seconds and returned HTTP `000`, so no parser or access-control workaround was attempted.
 - Created observation-record commit `4efaf87a122c9a82e4e1378b9b3f4463b672e28e`. Its first unchanged normal HTTPS push was reset by the remote connection, and the immediate read-only GitHub port-443 probe returned `False`. The local commit and worktree remain safe; no remote URL, protocol, or history was changed.
+- A later port-443 probe still returned `False`, but the bounded normal Git HTTPS retry succeeded and published through interruption-record commit `b3fa11a9e2ce8140fab90a71af37f28faf018ffa`. Before this final status-only update, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit and the worktree was clean.
 
 ## 4. Verification and blockers
 
@@ -300,9 +301,8 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. When GitHub port 443 recovers, normally push the pending JAI-021 observation commits and verify local HEAD, the tracking reference, and GitHub `ls-remote` agree.
-2. Continue daily all-source observations until three consecutive qualified calendar days exist; a failed/pre-observation day does not start or extend the sequence. Commit each evidence-backed observation without marking JAI-021 complete early.
-3. Keep OCR deferred to JAI-B01, JAI-022 matching/preferences out of scope until JAI-021 closes, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
+1. Continue daily all-source observations until three consecutive qualified calendar days exist; a failed/pre-observation day does not start or extend the sequence. Commit each evidence-backed observation without marking JAI-021 complete early.
+2. Keep OCR deferred to JAI-B01, JAI-022 matching/preferences out of scope until JAI-021 closes, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
 
