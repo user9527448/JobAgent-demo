@@ -1,5 +1,5 @@
-catalog_version = 2
-updated_on = "2026-08-26"
+catalog_version = 3
+updated_on = "2026-08-27"
 
 # 手工维护说明见 docs/SOURCE_CATALOG.md。planned 来源不得 enabled = true。
 
@@ -12,12 +12,12 @@ regions = ["national"]
 base_url = "https://www.sasac.gov.cn/"
 list_url = "https://www.sasac.gov.cn/n2588035/n2588325/n2588350/index.html"
 adapter = "sasac_recruitment"
-implementation_status = "active"
-enabled = true
+implementation_status = "blocked"
+enabled = false
 crawl_interval_minutes = 360
 include_keywords = ["招聘", "校园招聘", "应届毕业生"]
 exclude_keywords = ["公示", "结果公告"]
-notes = "JAI-011 首个 Adapter；仅访问公开列表与公开详情。"
+notes = "JAI-011 首个 Adapter；连续两日公网/TLS 不可达，JAI-021 已按 W6 稳定性闸门停用并由中国移动公开招聘公告替换。"
 
 [[sources]]
 key = "ncss-jobs"
@@ -138,14 +138,14 @@ official_owner = "中国移动通信集团有限公司"
 category = "state_owned"
 regions = ["national", "jiangsu", "zhejiang", "shanghai"]
 base_url = "https://job.10086.cn/"
-list_url = "https://job.10086.cn/"
+list_url = "https://job.10086.cn/personal/notice/"
 adapter = "china_mobile_recruitment"
-implementation_status = "planned"
-enabled = false
+implementation_status = "active"
+enabled = true
 crawl_interval_minutes = 360
-include_keywords = ["校园招聘", "应届毕业生", "春季招聘", "秋季招聘"]
-exclude_keywords = ["实习"]
-notes = "候选央企来源；只采集无需登录的公告。"
+include_keywords = ["招聘", "校招", "应届毕业生"]
+exclude_keywords = ["升级公告", "维护公告", "实习"]
+notes = "JAI-021 稳定性替代来源；只读公告页自身声明的同源静态 JSON 与公开详情，不访问注册、登录、简历或投递功能。"
 
 [[sources]]
 key = "china-telecom-recruitment"

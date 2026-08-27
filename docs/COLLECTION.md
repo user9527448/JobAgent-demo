@@ -101,11 +101,13 @@ Attachment discovery and file persistence do not occur inside the Adapter or bat
 
 ## JAI-011 sources
 
-### Source 1: SASAC recruitment
+### Current source 1 replacement: China Mobile recruitment announcements
 
-`SasacRecruitmentAdapter` reads the public SASAC central-SOE recruitment list and detail pages through `SourceHttpClient`. It recognizes detail links by stable public URL semantics, removes query strings/fragments and duplicate URLs, applies catalog keywords, and preserves the complete detail HTML plus readable text and publication provenance. `scripts/run_source_preview.py` can list the catalog or perform a low-frequency, read-only preview without database writes.
+`ChinaMobileRecruitmentAdapter` reads the official login-free announcement page and the same-origin static list/detail JSON declared by that page through `SourceHttpClient`. Discovery accepts only strict official HTTPS URLs and numeric announcement IDs, applies catalog include/exclude terms, and materializes each selected detail through GET-only requests. The raw document preserves the displayed organization, title, publication time, visible body and attachment links together with their provenance.
 
-Contract tests run exclusively against minimized offline fixtures. A live smoke check is still required before scheduling because the current Windows environment could not complete TLS access to `sasac.gov.cn`, and browser inspection was denied by the safety policy.
+The detail JSON also exposes an internal takedown field (`text5`/`downTime`). The public detail script does not render it, so the Adapter retains it only as source metadata and never labels it as an application deadline. A deadline is eligible only when visible announcement text supplies direct evidence. For an image-only body, the Adapter preserves the strictly validated same-origin image URL as evidence but does not download it or perform OCR. Contract tests use purely synthetic, minimized offline fixtures; `scripts/run_source_preview.py` provides a bounded, read-only live preview without database writes.
+
+The historical `SasacRecruitmentAdapter` and synthetic fixtures remain for traceability, but the catalog marks the source `blocked` and disabled. The public URL was unreachable from both the project environment and the user's browser on 2026-08-26 and 2026-08-27; the alternate official mobile hostname presented an expired certificate. No TLS bypass, login, browser automation, or access-control workaround is used.
 
 ### Source 2: Jiangsu personnel exams
 
@@ -124,3 +126,5 @@ The list record is already the complete public schedule record, so detail materi
 The JAI-011 PostgreSQL acceptance runs three fixed documents from each active source through the raw-document repository twice. The first pass creates nine immutable version-1 rows; the second pass returns the same nine IDs as `unchanged`, without new rows or versions. A SASAC PDF and Jiangsu XLSX then pass through attachment discovery and atomic storage twice, producing `stored` followed by `reused` with one database row, object and download per URL.
 
 Firstjob's public record exposes a poster image rather than a JAI-010-supported PDF/XLS/XLSX attachment. The adapter retains its validated official-domain URL as provenance but does not expand the current attachment-type boundary. This is treated as an explicit unsupported format, not as a missing or fabricated source attachment.
+
+JAI-021 separately exercises three synthetic China Mobile announcements together with the six source-4/5 fixtures through two PostgreSQL persistence runs. The first run creates nine immutable version-1 rows; the second returns the same nine rows as `unchanged`, proving the replacement does not introduce duplicate versions.

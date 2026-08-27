@@ -273,7 +273,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Labels**: `type:feature` `area:crawler` `area:extraction` `priority:P0` `size:L`
 - **Dependencies**: JAI-011, JAI-020
 - **Goal**: meet MVP source coverage and quality metrics.
-- **Scope**: prefer the National College Student Employment Service Platform and Shanghai public-institution announcements; if dynamic lists violate public-access boundaries, use a stable official endpoint or record a blocker, never login/application systems.
+- **Scope**: prefer the National College Student Employment Service Platform and Shanghai public-institution announcements; when an existing source remains unreachable, mark it `blocked` and, after user confirmation, replace it with a stable login-free official announcement endpoint, never a login/application system. On 2026-08-27 the unreachable SASAC column was disabled and the minimum China Mobile public-announcement scope from JAI-041 was absorbed as the fifth active source.
 - **Acceptance**:
   - [x] Five sources have Adapter contract tests.
   - [ ] Record success, duplicate, and completeness metrics for three consecutive days.
@@ -546,9 +546,13 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:crawler` `priority:P1` `size:L`
 - **Dependencies**: JAI-012, JAI-040
+- **Status**: reprioritized by the user and absorbed into JAI-021; do not create a separate branch or duplicate implementation.
 - **Goal**: collect group and Jiangsu/Zhejiang/Shanghai campus announcements and jobs.
 - **Boundary**: official login-free pages/APIs only; never access resumes or applications.
-- **Acceptance**: at least three fixture groups, region/campus filters, and no duplicates across two runs.
+- **Acceptance**:
+  - [x] At least three fixture groups.
+  - [x] Region/campus filters.
+  - [x] No duplicates across two persistence runs.
 
 ### JAI-042 Integrate China Telecom public recruitment
 
@@ -623,4 +627,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-Complete JAI-047 bilingual migration baseline → JAI-012 run/retry capability → JAI-013–JAI-021 to reach five stable MVP sources → continue the main line with JAI-022; remediate the JAI-021 live completeness gap under JAI-049 before the MVP release gate → JAI-038–JAI-045 one source at a time after the release loop is stable. Execute JAI-048 as an independent documentation Issue before the next substantive change to any listed legacy document; never mix it into feature branches. Personal WIP limit is two: at most one primary feature plus one small test/docs Issue. If a dynamic portal cannot satisfy public-access and terms boundaries, record `blocked` and continue; never force coverage with login, CAPTCHA, Playwright, or evasion.
+Complete JAI-047 bilingual migration baseline → JAI-012 run/retry capability → JAI-013–JAI-021 to reach five stable MVP sources → continue the main line with JAI-022; the minimum China Mobile public-announcement scope from JAI-041 was pulled into JAI-021 early because SASAC was blocked and must not be implemented twice → remediate the JAI-021 live completeness gap under JAI-049 before the MVP release gate → execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable. Execute JAI-048 as an independent documentation Issue before the next substantive change to any listed legacy document; never mix it into feature branches. Personal WIP limit is two: at most one primary feature plus one small test/docs Issue. If a dynamic portal cannot satisfy public-access and terms boundaries, record `blocked` and continue; never force coverage with login, CAPTCHA, Playwright, or evasion.

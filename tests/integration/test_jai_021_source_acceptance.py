@@ -1,4 +1,4 @@
-"""JAI-021 acceptance for sources 4-5 persistence and fixture completeness."""
+"""JAI-021 acceptance for sources 4-5 and replacement-source persistence."""
 
 from __future__ import annotations
 
@@ -19,6 +19,11 @@ from jobagent.crawlers import (
     SourceDefinition,
     SqlAlchemyRawDocumentRepository,
 )
+from jobagent.crawlers.china_mobile import (
+    parse_china_mobile_detail,
+    parse_china_mobile_detail_data_url,
+    parse_china_mobile_list,
+)
 from jobagent.crawlers.ncss import parse_ncss_detail, parse_ncss_list
 from jobagent.crawlers.shanghai_rsj import parse_shanghai_public_institution_detail
 from jobagent.crawlers.stability import evaluate_source_stability
@@ -31,7 +36,7 @@ PROJECT_ROOT = Path(__file__).parents[2]
 FIXTURE_ROOT = PROJECT_ROOT / "tests" / "fixtures"
 
 
-def test_sources_four_and_five_are_complete_and_idempotent() -> None:
+def test_jai_021_sources_and_replacement_are_complete_and_idempotent() -> None:
     database_url = _test_database_url()
     engine = create_engine(database_url)
     _reset_test_schema(engine)
@@ -79,8 +84,8 @@ def test_sources_four_and_five_are_complete_and_idempotent() -> None:
 
         with Session(engine) as session:
             count = session.scalar(select(func.count()).select_from(RawDocument))
-        assert count == expected_count == 6
-        assert versions == [1] * 6
+        assert count == expected_count == 9
+        assert versions == [1] * 9
     finally:
         _reset_test_schema(engine)
         engine.dispose()
@@ -104,6 +109,15 @@ def _create_sources(engine: Engine) -> dict[str, SourceDefinition]:
                 base_url="https://rsj.sh.gov.cn/",
                 category="public_exam",
                 adapter="shanghai_public_institution",
+            ),
+        ),
+        (
+            "china-mobile-recruitment",
+            Source(
+                name="JAI-021 中国移动招聘公告",
+                base_url="https://job.10086.cn/",
+                category="state_owned",
+                adapter="china_mobile_recruitment",
             ),
         ),
     )
@@ -162,9 +176,37 @@ def _source_documents() -> dict[str, tuple[RawDocumentInput, ...]]:
             ("detail-service.html", "/tzpgg_17408/20260823/t0035_9000003.html"),
         )
     )
+    mobile_dir = FIXTURE_ROOT / "china_mobile"
+    mobile_items = parse_china_mobile_list(
+        (mobile_dir / "list.json").read_bytes(),
+        base_url="https://job.10086.cn/",
+        data_url="https://job.10086.cn/personal/notice/9000001_10001_20001.json",
+        include_keywords=("招聘", "校招", "应届毕业生"),
+        exclude_keywords=("升级公告", "维护公告", "实习"),
+    )
+    mobile_documents = tuple(
+        parse_china_mobile_detail(
+            (mobile_dir / f"{stem}.json").read_bytes(),
+            detail_html=(mobile_dir / f"{stem}.html").read_bytes(),
+            detail_url=item.url,
+            data_url=parse_china_mobile_detail_data_url(
+                (mobile_dir / f"{stem}.html").read_bytes(),
+                detail_url=item.url,
+                base_url="https://job.10086.cn/",
+            ),
+            metadata=item.metadata,
+            official_owner="中国移动通信集团有限公司",
+        )
+        for item, stem in zip(
+            mobile_items,
+            ("detail-campus", "detail-social", "detail-graduate"),
+            strict=True,
+        )
+    )
     return {
         "ncss-jobs": ncss_documents,
         "shanghai-public-institution": shanghai_documents,
+        "china-mobile-recruitment": mobile_documents,
     }
 
 

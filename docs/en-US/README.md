@@ -30,6 +30,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | JAI-016 attachment golden fixtures | [English](../../tests/fixtures/attachments/README.md) | [中文](../zh-CN/fixtures/ATTACHMENTS.md) |
 | JAI-021 NCSS fixtures | [English](../../tests/fixtures/ncss/README.md) | [中文](../zh-CN/fixtures/NCSS.md) |
 | JAI-021 Shanghai RSJ fixtures | [English](../../tests/fixtures/shanghai_rsj/README.md) | [中文](../zh-CN/fixtures/SHANGHAI_RSJ.md) |
+| JAI-021 China Mobile replacement fixtures | [English](../../tests/fixtures/china_mobile/README.md) | [中文](../zh-CN/fixtures/CHINA_MOBILE.md) |
 
 ## Historical archive
 

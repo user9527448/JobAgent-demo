@@ -8,7 +8,7 @@ This document records the target sources, integration status, and manual mainten
 
 - Campus recruitment: prioritize education authorities, public student-employment services, and public job-fair information.
 - Jiangsu/Zhejiang/Shanghai public examinations: cover public civil-service and public-institution notices, application periods, qualification review, and exam schedules.
-- Central/state-owned enterprise recruitment: start with the SASAC aggregation column, then add representative official enterprise portals incrementally.
+- Central/state-owned enterprise recruitment: prefer stable official aggregators or representative enterprise announcement columns; disable persistently unreachable sources under the stability gate while retaining diagnostics.
 - Foreign-enterprise recruitment: prioritize company-owned career sites for China and Jiangsu/Zhejiang/Shanghai jobs, with a separate product section later.
 - Collect only public lists, details, and attachments that require no login. Never enter application forms, handle CAPTCHA, or bypass access controls.
 
@@ -22,9 +22,9 @@ This document records the target sources, integration status, and manual mainten
 | Public exam | Zhejiang | Zhejiang Civil Service Examination and Recruitment Network | [Home](https://gwy.zjks.gov.cn/) | Planned | Recruitment notices, registration statistics, and exam schedules |
 | Public exam | Shanghai | Shanghai Civil Service Bureau | [Home](https://www.shacs.gov.cn/) | Planned | Public recruitment notices only; never application forms |
 | Public exam | Shanghai | Shanghai Human Resources and Social Security Bureau | [Public-institution recruitment](https://rsj.sh.gov.cn/tsydwgkzp_17406/index.html) | Active | Source 5; recruitment-announcement paths only, excluding proposed-hire notices and registration systems |
-| State-owned | National | State-owned Assets Supervision and Administration Commission | [Public recruitment](https://www.sasac.gov.cn/n2588035/n2588325/n2588350/index.html) | Active | JAI-011's first Adapter; central-SOE campus and experienced-hire announcements |
+| State-owned | National | State-owned Assets Supervision and Administration Commission | [Public recruitment](https://www.sasac.gov.cn/n2588035/n2588325/n2588350/index.html) | Blocked | JAI-011's first Adapter; disabled after two consecutive days of public-network/TLS failure, with historical contracts and diagnostics retained |
 | State-owned | National/Jiangsu-Zhejiang-Shanghai | State Grid | [Recruitment](https://zhaopin.sgcc.com.cn/) | Planned | Dynamic portal; verify public interfaces, terms, and stability first |
-| State-owned | National/Jiangsu-Zhejiang-Shanghai | China Mobile | [Recruitment](https://job.10086.cn/) | Planned | Integrate only campus announcements that require no login |
+| State-owned | National/Jiangsu-Zhejiang-Shanghai | China Mobile | [Recruitment announcements](https://job.10086.cn/personal/notice/) | Active | JAI-021 stability replacement; reads only same-origin static JSON declared by the page and public details, never account or application actions |
 | State-owned | National/Jiangsu-Zhejiang-Shanghai | China Telecom | [Group recruitment](https://www.chinatelecom.com.cn/ct/zp/) | Planned | Prefer the group public column over personal application functions |
 | State-owned | National/Jiangsu-Zhejiang-Shanghai | CNPC | [Graduate recruitment](https://zhaopin.cnpc.com.cn/) | Planned | Dynamic portal; verify public-list stability first |
 | Foreign enterprise | China/Jiangsu-Zhejiang-Shanghai | Apple | [China careers](https://jobs.apple.com/zh-cn/search?location=shanghai-state157) | Planned | Official public student/graduate jobs; never submit applications |
@@ -33,9 +33,9 @@ This document records the target sources, integration status, and manual mainten
 | Foreign enterprise | China/Jiangsu-Zhejiang-Shanghai | SAP | [China jobs](https://jobs.sap.com/go/China/8807101/) | Planned | Official China jobs/student programs; never submit talent-community forms |
 | Foreign enterprise | China/Jiangsu-Zhejiang-Shanghai | P&G | [Greater China careers](https://www.pgcareers.com/global/en/locations/greaterchina/) | Planned | Official public jobs; never fill talent-community or application forms |
 
-`Planned` means registered as a candidate, not that the program will access it. Machine configuration requires `implementation_status = "planned"` and `enabled = false` for these entries.
+`Planned` means registered as a candidate, not that the program will access it. Machine configuration requires `implementation_status = "planned"` and `enabled = false`; `Blocked` uses `blocked` and likewise cannot be enabled.
 
-All 11 official candidates are mapped to the implementation roadmap: JAI-011/JAI-021 enable five, and JAI-038 through JAI-043 handle the remaining six one site at a time. If a dynamic portal cannot be read stably without login/CAPTCHA and within its terms, it stays `planned` or becomes `blocked`; prefer a public announcement endpoint owned by the same official body. Roadmap inclusion never authorizes bypassing restrictions.
+All 11 official candidates remain mapped to the roadmap: JAI-011/JAI-021 currently enable five, China Mobile was absorbed early from JAI-041 as the stability replacement, SASAC remains one blocked source, and the five remaining planned sources stay under the unfinished JAI-038 through JAI-043 items. If a dynamic portal cannot be read stably without login/CAPTCHA and within its terms, it stays `planned` or becomes `blocked`; prefer a stable public announcement endpoint. Roadmap inclusion never authorizes bypassing restrictions.
 
 Commercial platforms such as BOSS Zhipin are excluded from this executable catalog. Their manual-reference role and compliance boundary are documented in the [unofficial recruitment reference sources](../REFERENCE_SOURCES.md).
 
@@ -63,11 +63,11 @@ After an edit, run:
 Low-frequency previews access public sites but do not write the database:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/run_source_preview.py --source sasac-recruitment --limit 10
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source jiangsu-personnel-exam --limit 10 --fetch-first-detail
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source shanghai-firstjob --limit 10 --fetch-first-detail
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source ncss-jobs --limit 3 --fetch-first-detail
 .\.venv\Scripts\python.exe scripts/run_source_preview.py --source shanghai-public-institution --limit 3 --fetch-first-detail
+.\.venv\Scripts\python.exe scripts/run_source_preview.py --source china-mobile-recruitment --limit 3 --fetch-first-detail
 ```
 
 ## 4. New-source launch checklist
@@ -80,4 +80,4 @@ Low-frequency previews access public sites but do not write the database:
 
 ## 5. Current environment limitations
 
-On 2026-08-26, low-frequency read-only smoke tests passed for NCSS and Shanghai public-institution recruitment. Jiangsu remained reachable, while Shanghai Firstjob returned no matching fair that day. SASAC still ended with retryable `PoolTimeout` after three bounded retries, so the all-source observation was not a qualified stability day. All five Adapters, fixture groups, and PostgreSQL idempotency acceptance pass; never substitute an unofficial entry, weaken TLS, or bypass access controls to manufacture a live success.
+On 2026-08-27, the SASAC public recruitment column failed with retryable `PoolTimeout` for a second consecutive day. The user's normal browser also failed, the public `www` CDN could not be reached, and the official `wap` endpoint exposed an expired certificate, so the W6 stability gate moved it to disabled `blocked` status. China Mobile's official announcement page and same-origin static list/detail JSON returned 200 to bounded GET checks; the final replacement run completed three details and all five active sources, becoming stability day 1. One earlier list request did hit `PoolTimeout`, so observation must continue. Never infer an application deadline from JSON down-time; retain an image-only body's same-origin image URL without download or OCR; never enter registration, login, resume, or application actions.

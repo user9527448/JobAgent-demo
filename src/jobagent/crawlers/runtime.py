@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from jobagent.core.exceptions import ConfigurationError
 from jobagent.crawlers.catalog import SourceCatalog, SourceCatalogEntry
+from jobagent.crawlers.china_mobile import ChinaMobileRecruitmentAdapter
 from jobagent.crawlers.contracts import SourceDefinition
 from jobagent.crawlers.firstjob import ShanghaiFirstjobAdapter
 from jobagent.crawlers.http import SourceHttpClient
 from jobagent.crawlers.jiangsu import JiangsuPersonnelExamAdapter
 from jobagent.crawlers.ncss import NcssJobsAdapter
 from jobagent.crawlers.registry import AdapterRegistry
-from jobagent.crawlers.sasac import SasacRecruitmentAdapter
 from jobagent.crawlers.shanghai_rsj import ShanghaiPublicInstitutionAdapter
 
 
@@ -46,12 +46,7 @@ def build_adapter_registry(
 ) -> AdapterRegistry:
     """Register the one explicit Adapter allowed for this manual source run."""
     registry = AdapterRegistry()
-    if entry.adapter == "sasac_recruitment":
-        registry.register(
-            entry.adapter,
-            lambda resolved: SasacRecruitmentAdapter(resolved, entry, http_client),
-        )
-    elif entry.adapter == "jiangsu_personnel_exam":
+    if entry.adapter == "jiangsu_personnel_exam":
         registry.register(
             entry.adapter,
             lambda resolved: JiangsuPersonnelExamAdapter(resolved, entry, http_client),
@@ -70,6 +65,11 @@ def build_adapter_registry(
         registry.register(
             entry.adapter,
             lambda resolved: ShanghaiPublicInstitutionAdapter(resolved, entry, http_client),
+        )
+    elif entry.adapter == "china_mobile_recruitment":
+        registry.register(
+            entry.adapter,
+            lambda resolved: ChinaMobileRecruitmentAdapter(resolved, entry, http_client),
         )
     else:
         raise ConfigurationError(

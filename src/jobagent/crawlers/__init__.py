@@ -12,6 +12,7 @@ from jobagent.crawlers.attachments import (
     discover_attachment_links,
 )
 from jobagent.crawlers.catalog import SourceCatalog, SourceCatalogEntry, load_source_catalog
+from jobagent.crawlers.china_mobile import ChinaMobileRecruitmentAdapter
 from jobagent.crawlers.contracts import (
     AdapterFactory,
     CrawlBatchResult,
@@ -60,6 +61,7 @@ __all__ = [
     "AttachmentStorageService",
     "AttachmentStoreResult",
     "AttachmentStoreStatus",
+    "ChinaMobileRecruitmentAdapter",
     "CollectionOrchestrator",
     "CrawlBatchResult",
     "CrawlCursor",

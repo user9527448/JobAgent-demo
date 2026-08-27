@@ -30,6 +30,7 @@
 | JAI-016 附件黄金样本 | [中文](fixtures/ATTACHMENTS.md) | [English](../../tests/fixtures/attachments/README.md) |
 | JAI-021 NCSS 固定样本 | [中文](fixtures/NCSS.md) | [English](../../tests/fixtures/ncss/README.md) |
 | JAI-021 上海人社固定样本 | [中文](fixtures/SHANGHAI_RSJ.md) | [English](../../tests/fixtures/shanghai_rsj/README.md) |
+| JAI-021 中国移动替代来源固定样本 | [中文](fixtures/CHINA_MOBILE.md) | [English](../../tests/fixtures/china_mobile/README.md) |
 
 ## 历史归档
 
