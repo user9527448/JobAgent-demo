@@ -15,11 +15,12 @@ EXPECTED_TABLES = {
     "job_posts",
     "raw_documents",
     "sources",
+    "user_preferences",
     "validation_issues",
 }
 
 
-def test_model_registry_contains_exactly_the_jai_006_tables() -> None:
+def test_model_registry_contains_all_current_tables() -> None:
     assert set(Base.metadata.tables) == EXPECTED_TABLES
 
 

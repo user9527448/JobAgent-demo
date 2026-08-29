@@ -9,6 +9,7 @@ from jobagent.db.models.entities import (
     JobPost,
     RawDocument,
     Source,
+    UserPreference,
     ValidationIssue,
 )
 
@@ -22,5 +23,6 @@ __all__ = [
     "RawDocument",
     "Source",
     "UTCDateTime",
+    "UserPreference",
     "ValidationIssue",
 ]

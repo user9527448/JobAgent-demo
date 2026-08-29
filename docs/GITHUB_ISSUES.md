@@ -287,13 +287,13 @@
 
 - **Labels**：`type:feature` `area:matching` `area:api` `priority:P0` `size:M`
 - **依赖**：JAI-006
-- **状态**：2026-08-29 经用户批准从三端一致的 `develop` 并行启动；独立分支 `feature/jai-022-single-user-preferences`。
+- **状态**：2026-08-30 功能实现、双语文档和 PostgreSQL 完整门禁已完成；独立分支 `feature/jai-022-single-user-preferences` 等待 JAI-021 先合并，再同步最新 `develop` 后集成。
 - **目标**：以结构化方式保存个人筛选与偏好。
 - **范围**：地区、学历、专业、岗位关键词、单位类型、排除词；读取/更新 API。
 - **验收标准**：
-  - [ ] 输入经过 Schema 和枚举校验。
-  - [ ] 配置变更有更新时间并可触发重算。
-  - [ ] 默认配置不会意外过滤全部岗位。
+  - [x] 输入经过 Schema 和枚举校验。
+  - [x] 配置变更有更新时间并可触发重算。
+  - [x] 默认配置不会意外过滤全部岗位。
 
 ### JAI-023 实现硬过滤和版本化规则评分
 

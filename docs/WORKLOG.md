@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-29
+> Last updated: 2026-08-30
 >
 > Active branch: `feature/jai-022-single-user-preferences`
 
@@ -29,8 +29,8 @@
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
-| JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `346a6e4` | Implementation complete; consecutive-day stability acceptance continues independently |
-| JAI-022 | In progress | `feature/jai-022-single-user-preferences` | User-approved parallel implementation from verified `develop` |
+| JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | Implementation complete; qualified Day 1/Day 2 observations recorded; final consecutive-day run remains |
+| JAI-022 | Implementation complete, integration pending | `feature/jai-022-single-user-preferences` | Full PostgreSQL gate passed; waits for JAI-021-first merge boundary |
 
 ## 2. Current decisions
 
@@ -273,6 +273,15 @@ The same document/extraction version may be repeated only when its merged result
 - JAI-022 scope remains limited to one structured user preference model and read/update API for regions, education, majors, job keywords, organization types, and exclusions; validation, update timestamps, recalculation signaling, and a non-filtering default are required. JAI-023 scoring/filtering remains out of scope.
 - Next action: inspect existing models, migrations, API conventions, and tests; define the smallest preference contract and persistence boundary before implementation.
 
+### 2026-08-30 — JAI-022 implementation and feature-branch acceptance completed
+
+- Added migration `0006_single_user_preferences` and an ORM singleton constrained to `id=1`. The migration inserts a non-filtering default: empty region/major/keyword/organization/exclusion arrays, `education=null`, and no pending recomputation. JSON array shape and education values are database-constrained.
+- Added `GET /preferences` and full-replacement `PUT /preferences`. Region and education values reuse deterministic extraction enums; organization type intentionally uses the separate `government`/`public_institution`/`state_owned`/`private`/`foreign_enterprise` vocabulary rather than confusing source category with employer type. Text is NFKC/whitespace normalized and deduplicated in stable order.
+- Updates lock the singleton row and store `updated_at`. `trigger_recompute=true` sets a sticky pending flag and request timestamp; a deferred update cannot erase an existing request. JAI-023 owns signal consumption, hard filtering, scoring, and recomputation execution and remains unimplemented here.
+- Added API/model/migration/repository/enum-alignment tests and paired preference/database/index/plan/backlog/log documentation. The first focused repository run failed only because the new Windows test used the default Proactor event loop, which psycopg async rejects; it was corrected to the repository-standard `asyncio.SelectorEventLoop`, after which all three focused PostgreSQL tests passed. The first enum-test Mypy/full-gate attempt exposed the duplicate bare module name `test_contracts`; renaming it to `test_preference_contracts` fixed package discovery without changing assertions.
+- Docker Desktop and the existing `db` service were started without rebuilding or deleting volumes; the existing isolated `jobagent_test` database was confirmed. Final `scripts/check.py` passed: Ruff format checked 164 files, Ruff lint passed, Mypy passed across 109 source files, all 224 tests passed with no skips, and coverage was 88.18%.
+- Next action: commit and normally push this feature result. After JAI-021 completes and merges first, normally merge updated `develop` into this branch, preserve both bilingual logs, resolve paired-document conflicts, rerun the full PostgreSQL gate, and only then merge JAI-022.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -285,8 +294,8 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Implement and verify JAI-022 on its independent branch while JAI-021 continues calendar-day observations on its own branch.
-2. Merge JAI-021 first; then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and only then consider JAI-022 integration.
+1. Commit and normally push the completed JAI-022 feature result without merging it into `develop` yet.
+2. Complete and merge JAI-021 first; then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and only then integrate JAI-022.
 3. Keep JAI-023 scoring, OCR JAI-B01, and JAI-048 legacy migration outside JAI-022.
 
 ## 6. Update template

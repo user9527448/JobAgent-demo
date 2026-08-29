@@ -525,3 +525,72 @@ class FieldEvidence(Base):
         back_populates="evidence_records",
         foreign_keys=[source_attachment_id],
     )
+
+
+class UserPreference(TimestampMixin, Base):
+    """The single local user's structured matching preferences."""
+
+    __tablename__ = "user_preferences"
+    __table_args__ = (
+        CheckConstraint("id = 1", name="single_user"),
+        CheckConstraint("jsonb_typeof(regions) = 'array'", name="regions_array"),
+        CheckConstraint(
+            "education IS NULL OR education IN "
+            "('no_requirement', 'doctorate', 'master_or_above', 'master', "
+            "'bachelor_or_above', 'bachelor', 'associate_or_above', 'associate', "
+            "'secondary_vocational', 'high_school')",
+            name="education_valid",
+        ),
+        CheckConstraint("jsonb_typeof(majors) = 'array'", name="majors_array"),
+        CheckConstraint("jsonb_typeof(job_keywords) = 'array'", name="job_keywords_array"),
+        CheckConstraint(
+            "jsonb_typeof(organization_types) = 'array'",
+            name="organization_types_array",
+        ),
+        CheckConstraint("jsonb_typeof(exclusions) = 'array'", name="exclusions_array"),
+    )
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        default=1,
+        server_default=text("1"),
+    )
+    regions: Mapped[list[str]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,
+        server_default=text("'[]'::jsonb"),
+    )
+    education: Mapped[str | None] = mapped_column(String(50))
+    majors: Mapped[list[str]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,
+        server_default=text("'[]'::jsonb"),
+    )
+    job_keywords: Mapped[list[str]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,
+        server_default=text("'[]'::jsonb"),
+    )
+    organization_types: Mapped[list[str]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,
+        server_default=text("'[]'::jsonb"),
+    )
+    exclusions: Mapped[list[str]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,
+        server_default=text("'[]'::jsonb"),
+    )
+    recompute_required: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
+    recompute_requested_at: Mapped[datetime | None] = mapped_column(UTCDateTime())

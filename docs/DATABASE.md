@@ -2,7 +2,7 @@
 
 > 简体中文：[JOBAGENT 核心数据库模型](zh-CN/DATABASE.md)
 
-This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), and JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
+This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md), and JAI-022 [single-user preference policy](PREFERENCES.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
 
 ## Tables
 
@@ -16,6 +16,7 @@ This document describes the PostgreSQL schema established in JAI-006 and extende
 | `job_positions` | Optional position records below one post version | Stable record key; evidenced name may be absent; positive headcount when known |
 | `field_evidence` | Field-level traceability | Raw/normalized values, method/version, selection/conflict, exactly one source, quote/page/line/sheet/cell locator, confidence from 0 to 1 |
 | `validation_issues` | Version-specific quality findings | Stable issue key per post; reason, severity, entity/field identity; errors and warnings only |
+| `user_preferences` | Singleton local-user profile | Fixed `id=1`; structured filters; unrestricted defaults; audit timestamps and sticky recomputation signal |
 
 ## Relationships and deletion policy
 
@@ -59,6 +60,7 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 - Field evidence stores original and normalized values together and retains conflicting candidates instead of overwriting them. Line and worksheet/cell coordinates complement existing page/quote locators.
 - `review_status` is limited to `approved`, `review_required`, or `blocked`; `validation_issues.severity` is limited to `warning` or `error`. Any error sets `recommendation_eligible=false` in the same extraction transaction.
 - The current/eligibility index supports later recommendation queries without treating legacy or blocked rows as eligible. Legacy rows are backfilled as `review_required` and `legacy-unvalidated`, never silently approved.
+- `user_preferences` permits only `id=1`; JSON preference fields must remain arrays and `education` must be a supported deterministic enum or null. Empty values are unrestricted, never “match nothing.”
 
 ## Migrations
 

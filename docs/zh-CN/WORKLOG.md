@@ -6,7 +6,7 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-29
+> 最后更新：2026-08-30
 >
 > 当前分支：`feature/jai-022-single-user-preferences`
 
@@ -29,8 +29,8 @@
 | JAI-018 | 已完成、合并并推送到 `develop` | `develop` / `c013544` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
 | JAI-019 | 已完成、合并并推送到 `develop` | `develop` / `82797d1` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
 | JAI-020 | 已完成、合并并推送到 `develop` | `develop` / `f56365f` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
-| JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `346a6e4` | 实现已完成；连续自然日稳定性验收独立继续 |
-| JAI-022 | 进行中 | `feature/jai-022-single-user-preferences` | 经用户批准，从已核验 `develop` 并行实施 |
+| JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | 实现已完成；合格 Day 1/Day 2 观测已登记；还需最后一次连续自然日运行 |
+| JAI-022 | 实现完成，待集成 | `feature/jai-022-single-user-preferences` | PostgreSQL 完整门禁通过；遵守 JAI-021 先合并边界 |
 
 ## 2. 当前决策
 
@@ -273,6 +273,15 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - JAI-022 只实现一个结构化用户偏好模型和读取/更新 API，覆盖地区、学历、专业、岗位关键词、单位类型和排除词；必须具备输入校验、更新时间、重算信号和不会过滤全部岗位的默认值。JAI-023 评分/过滤保持在范围外。
 - 下一步：检查现有模型、迁移、API 约定和测试，在实施前定义最小偏好契约与持久化边界。
 
+### 2026-08-30 — JAI-022 实现与功能分支验收完成
+
+- 新增迁移 `0006_single_user_preferences` 和固定 `id=1` 的 ORM 单例。迁移插入不会筛空的默认值：地区/专业/关键词/单位类型/排除词均为空数组，`education=null`，且没有待处理重算。数据库约束会校验 JSON 数组形状和学历值。
+- 新增 `GET /preferences` 和全量替换 `PUT /preferences`。地区和学历复用确定性抽取枚举；单位类型有意使用独立的 `government`/`public_institution`/`state_owned`/`private`/`foreign_enterprise` 词表，避免把来源分类误作单位属性。文本会进行 NFKC/空白规范化，并按稳定顺序去重。
+- 更新会锁定单例行并保存 `updated_at`。`trigger_recompute=true` 会设置粘性的待处理标志和请求时间；延迟重算的更新不能抹除已有请求。信号消费、硬过滤、评分与实际重算属于 JAI-023，本分支没有提前实现。
+- 新增 API/模型/迁移/仓库/枚举对齐测试，并同步偏好、数据库、索引、计划、Backlog 和日志双语文档。首次定向仓库测试仅因新 Windows 测试使用默认 Proactor 事件循环而失败，psycopg async 不支持该循环；改为仓库既有的 `asyncio.SelectorEventLoop` 后，3 项定向 PostgreSQL 测试全部通过。首次枚举测试 Mypy/完整门禁还暴露了重复的裸模块名 `test_contracts`；将其改名为 `test_preference_contracts` 后修复包发现，不改变断言。
+- 已启动 Docker Desktop 和既有 `db` 服务，未重建容器或删除数据卷；确认现有隔离库 `jobagent_test`。最终 `scripts/check.py` 通过：Ruff format 检查 164 个文件，Ruff lint 通过，109 个源文件的 Mypy 通过，224 项测试全部通过、无跳过，覆盖率 88.18%。
+- 下一步：提交并普通推送本功能结果。JAI-021 完成并先合并后，把更新后的 `develop` 普通合并到本分支，保留两份双语日志、处理配对文档冲突、重跑 PostgreSQL 完整门禁，之后才合并 JAI-022。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -285,8 +294,8 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 在独立分支实现并验证 JAI-022，同时让 JAI-021 在自身分支继续自然日观测。
-2. 先合并 JAI-021；再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，之后才考虑集成 JAI-022。
+1. 提交并普通推送已完成的 JAI-022 功能结果，暂不合并到 `develop`。
+2. 先完成并合并 JAI-021；再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，之后才集成 JAI-022。
 3. JAI-023 评分、OCR JAI-B01 和 JAI-048 存量迁移保持在 JAI-022 范围外。
 
 ## 6. 更新模板

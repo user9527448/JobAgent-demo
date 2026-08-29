@@ -6,6 +6,7 @@ from fastapi import HTTPException, Request, status
 
 from jobagent.db import DatabaseHealth
 from jobagent.extraction.reparse import ReparseOperations
+from jobagent.preferences import PreferenceOperations
 
 
 def get_database(request: Request) -> DatabaseHealth:
@@ -22,6 +23,20 @@ def get_reparse_service(request: Request) -> ReparseOperations:
             detail={
                 "code": "reparse.service_unavailable",
                 "message": "Reparse service is unavailable for this application instance.",
+            },
+        )
+    return service
+
+
+def get_preference_service(request: Request) -> PreferenceOperations:
+    """Return preference operations or an explicit service-unavailable response."""
+    service = cast(PreferenceOperations | None, request.app.state.preference_service)
+    if service is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "preferences.service_unavailable",
+                "message": "Preference service is unavailable for this application instance.",
             },
         )
     return service

@@ -287,13 +287,13 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:matching` `area:api` `priority:P0` `size:M`
 - **Dependencies**: JAI-006
-- **Status**: started in parallel on 2026-08-29 with user approval from three-way-synchronized `develop`; dedicated branch `feature/jai-022-single-user-preferences`.
+- **Status**: implementation, paired documentation, and the PostgreSQL-enabled full gate completed on 2026-08-30; dedicated branch `feature/jai-022-single-user-preferences` awaits JAI-021 integration first, then synchronization from updated `develop` before integration.
 - **Goal**: store structured filters and preferences.
 - **Scope**: region, education, major, keywords, organization type, exclusions, read/update API.
 - **Acceptance**:
-  - [ ] Schema and enum validation protects input.
-  - [ ] Changes record update time and can trigger recomputation.
-  - [ ] Defaults do not accidentally filter every job.
+  - [x] Schema and enum validation protects input.
+  - [x] Changes record update time and can trigger recomputation.
+  - [x] Defaults do not accidentally filter every job.
 
 ### JAI-023 Implement hard filters and versioned rule scoring
 
