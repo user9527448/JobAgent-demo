@@ -30,7 +30,7 @@
 | JAI-019 | 已完成、合并并推送到 `develop` | `develop` / `82797d1` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
 | JAI-020 | 已完成、合并并推送到 `develop` | `develop` / `f56365f` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
 | JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | 实现已完成；合格 Day 1/Day 2 观测已登记；还需最后一次连续自然日运行 |
-| JAI-022 | 实现完成，待集成 | `feature/jai-022-single-user-preferences` | PostgreSQL 完整门禁通过；遵守 JAI-021 先合并边界 |
+| JAI-022 | 实现完成，待重试推送 | `feature/jai-022-single-user-preferences` / `38cca14` | PostgreSQL 完整门禁通过；GitHub 443 不可达期间本地功能提交安全保留 |
 
 ## 2. 当前决策
 
@@ -280,7 +280,8 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 更新会锁定单例行并保存 `updated_at`。`trigger_recompute=true` 会设置粘性的待处理标志和请求时间；延迟重算的更新不能抹除已有请求。信号消费、硬过滤、评分与实际重算属于 JAI-023，本分支没有提前实现。
 - 新增 API/模型/迁移/仓库/枚举对齐测试，并同步偏好、数据库、索引、计划、Backlog 和日志双语文档。首次定向仓库测试仅因新 Windows 测试使用默认 Proactor 事件循环而失败，psycopg async 不支持该循环；改为仓库既有的 `asyncio.SelectorEventLoop` 后，3 项定向 PostgreSQL 测试全部通过。首次枚举测试 Mypy/完整门禁还暴露了重复的裸模块名 `test_contracts`；将其改名为 `test_preference_contracts` 后修复包发现，不改变断言。
 - 已启动 Docker Desktop 和既有 `db` 服务，未重建容器或删除数据卷；确认现有隔离库 `jobagent_test`。最终 `scripts/check.py` 通过：Ruff format 检查 164 个文件，Ruff lint 通过，109 个源文件的 Mypy 通过，224 项测试全部通过、无跳过，覆盖率 88.18%。
-- 下一步：提交并普通推送本功能结果。JAI-021 完成并先合并后，把更新后的 `develop` 普通合并到本分支，保留两份双语日志、处理配对文档冲突、重跑 PostgreSQL 完整门禁，之后才合并 JAI-022。
+- 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `38cca14`。两次普通推送均未更新远端：首次连接被重置，第二次在 GitHub 443 端口超时；只读 `ls-remote` 同样超时。DNS 仍将 `github.com` 解析为 `20.205.243.166`，Git 未配置代理，但直接 TCP 443 探测失败。本地提交和分支保持完整，没有使用 force/rebase。
+- 下一步：GitHub 443 恢复后重试同一普通推送，再核对本地 HEAD、跟踪引用与 `ls-remote`。JAI-021 完成并先合并后，把更新后的 `develop` 普通合并到本分支，保留两份双语日志、处理配对文档冲突、重跑 PostgreSQL 完整门禁，之后才合并 JAI-022。
 
 ## 4. 检查与阻塞
 
@@ -294,7 +295,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 提交并普通推送已完成的 JAI-022 功能结果，暂不合并到 `develop`。
+1. 重试普通推送本地 JAI-022 提交 `38cca14`，并完成三端分支末端核验；暂不合并到 `develop`。
 2. 先完成并合并 JAI-021；再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，之后才集成 JAI-022。
 3. JAI-023 评分、OCR JAI-B01 和 JAI-048 存量迁移保持在 JAI-022 范围外。
 

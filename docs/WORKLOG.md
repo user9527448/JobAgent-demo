@@ -30,7 +30,7 @@
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
 | JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | Implementation complete; qualified Day 1/Day 2 observations recorded; final consecutive-day run remains |
-| JAI-022 | Implementation complete, integration pending | `feature/jai-022-single-user-preferences` | Full PostgreSQL gate passed; waits for JAI-021-first merge boundary |
+| JAI-022 | Implementation complete, push retry pending | `feature/jai-022-single-user-preferences` / `38cca14` | Full PostgreSQL gate passed; local feature commit is safe while GitHub 443 is unavailable |
 
 ## 2. Current decisions
 
@@ -280,7 +280,8 @@ The same document/extraction version may be repeated only when its merged result
 - Updates lock the singleton row and store `updated_at`. `trigger_recompute=true` sets a sticky pending flag and request timestamp; a deferred update cannot erase an existing request. JAI-023 owns signal consumption, hard filtering, scoring, and recomputation execution and remains unimplemented here.
 - Added API/model/migration/repository/enum-alignment tests and paired preference/database/index/plan/backlog/log documentation. The first focused repository run failed only because the new Windows test used the default Proactor event loop, which psycopg async rejects; it was corrected to the repository-standard `asyncio.SelectorEventLoop`, after which all three focused PostgreSQL tests passed. The first enum-test Mypy/full-gate attempt exposed the duplicate bare module name `test_contracts`; renaming it to `test_preference_contracts` fixed package discovery without changing assertions.
 - Docker Desktop and the existing `db` service were started without rebuilding or deleting volumes; the existing isolated `jobagent_test` database was confirmed. Final `scripts/check.py` passed: Ruff format checked 164 files, Ruff lint passed, Mypy passed across 109 source files, all 224 tests passed with no skips, and coverage was 88.18%.
-- Next action: commit and normally push this feature result. After JAI-021 completes and merges first, normally merge updated `develop` into this branch, preserve both bilingual logs, resolve paired-document conflicts, rerun the full PostgreSQL gate, and only then merge JAI-022.
+- Created feature commit `38cca14` with repository-local author `user9527448 <2537759248@qq.com>`. Two normal push attempts failed without updating the remote: the first connection was reset and the second timed out on GitHub port 443. A read-only `ls-remote` timed out as well; DNS still resolved `github.com` to `20.205.243.166`, no Git proxy was configured, and a direct TCP 443 probe failed. The local commit and branch remain intact and no force/rebase action was used.
+- Next action: retry the same normal push when GitHub 443 is reachable, then verify local HEAD/tracking/`ls-remote`. After JAI-021 completes and merges first, normally merge updated `develop` into this branch, preserve both bilingual logs, resolve paired-document conflicts, rerun the full PostgreSQL gate, and only then merge JAI-022.
 
 ## 4. Verification and blockers
 
@@ -294,7 +295,7 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Commit and normally push the completed JAI-022 feature result without merging it into `develop` yet.
+1. Retry the normal push of local JAI-022 commit `38cca14`, then complete three-way branch-tip verification; do not merge it into `develop` yet.
 2. Complete and merge JAI-021 first; then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and only then integrate JAI-022.
 3. Keep JAI-023 scoring, OCR JAI-B01, and JAI-048 legacy migration outside JAI-022.
 
