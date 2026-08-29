@@ -281,6 +281,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 新增 API/模型/迁移/仓库/枚举对齐测试，并同步偏好、数据库、索引、计划、Backlog 和日志双语文档。首次定向仓库测试仅因新 Windows 测试使用默认 Proactor 事件循环而失败，psycopg async 不支持该循环；改为仓库既有的 `asyncio.SelectorEventLoop` 后，3 项定向 PostgreSQL 测试全部通过。首次枚举测试 Mypy/完整门禁还暴露了重复的裸模块名 `test_contracts`；将其改名为 `test_preference_contracts` 后修复包发现，不改变断言。
 - 已启动 Docker Desktop 和既有 `db` 服务，未重建容器或删除数据卷；确认现有隔离库 `jobagent_test`。最终 `scripts/check.py` 通过：Ruff format 检查 164 个文件，Ruff lint 通过，109 个源文件的 Mypy 通过，224 项测试全部通过、无跳过，覆盖率 88.18%。
 - 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `38cca14`。两次普通推送均未更新远端：首次连接被重置，第二次在 GitHub 443 端口超时；只读 `ls-remote` 同样超时。DNS 仍将 `github.com` 解析为 `20.205.243.166`，Git 未配置代理，但直接 TCP 443 探测失败。本地提交和分支保持完整，没有使用 force/rebase。
+- 2026-08-30 01:27 +08:00 继续重试时，GitHub 443 仍然超时。只读诊断确认没有 `HTTP_PROXY`/`HTTPS_PROXY` 环境设置，WinHTTP 采用直接连接，Windows 用户代理已禁用，常见本地代理端口也没有监听。当前日期仍属于 JAI-021 合格 Day 2；2026-08-31 之前不能如实执行 Day 3。
 - 下一步：GitHub 443 恢复后重试同一普通推送，再核对本地 HEAD、跟踪引用与 `ls-remote`。JAI-021 完成并先合并后，把更新后的 `develop` 普通合并到本分支，保留两份双语日志、处理配对文档冲突、重跑 PostgreSQL 完整门禁，之后才合并 JAI-022。
 
 ## 4. 检查与阻塞
