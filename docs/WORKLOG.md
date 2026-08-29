@@ -308,6 +308,13 @@ The same document/extraction version may be repeated only when its merged result
 - After the user restored a working external network path, the unchanged normal HTTPS push succeeded through network-diagnostic commit `6d30ad909e8af6c7947a4db7188d2081c22a9d75`. Local HEAD and the tracking reference matched immediately. The first sandboxed `ls-remote` check failed on its isolated network path after 11 ms; the read-only check in the same external network context as the push then succeeded and confirmed GitHub at the same commit.
 - Next action: continue daily replacement five-source observations from 2026-08-28 for days 2 and 3; do not close JAI-021 before three consecutive qualified calendar days exist.
 
+### 2026-08-29 — JAI-021 stability sequence restarted
+
+- Resumed the clean `feature/jai-021-sources-four-five-stability` branch at `a6bdcfbe3e96c3ab7d1257873aacf2749f8a1c04`; local HEAD and its tracking reference matched, and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
+- No evidence-backed run was recorded on 2026-08-28. The qualified 2026-08-27 result therefore cannot be backfilled or extended into a consecutive sequence.
+- The bounded 2026-08-29 replacement observation qualified: all 5 source runs and all 8 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 80% (32/40). NCSS and Firstjob returned valid empty lists; Jiangsu, Shanghai public institutions, and China Mobile returned 2, 3, and 3 details respectively. No database, runtime file, or source body was written.
+- The consecutive sequence restarts at day 1 on 2026-08-29. Next action: record qualified runs on 2026-08-30 and 2026-08-31; any missing or failed day restarts the sequence again.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -320,7 +327,7 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Continue the replacement five-source observation on 2026-08-28 and 2026-08-29. Only full-source successes extend the sequence; commit each evidence-backed result and never mark JAI-021 complete before all three consecutive days exist.
+1. Continue the replacement five-source observation on 2026-08-30 and 2026-08-31. Only full-source successes extend the sequence; commit each evidence-backed result and never mark JAI-021 complete before all three consecutive days exist.
 2. Keep OCR deferred to JAI-B01, JAI-022 matching/preferences out of scope until JAI-021 closes, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
