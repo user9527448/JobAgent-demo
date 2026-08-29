@@ -6,9 +6,9 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-25
+> 最后更新：2026-08-29
 >
-> 当前分支：`feature/jai-020-validation-review-reparse`
+> 当前分支：`feature/jai-022-single-user-preferences`
 
 ## 1. 当前状态
 
@@ -28,7 +28,9 @@
 | JAI-017 | 已完成、合并并推送到 `develop` | `develop` / `c7a2ebe` | 确定性日期/时区、地区、URL、人数、学历/类别、原值/规范值和解析器证据已验证 |
 | JAI-018 | 已完成、合并并推送到 `develop` | `develop` / `c013544` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
 | JAI-019 | 已完成、合并并推送到 `develop` | `develop` / `82797d1` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
-| JAI-020 | 已完成并普通推送 | `feature/jai-020-validation-review-reparse` / `6712010` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
+| JAI-020 | 已完成、合并并推送到 `develop` | `develop` / `f56365f` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
+| JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `346a6e4` | 实现已完成；连续自然日稳定性验收独立继续 |
+| JAI-022 | 进行中 | `feature/jai-022-single-user-preferences` | 经用户批准，从已核验 `develop` 并行实施 |
 
 ## 2. 当前决策
 
@@ -263,6 +265,14 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 所有文档和防御性测试完成后，最终启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 154 个文件，Ruff lint 通过，102 个源文件的 Mypy 通过，216 项测试全部通过、无跳过，覆盖率为 88.07%。
 - 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `67120101ea0c926f327b781a6e69c05350d41df7`，并普通推送新 feature 分支。在本次最终状态更新之前，本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为该提交；GitHub `develop` 仍为 `82797d1fa91b1f5e77296d04e3138a9fabe7b499`。
 
+### 2026-08-29 — JAI-022 单用户偏好并行启动
+
+- 已确认 JAI-020 完成合并：本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 均为非快进合并 `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`，其第二父提交是 JAI-020 feature 末端 `9c86cad8eb621b20fa70e1e6a07a377f929608a3`。
+- 用户明确批准 JAI-021 只剩自然日观测期间的一次有边界 WIP 例外。已直接从三端核验一致的 `develop` 创建 `feature/jai-022-single-user-preferences`；其 `git log` 祖先不包含任何未合并的 JAI-021 提交。
+- 合并边界固定：JAI-021 只在自己的分支继续并必须先完成/合并；随后把最新 `develop` 普通合并到 JAI-022，保留两份双语 WORKLOG 历史，显式处理文档冲突并重跑启用 PostgreSQL 的完整门禁。绝不 rebase 或改写已发布历史。
+- JAI-022 只实现一个结构化用户偏好模型和读取/更新 API，覆盖地区、学历、专业、岗位关键词、单位类型和排除词；必须具备输入校验、更新时间、重算信号和不会过滤全部岗位的默认值。JAI-023 评分/过滤保持在范围外。
+- 下一步：检查现有模型、迁移、API 约定和测试，在实施前定义最小偏好契约与持久化边界。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -275,9 +285,9 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 只在下一次获授权的集成步骤合并 JAI-020，并随后核验 `develop` 同步状态。
-2. 从同步后的 `develop` 启动 JAI-021；保持其来源 4/5 和三日稳定性范围与 JAI-020 分离。
-3. OCR 继续延期至 JAI-B01，JAI-048 使用独立文档 Issue 执行。
+1. 在独立分支实现并验证 JAI-022，同时让 JAI-021 在自身分支继续自然日观测。
+2. 先合并 JAI-021；再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，之后才考虑集成 JAI-022。
+3. JAI-023 评分、OCR JAI-B01 和 JAI-048 存量迁移保持在 JAI-022 范围外。
 
 ## 6. 更新模板
 

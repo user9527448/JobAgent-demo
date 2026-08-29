@@ -287,6 +287,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:matching` `area:api` `priority:P0` `size:M`
 - **Dependencies**: JAI-006
+- **Status**: started in parallel on 2026-08-29 with user approval from three-way-synchronized `develop`; dedicated branch `feature/jai-022-single-user-preferences`.
 - **Goal**: store structured filters and preferences.
 - **Scope**: region, education, major, keywords, organization type, exclusions, read/update API.
 - **Acceptance**:
@@ -612,4 +613,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-Complete JAI-047 bilingual migration baseline → JAI-012 run/retry capability → JAI-013–JAI-021 to reach five stable MVP sources → JAI-038–JAI-045 one source at a time after the release loop is stable. Execute JAI-048 as an independent documentation Issue before the next substantive change to any listed legacy document; never mix it into feature branches. Personal WIP limit is two: at most one primary feature plus one small test/docs Issue. If a dynamic portal cannot satisfy public-access and terms boundaries, record `blocked` and continue; never force coverage with login, CAPTCHA, Playwright, or evasion.
+Complete JAI-047 bilingual migration baseline → JAI-012 run/retry capability → implement JAI-013–JAI-021 in order. The user explicitly approved one bounded WIP exception: while JAI-021 is in calendar-day acceptance observation only, JAI-022 may proceed independently from `develop`. JAI-021 must complete and merge first; then normally merge the latest `develop` into JAI-022, preserve both logs, and rerun the full gate, never using rebase or history rewriting to avoid conflicts. Execute JAI-038–JAI-045 one source at a time after the release loop is stable. Execute JAI-048 as an independent documentation Issue before the next substantive change to any listed legacy document; never mix it into feature branches. Except for the explicitly approved JAI-021 observation lane, the personal WIP limit remains one primary feature plus one small test/docs Issue. If a dynamic portal cannot satisfy public-access and terms boundaries, record `blocked` and continue; never force coverage with login, CAPTCHA, Playwright, or evasion.

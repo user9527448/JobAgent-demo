@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-25
+> Last updated: 2026-08-29
 >
-> Active branch: `feature/jai-020-validation-review-reparse`
+> Active branch: `feature/jai-022-single-user-preferences`
 
 ## 1. Current status
 
@@ -28,7 +28,9 @@
 | JAI-017 | Complete, merged and pushed to `develop` | `develop` / `c7a2ebe` | Deterministic dates/timezones, regions, URLs, headcount, education/categories, raw/normalized values, and parser evidence verified |
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
-| JAI-020 | Complete and normally pushed | `feature/jai-020-validation-review-reparse` / `6712010` | Validation severity, review eligibility, and idempotent document reparsing verified |
+| JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
+| JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `346a6e4` | Implementation complete; consecutive-day stability acceptance continues independently |
+| JAI-022 | In progress | `feature/jai-022-single-user-preferences` | User-approved parallel implementation from verified `develop` |
 
 ## 2. Current decisions
 
@@ -263,6 +265,14 @@ The same document/extraction version may be repeated only when its merged result
 - The final PostgreSQL-enabled `scripts/check.py` passed after all documentation and defensive tests: Ruff format checked 154 files, Ruff lint passed, Mypy passed across 102 source files, all 216 tests passed with no skips, and coverage was 88.07%.
 - Created feature commit `67120101ea0c926f327b781a6e69c05350d41df7` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the new feature branch. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit before this final status-only update; GitHub `develop` remained at `82797d1fa91b1f5e77296d04e3138a9fabe7b499`.
 
+### 2026-08-29 — JAI-022 single-user preferences started in parallel
+
+- Verified JAI-020 is merged: local `develop`, `origin/develop`, and GitHub `ls-remote` all matched non-fast-forward merge `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`, whose second parent is JAI-020 feature tip `9c86cad8eb621b20fa70e1e6a07a377f929608a3`.
+- The user explicitly approved one bounded WIP exception while JAI-021 waits only for calendar-day observations. Created `feature/jai-022-single-user-preferences` directly from verified `develop`; `git log` ancestry therefore contains no unmerged JAI-021 commit.
+- Merge boundary is fixed: JAI-021 continues only on its own branch and must complete/merge first. Then normally merge the latest `develop` into JAI-022, preserve both bilingual WORKLOG histories, resolve any documentation conflict explicitly, and rerun the complete PostgreSQL-enabled gate. Never rebase or rewrite published history.
+- JAI-022 scope remains limited to one structured user preference model and read/update API for regions, education, majors, job keywords, organization types, and exclusions; validation, update timestamps, recalculation signaling, and a non-filtering default are required. JAI-023 scoring/filtering remains out of scope.
+- Next action: inspect existing models, migrations, API conventions, and tests; define the smallest preference contract and persistence boundary before implementation.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -275,9 +285,9 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Merge JAI-020 only in the next authorized integration step and verify synchronized `develop` afterward.
-2. Start JAI-021 from that synchronized `develop`; keep its source 4/5 and three-day stability scope separate from JAI-020.
-3. Keep OCR deferred to JAI-B01 and execute JAI-048 as a separate documentation Issue.
+1. Implement and verify JAI-022 on its independent branch while JAI-021 continues calendar-day observations on its own branch.
+2. Merge JAI-021 first; then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and only then consider JAI-022 integration.
+3. Keep JAI-023 scoring, OCR JAI-B01, and JAI-048 legacy migration outside JAI-022.
 
 ## 6. Update template
 
