@@ -317,6 +317,12 @@ The same document/extraction version may be repeated only when its merged result
 - The user explicitly approved parallel JAI-022 work while JAI-021 remains in observation-only acceptance. Verified JAI-020 is already in `develop`: local and tracking `develop` both point to non-fast-forward merge `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`, whose second parent is the JAI-020 final feature commit `9c86cad8eb621b20fa70e1e6a07a377f929608a3`. The active-branch status table already names the merge commit; the older `develop` copy seen by the user still shows the pre-JAI-021 wording and will receive the clarified table when JAI-021 merges.
 - A live GitHub `ls-remote` recheck of `develop` encountered the known intermittent port-443 timeout; branch creation requires a successful retry. Version-control boundary: create JAI-022 only from three-way-verified `develop`, keep JAI-021 observations on their existing branch, merge JAI-021 into `develop` first, then normally merge updated `develop` into JAI-022 and preserve both bilingual WORKLOG histories before rerunning the complete gate. Published history will not be rebased or rewritten.
 
+### 2026-08-30 — JAI-021 qualified stability day 2
+
+- Switched from the clean, pushed JAI-022 startup branch back to `feature/jai-021-sources-four-five-stability`; no JAI-022 commit or file change entered this branch.
+- The bounded read-only observation qualified: all 5 source runs and all 9 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 80% (36/45). Firstjob returned a valid empty list; NCSS, Jiangsu, Shanghai public institutions, and China Mobile returned 1, 2, 3, and 3 details respectively. No database, runtime file, or live source body was written.
+- The sequence now contains qualified 2026-08-29 day 1 and 2026-08-30 day 2. Next action: run the same bounded observation on 2026-08-31; only a full-source success completes JAI-021 acceptance.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -329,7 +335,7 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Continue the replacement five-source observation on 2026-08-30 and 2026-08-31. Only full-source successes extend the sequence; commit each evidence-backed result and never mark JAI-021 complete before all three consecutive days exist.
+1. Run the replacement five-source observation on 2026-08-31. Only a full-source success completes the three-day sequence; do not close JAI-021 early.
 2. Keep OCR deferred to JAI-B01, JAI-022 matching/preferences out of scope until JAI-021 closes, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
