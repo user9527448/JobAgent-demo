@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-26
+> Last updated: 2026-08-29
 >
 > Active branch: `feature/jai-021-sources-four-five-stability`
 
@@ -314,6 +314,8 @@ The same document/extraction version may be repeated only when its merged result
 - No evidence-backed run was recorded on 2026-08-28. The qualified 2026-08-27 result therefore cannot be backfilled or extended into a consecutive sequence.
 - The bounded 2026-08-29 replacement observation qualified: all 5 source runs and all 8 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 80% (32/40). NCSS and Firstjob returned valid empty lists; Jiangsu, Shanghai public institutions, and China Mobile returned 2, 3, and 3 details respectively. No database, runtime file, or source body was written.
 - The consecutive sequence restarts at day 1 on 2026-08-29. Next action: record qualified runs on 2026-08-30 and 2026-08-31; any missing or failed day restarts the sequence again.
+- The user explicitly approved parallel JAI-022 work while JAI-021 remains in observation-only acceptance. Verified JAI-020 is already in `develop`: local and tracking `develop` both point to non-fast-forward merge `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`, whose second parent is the JAI-020 final feature commit `9c86cad8eb621b20fa70e1e6a07a377f929608a3`. The active-branch status table already names the merge commit; the older `develop` copy seen by the user still shows the pre-JAI-021 wording and will receive the clarified table when JAI-021 merges.
+- A live GitHub `ls-remote` recheck of `develop` encountered the known intermittent port-443 timeout; branch creation requires a successful retry. Version-control boundary: create JAI-022 only from three-way-verified `develop`, keep JAI-021 observations on their existing branch, merge JAI-021 into `develop` first, then normally merge updated `develop` into JAI-022 and preserve both bilingual WORKLOG histories before rerunning the complete gate. Published history will not be rebased or rewritten.
 
 ## 4. Verification and blockers
 
