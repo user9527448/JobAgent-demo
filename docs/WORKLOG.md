@@ -31,7 +31,7 @@
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
 | JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | Implementation complete; qualified Day 1/Day 2 observations recorded; final consecutive-day run remains |
 | JAI-022 | Implementation complete and normally pushed; integration pending | `feature/jai-022-single-user-preferences` / `38cca14` | Full PostgreSQL gate passed; waits for JAI-021-first merge boundary |
-| JAI-023 | Implementation complete; push blocked by network | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | Full PostgreSQL gate passed; normal push waits for GitHub 443 recovery |
+| JAI-023 | Implementation complete and normally pushed; integration pending | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | Full PostgreSQL gate passed; waiting for the recorded JAI-021/JAI-022 integration sequence |
 
 ## 2. Current decisions
 
@@ -316,6 +316,7 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 - No JAI-024 report query, grouping, rendering, snapshot, notification, scheduler, LLM reranking, embedding, public matching API, credential, personal data, downloaded source, or runtime data was added.
 - Next action: commit and normally push this dedicated feature branch, verify local/tracking/GitHub refs, then wait for the recorded JAI-021/JAI-022 integration sequence before synchronizing from `develop`.
 - Created feature commit `8a334e5` with repository-local author `user9527448 <2537759248@qq.com>`. The first normal HTTPS push failed after about 21 seconds because GitHub port 443 was unreachable; a read-only `ls-remote` failed the same way and a TCP probe resolved `github.com` to `20.205.243.166` but reported port 443 closed. No remote branch, protocol, history, or author was changed; retry the same non-force push when connectivity recovers.
+- The later unchanged normal push succeeded. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched blocker-record tip `18cdc97c16cc02fbb2cdd6383258c811bd062cea`; `develop`, JAI-021, and JAI-022 remained unchanged and isolated.
 
 ## 4. Verification and blockers
 
@@ -331,7 +332,7 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 
 1. Complete JAI-021 Day 3 no earlier than 2026-08-31 and merge JAI-021 first.
 2. Then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and integrate JAI-022.
-3. Continue JAI-023 on its independent branch; after JAI-022 merges, normally merge the newly updated `develop` into JAI-023 and rerun the full gate before integration.
+3. JAI-023 implementation is complete and normally pushed on its independent branch; after JAI-022 merges, normally merge the newly updated `develop` into JAI-023 and rerun the full gate before integration.
 4. Keep JAI-024 reports/notifications, OCR JAI-B01, and JAI-048 legacy migration outside JAI-023.
 
 ## 6. Update template

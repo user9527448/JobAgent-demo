@@ -31,7 +31,7 @@
 | JAI-020 | 已完成、合并并推送到 `develop` | `develop` / `f56365f` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
 | JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | 实现已完成；合格 Day 1/Day 2 观测已登记；还需最后一次连续自然日运行 |
 | JAI-022 | 实现完成并普通推送，待集成 | `feature/jai-022-single-user-preferences` / `38cca14` | PostgreSQL 完整门禁通过；遵守 JAI-021 先合并边界 |
-| JAI-023 | 实现完成，推送受网络阻塞 | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | PostgreSQL 完整门禁通过；等待 GitHub 443 恢复后普通推送 |
+| JAI-023 | 实现完成并普通推送，待集成 | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | PostgreSQL 完整门禁通过；等待已记录的 JAI-021/JAI-022 合并顺序 |
 
 ## 2. 当前决策
 
@@ -316,6 +316,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 未新增 JAI-024 日报查询/分组/渲染/快照/通知、调度、LLM rerank、向量召回、公开匹配 API、凭据、个人数据、下载来源文件或运行数据。
 - 下一步：提交并普通推送该独立 feature 分支，核验本地/跟踪/GitHub 引用，再等待已记录的 JAI-021/JAI-022 集成顺序完成后同步 `develop`。
 - 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `8a334e5`。首次 HTTPS 普通推送在约 21 秒后因 GitHub 443 不可达而失败；只读 `ls-remote` 同样失败，TCP 探测把 `github.com` 解析到 `20.205.243.166`，但 443 端口不通。远程分支、协议、历史和作者均未改变；连通性恢复后重试相同的非强制推送。
+- 后续保持不变的普通推送已经成功。本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为阻塞记录末端 `18cdc97c16cc02fbb2cdd6383258c811bd062cea`；`develop`、JAI-021 与 JAI-022 均保持不变并相互隔离。
 
 ## 4. 检查与阻塞
 
@@ -331,7 +332,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 1. 不早于 2026-08-31 完成 JAI-021 Day 3，并先合并 JAI-021。
 2. 再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，并集成 JAI-022。
-3. JAI-023 继续在独立分支开发；JAI-022 合并后，把再次更新的 `develop` 普通合并到 JAI-023，并在集成前重跑完整门禁。
+3. JAI-023 已在独立分支完成实现并普通推送；JAI-022 合并后，把再次更新的 `develop` 普通合并到 JAI-023，并在集成前重跑完整门禁。
 4. JAI-024 日报/通知、OCR JAI-B01 和 JAI-048 存量迁移保持在 JAI-023 范围外。
 
 ## 6. 更新模板
