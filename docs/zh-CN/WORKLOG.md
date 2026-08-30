@@ -6,7 +6,7 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-29
+> 最后更新：2026-08-30
 >
 > 当前分支：`feature/jai-021-sources-four-five-stability`
 
@@ -323,6 +323,22 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 有界只读观测合格：5 个来源运行和 9 条尝试详情全部成功，重复率 0%，有证据完整率 80%（36/45）。Firstjob 返回有效空列表；NCSS、江苏、上海事业单位和中国移动分别返回 1、2、3、3 条详情。未写数据库、运行文件或线上来源正文。
 - 当前序列包含 2026-08-29 合格第 1 日和 2026-08-30 合格第 2 日。下一步：2026-08-31 执行同一有界观测；只有全来源成功才完成 JAI-021 验收。
 
+### 2026-08-30 — JAI-021 并行核验通道准备
+
+- 用户明确批准把 JAI-021 剩余核验与后续开发任务并行推进，前提是记录完整并保持版本控制隔离。本通道现使用独立 worktree `data/worktrees/jai021` 和 `feature/jai-021-sources-four-five-stability`；没有携带任何 JAI-022/JAI-023 提交或文件改动。
+- 实际 `Asia/Shanghai` 时间为 `2026-08-30 11:47`。今日已经登记第 2 日，因此没有执行或把同日重复运行计为第 3 日；最早有效的第 3 日观测仍是 2026-08-31。
+- 已复用主仓库现有 `.venv` 和本 worktree 的 `src` 完成离线准备：NCSS、上海事业单位、中国移动、稳定性指标、运行时和网站库共 32 项测试在 2.11 秒内全部通过。命令帮助退出码为 0，`--limit 0` 被以退出码 2 拒绝，确认限制为 1～10。检查没有访问线上来源、数据库，也没有写运行文件或来源正文。
+- 本 worktree 在 2026-08-31 的准确命令为：
+
+  ```powershell
+  $env:PYTHONPATH = 'F:\CXG\JOBAGENTV1.0\data\worktrees\jai021\src'
+  & 'F:\CXG\JOBAGENTV1.0\.venv\Scripts\python.exe' 'F:\CXG\JOBAGENTV1.0\data\worktrees\jai021\scripts\evaluate_source_stability.py' --catalog 'F:\CXG\JOBAGENTV1.0\data\worktrees\jai021\config\source_catalog.toml' --limit 3
+  ```
+
+- 观测仍严格限定为 5 个 `active`/`enabled` 的公开官方来源、并发 1、共享限速/重试、仅 GET 访问和 JSON 标准输出；不得进入登录、验证码、简历/投递流程，不得写数据库/文件或留存线上来源正文。
+- 合格第 3 日要求 `observation_date=2026-08-31`、5/5 来源全部成功且所有尝试详情无失败；重复率必须保持在 MVP 上限 2% 以内。有证据完整率只做真实记录、不猜测补值；85% 目标或已经登记的 JAI-049 整改路径仍是文档约定的验收二选一条件。
+- 合并顺序固定：完成 JAI-021 与最终门禁后，先把 JAI-021 合并到 `develop`；此后 JAI-022/JAI-023 才能通过普通合并同步最新 `develop`，保留两边双语 WORKLOG 历史、解决配对文档冲突，并在后续合并到 `develop` 前重跑各自完整门禁。继续禁止 rebase、force push 和改写已发布历史。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -335,8 +351,9 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 于 2026-08-31 执行替换后五来源观测。只有全来源成功才完成连续三日序列；不得提前关闭 JAI-021。
-2. OCR 继续延期至 JAI-B01；JAI-021 关闭前 JAI-022 匹配/偏好保持在范围外；JAI-049 在 MVP 发布闸门前处理；JAI-048 继续使用独立文档 Issue。
+1. 于 2026-08-31 在独立 JAI-021 worktree 执行替换后五来源观测。只有全来源成功才完成连续三日序列；不得提前关闭 JAI-021。
+2. 若第 3 日合格，同步双语稳定性/计划/Backlog/工作日志记录，运行完整且相称的门禁，普通推送 JAI-021，并在同步 JAI-022/JAI-023 前先合并到 `develop`。
+3. OCR 继续延期至 JAI-B01；全部 JAI-022/JAI-023 实施保持在本分支范围外；JAI-049 在 MVP 发布闸门前处理；JAI-048 继续使用独立文档 Issue。
 
 ## 6. 更新模板
 

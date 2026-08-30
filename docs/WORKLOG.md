@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-29
+> Last updated: 2026-08-30
 >
 > Active branch: `feature/jai-021-sources-four-five-stability`
 
@@ -323,6 +323,22 @@ The same document/extraction version may be repeated only when its merged result
 - The bounded read-only observation qualified: all 5 source runs and all 9 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 80% (36/45). Firstjob returned a valid empty list; NCSS, Jiangsu, Shanghai public institutions, and China Mobile returned 1, 2, 3, and 3 details respectively. No database, runtime file, or live source body was written.
 - The sequence now contains qualified 2026-08-29 day 1 and 2026-08-30 day 2. Next action: run the same bounded observation on 2026-08-31; only a full-source success completes JAI-021 acceptance.
 
+### 2026-08-30 — JAI-021 parallel verification lane prepared
+
+- The user explicitly approved running the remaining JAI-021 verification and later development work in parallel, with records and version-control isolation. This lane now uses the independent worktree `data/worktrees/jai021` on `feature/jai-021-sources-four-five-stability`; no JAI-022/JAI-023 commit or file change is carried into it.
+- The actual `Asia/Shanghai` time was `2026-08-30 11:47`. Day 2 had already been recorded today, so no repeated same-day run was executed or counted as day 3. The earliest valid day-3 observation remains 2026-08-31.
+- Offline preparation passed with the main repository's existing `.venv` and this worktree's `src`: 32 NCSS, Shanghai public-institution, China Mobile, stability-metric, runtime, and catalog tests passed in 2.11 seconds. The command help exited 0, while `--limit 0` was rejected with exit 2, confirming the 1-10 bound. No live source, database, runtime file, or source-body write was involved.
+- The exact 2026-08-31 command for this worktree is:
+
+  ```powershell
+  $env:PYTHONPATH = 'F:\CXG\JOBAGENTV1.0\data\worktrees\jai021\src'
+  & 'F:\CXG\JOBAGENTV1.0\.venv\Scripts\python.exe' 'F:\CXG\JOBAGENTV1.0\data\worktrees\jai021\scripts\evaluate_source_stability.py' --catalog 'F:\CXG\JOBAGENTV1.0\data\worktrees\jai021\config\source_catalog.toml' --limit 3
+  ```
+
+- The observation remains bounded to the five `active`/`enabled` public official sources, concurrency 1, shared pacing/retries, GET-only source access, and JSON stdout. It must not enter login, CAPTCHA, resume/application flows, write the database/files, or retain live source bodies.
+- A qualified day 3 requires `observation_date=2026-08-31`, all 5 source runs to succeed, and no attempted detail failure; duplicates must remain within the MVP ceiling of 2%. Evidence-backed completeness is recorded without guessing: the 85% target or the already registered JAI-049 corrective path remains the documented acceptance alternative.
+- Merge order is fixed: complete JAI-021 and its final gate, then merge JAI-021 into `develop` first. Only afterward may JAI-022/JAI-023 synchronize the latest `develop` through normal merges, preserve both bilingual WORKLOG histories, resolve paired-document conflicts, and rerun their complete gates before later `develop` merges. Rebase, force push, and published-history rewriting remain prohibited.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -335,8 +351,9 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Run the replacement five-source observation on 2026-08-31. Only a full-source success completes the three-day sequence; do not close JAI-021 early.
-2. Keep OCR deferred to JAI-B01, JAI-022 matching/preferences out of scope until JAI-021 closes, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
+1. Run the replacement five-source observation on 2026-08-31 from the independent JAI-021 worktree. Only a full-source success completes the three-day sequence; do not close JAI-021 early.
+2. If day 3 qualifies, synchronize the paired stability/plan/backlog/work-log records, run the complete proportional gate, normally push JAI-021, and merge it into `develop` before synchronizing JAI-022/JAI-023.
+3. Keep OCR deferred to JAI-B01, all JAI-022/JAI-023 implementation outside this branch, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
 
