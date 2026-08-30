@@ -299,13 +299,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:matching` `priority:P0` `size:L`
 - **Dependencies**: JAI-020, JAI-022
+- **Status**: implementation, migration, paired documentation, and the PostgreSQL-enabled complete gate finished on 2026-08-30. Dedicated branch `feature/jai-023-hard-filter-versioned-scoring` is based on published JAI-022 tip `44ed502` and will synchronize from updated `develop` only after JAI-021 and JAI-022 integrate in the recorded order.
 - **Goal**: stable, explainable, recomputable ranking.
 - **Scope**: education/deadline/exclusion hard filters; region/direction/major/organization/urgency/completeness components.
 - **Acceptance**:
-  - [ ] Identical input/version yields identical output.
-  - [ ] Persist each component's rule, input, score, and explanation.
-  - [ ] Preference changes support full recomputation.
-  - [ ] Unit tests cover boundaries.
+  - [x] Identical input/version yields identical output.
+  - [x] Persist each component's rule, input, score, and explanation.
+  - [x] Preference changes support full recomputation.
+  - [x] Unit tests cover boundaries.
 
 ### JAI-024 Implement report query and Markdown/HTML rendering
 
@@ -613,4 +614,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-Complete JAI-047 bilingual migration baseline → JAI-012 run/retry capability → implement JAI-013–JAI-021 in order. The user explicitly approved one bounded WIP exception: while JAI-021 is in calendar-day acceptance observation only, JAI-022 may proceed independently from `develop`. JAI-021 must complete and merge first; then normally merge the latest `develop` into JAI-022, preserve both logs, and rerun the full gate, never using rebase or history rewriting to avoid conflicts. Execute JAI-038–JAI-045 one source at a time after the release loop is stable. Execute JAI-048 as an independent documentation Issue before the next substantive change to any listed legacy document; never mix it into feature branches. Except for the explicitly approved JAI-021 observation lane, the personal WIP limit remains one primary feature plus one small test/docs Issue. If a dynamic portal cannot satisfy public-access and terms boundaries, record `blocked` and continue; never force coverage with login, CAPTCHA, Playwright, or evasion.
+Complete JAI-047 bilingual migration baseline → JAI-012 run/retry capability → implement JAI-013–JAI-021 in order. The user explicitly approved a bounded parallel exception: while JAI-021 remains in calendar-day acceptance observation only, JAI-022 and then JAI-023 may proceed on independent branches. Integration must follow JAI-021 → `develop`, updated `develop` → JAI-022 followed by its merge, then the newly updated `develop` → JAI-023. Preserve bilingual WORKLOG histories, resolve conflicts explicitly, and rerun the full gate at every integration boundary; never use rebase or history rewriting to avoid conflicts. Execute JAI-038–JAI-045 one source at a time after the release loop is stable. Execute JAI-048 as an independent documentation Issue before the next substantive change to any listed legacy document; never mix it into feature branches. Outside this explicitly approved observation/downstream-development exception, the personal WIP limit remains one primary feature plus one small test/docs Issue. If a dynamic portal cannot satisfy public-access and terms boundaries, record `blocked` and continue; never force coverage with login, CAPTCHA, Playwright, or evasion.

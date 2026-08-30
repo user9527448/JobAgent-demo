@@ -25,6 +25,7 @@ CORE_TABLES = {
     "field_evidence",
     "job_positions",
     "job_posts",
+    "match_results",
     "raw_documents",
     "sources",
     "user_preferences",

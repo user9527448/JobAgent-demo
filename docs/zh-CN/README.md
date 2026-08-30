@@ -23,6 +23,7 @@
 | 抽取结果合并与字段证据 | [中文](MERGING_AND_EVIDENCE.md) | [English](../MERGING_AND_EVIDENCE.md) |
 | 数据校验、待复核与重解析 | [中文](VALIDATION_AND_REPARSING.md) | [English](../VALIDATION_AND_REPARSING.md) |
 | 单用户偏好 | [中文](PREFERENCES.md) | [English](../PREFERENCES.md) |
+| 确定性匹配与版本化评分 | [中文](MATCHING.md) | [English](../MATCHING.md) |
 | JAI-005 济宁来源技术验证 | [中文](spikes/JAI-005-JINING-SOURCE.md) | [English](../spikes/JAI-005-JINING-SOURCE.md) |
 | 数据库迁移说明 | [中文](MIGRATIONS.md) | [English](../../migrations/README.md) |
 | JAI-005 固定样本说明 | [中文](fixtures/JINING.md) | [English](../../tests/fixtures/jining/README.md) |

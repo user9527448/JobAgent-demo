@@ -8,7 +8,7 @@
 >
 > 最后更新：2026-08-30
 >
-> 当前分支：`feature/jai-022-single-user-preferences`
+> 当前分支：`feature/jai-023-hard-filter-versioned-scoring`
 
 ## 1. 当前状态
 
@@ -31,6 +31,7 @@
 | JAI-020 | 已完成、合并并推送到 `develop` | `develop` / `f56365f` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
 | JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | 实现已完成；合格 Day 1/Day 2 观测已登记；还需最后一次连续自然日运行 |
 | JAI-022 | 实现完成并普通推送，待集成 | `feature/jai-022-single-user-preferences` / `38cca14` | PostgreSQL 完整门禁通过；遵守 JAI-021 先合并边界 |
+| JAI-023 | 实现完成，待集成 | `feature/jai-023-hard-filter-versioned-scoring` / 待提交 | PostgreSQL 完整门禁通过；等待已记录的 JAI-021/JAI-022 合并列车 |
 
 ## 2. 当前决策
 
@@ -89,6 +90,18 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 ### D-028 重解析版本是显式幂等 key
 
 同一文档/抽取版本只有在合并结果哈希不变时才能重复。规则修正使用新版本，并追加公告、岗位、证据和校验历史。默认已存文档流水线不发起线上来源或 LLM 请求。
+
+### D-029 并行匹配开发使用显式合并列车
+
+用户批准在 JAI-021 仍处于自然日观测期间开发 JAI-023。JAI-023 分支从已推送的 JAI-022 末端 `44ed50292aa6609c7c4eaa1fb16e0793082d4e0a` 创建。集成顺序为：JAI-021 合并到 `develop`；更新后的 `develop` 普通合并到 JAI-022，随后完成 JAI-022 合并；再次更新的 `develop` 再普通合并到 JAI-023。每个边界都保留双语日志、显式解决冲突并重跑 PostgreSQL 完整门禁；继续禁止 rebase 和改写已发布历史。
+
+### D-030 缺失证据不得变成猜测的硬过滤失败
+
+只有显式学历不足、到达截止时间、命中排除词或 JAI-020 推荐阻塞才会过滤岗位。缺少学历或截止证据时仍保持可推荐，只损失相应紧迫度/完整度信号。这样既不虚构字段，也能把需要确认的数据留给 JAI-024。
+
+### D-031 评估时间与偏好确认都是事务输入
+
+匹配引擎显式接收带时区的 `evaluated_at`，不会读取进程时钟，因此紧迫度和哈希可复现。全量重算会锁定 JAI-022 单例，并只在所有当前岗位结果写入的同一事务中确认粘性信号。失败会同时回滚结果与确认，成功确认则保留代表偏好值身份的 `updated_at`。
 
 ## 3. 当前工作记录
 
@@ -285,6 +298,24 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 后续普通推送已经成功。本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为 `e8e29610bfe3d84051b75defa83adcb8c72a9ad3`；GitHub `develop` 保持 `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`，没有被改动。
 - 下一步：JAI-021 完成并先合并后，把更新后的 `develop` 普通合并到本分支，保留两份双语日志、处理配对文档冲突、重跑 PostgreSQL 完整门禁，之后才合并 JAI-022。
 
+### 2026-08-30 — JAI-023 硬过滤与版本化规则评分并行启动
+
+- 用户明确批准在 JAI-021 继续验收观测时并行推进后续开发，前提是完整记录依赖、合并边界并保持版本历史安全。
+- 已核验 `feature/jai-023-hard-filter-versioned-scoring` 位于 `44ed50292aa6609c7c4eaa1fb16e0793082d4e0a`；其 HEAD 与已推送 JAI-022 末端的 merge base 完全一致。仓库本地作者仍为 `user9527448 <2537759248@qq.com>`，现有 HTTPS origin 未改变。
+- 合并顺序固定为：JAI-021 → `develop`；更新后的 `develop` → JAI-022 并完成 JAI-022 合并；再次更新的 `develop` → JAI-023。所有双语 WORKLOG 历史都必须保留，冲突须显式解决，每个边界重跑 PostgreSQL 完整门禁，绝不 rebase 或改写已发布历史。
+- 范围仅限学历/截止/排除词硬过滤，地区/岗位方向/专业/单位类型/截止紧迫度/信息完整度分项评分，确定性评分版本，逐分项规则/输入/得分/解释持久化，以及消费 JAI-022 偏好信号执行全量重算。
+- JAI-024 的日报查询、渲染、快照和通知均保持在范围外。
+- 下一步：检查 JAI-022 偏好契约和现有岗位实体，再新增最小匹配契约、迁移、确定性引擎、重算仓储及边界测试。
+- 新增纯 `DeterministicMatchingEngine` 版本 `jai-023-v1`：显式记录校验资格/学历/截止/排除词决定，并固定地区 25、方向 30、专业 15、单位 10、紧迫度 10、完整度 10 六个分项。UTC 标准 JSON 分别生成输入、偏好和结果 SHA-256。
+- 新增迁移 `0007_versioned_match_results`、ORM 当前/历史关系、JSONB 规则/分项解释、计算唯一性、分数/哈希约束，以及指向岗位/偏好/自身历史的受限外键。
+- 新增 `SqlAlchemyMatchingService.recompute_if_requested()`：锁定单例偏好，按 ID 稳定顺序评估当前公告版本下的全部岗位，追加/切换结果，并只在完整事务提交时清除粘性信号；信号确认不改变偏好值更新时间。
+- 只对语义直接的类别推导单位类型（`civil_service`、`public_institution`、`state_owned`）；`campus` 和 `social` 保持未知。不会猜测单位类型、截止、学历或其他缺失值。
+- 新增 16 项引擎边界测试和 PostgreSQL 全量重算验收测试。最终文档同步前的首轮完整门禁已通过：Ruff format 检查 172 个文件，Ruff lint 通过，116 个源文件的 Mypy 通过，241 项测试全部通过、无跳过，覆盖率 88.47%。
+- 新增配对匹配文档，并同步数据库/偏好指南与两份索引。文档检查通过：配对标题数量一致，两份 Backlog 保持相同的 171 个 Issue 标识及顺序，仓库 Markdown 相对链接均有效，`git diff --check` 通过。
+- 文档同步后的最终 `scripts/check.py` 门禁通过：Ruff format 检查 174 个文件，Ruff lint 通过，116 个源文件的 Mypy 通过，241 项测试全部通过、无跳过，覆盖率 88.47%。
+- 未新增 JAI-024 日报查询/分组/渲染/快照/通知、调度、LLM rerank、向量召回、公开匹配 API、凭据、个人数据、下载来源文件或运行数据。
+- 下一步：提交并普通推送该独立 feature 分支，核验本地/跟踪/GitHub 引用，再等待已记录的 JAI-021/JAI-022 集成顺序完成后同步 `develop`。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -298,8 +329,9 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 ## 5. 下一步
 
 1. 不早于 2026-08-31 完成 JAI-021 Day 3，并先合并 JAI-021。
-2. 再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，之后才集成 JAI-022。
-3. JAI-023 评分、OCR JAI-B01 和 JAI-048 存量迁移保持在 JAI-022 范围外。
+2. 再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，并集成 JAI-022。
+3. JAI-023 继续在独立分支开发；JAI-022 合并后，把再次更新的 `develop` 普通合并到 JAI-023，并在集成前重跑完整门禁。
+4. JAI-024 日报/通知、OCR JAI-B01 和 JAI-048 存量迁移保持在 JAI-023 范围外。
 
 ## 6. 更新模板
 

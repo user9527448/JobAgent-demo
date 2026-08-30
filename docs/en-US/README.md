@@ -23,6 +23,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | Extraction merging and field evidence | [English](../MERGING_AND_EVIDENCE.md) | [中文](../zh-CN/MERGING_AND_EVIDENCE.md) |
 | Validation, review, and reparsing | [English](../VALIDATION_AND_REPARSING.md) | [中文](../zh-CN/VALIDATION_AND_REPARSING.md) |
 | Single-user preferences | [English](../PREFERENCES.md) | [中文](../zh-CN/PREFERENCES.md) |
+| Deterministic matching and versioned scoring | [English](../MATCHING.md) | [中文](../zh-CN/MATCHING.md) |
 | JAI-005 Jining source Spike | [English](../spikes/JAI-005-JINING-SOURCE.md) | [中文](../zh-CN/spikes/JAI-005-JINING-SOURCE.md) |
 | Database migration guide | [English](../../migrations/README.md) | [中文](../zh-CN/MIGRATIONS.md) |
 | JAI-005 fixture guide | [English](../../tests/fixtures/jining/README.md) | [中文](../zh-CN/fixtures/JINING.md) |

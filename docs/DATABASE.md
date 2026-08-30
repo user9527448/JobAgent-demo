@@ -2,7 +2,7 @@
 
 > 简体中文：[JOBAGENT 核心数据库模型](zh-CN/DATABASE.md)
 
-This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md), and JAI-022 [single-user preference policy](PREFERENCES.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
+This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md), JAI-022 [single-user preference policy](PREFERENCES.md), and JAI-023 [versioned matching policy](MATCHING.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
 
 ## Tables
 
@@ -17,6 +17,7 @@ This document describes the PostgreSQL schema established in JAI-006 and extende
 | `field_evidence` | Field-level traceability | Raw/normalized values, method/version, selection/conflict, exactly one source, quote/page/line/sheet/cell locator, confidence from 0 to 1 |
 | `validation_issues` | Version-specific quality findings | Stable issue key per post; reason, severity, entity/field identity; errors and warnings only |
 | `user_preferences` | Singleton local-user profile | Fixed `id=1`; structured filters; unrestricted defaults; audit timestamps and sticky recomputation signal |
+| `match_results` | Versioned position matching decision | Score/rule version; input/preference/result hashes; hard-filter decision; JSONB components/rules; one current result plus append-only history |
 
 ## Relationships and deletion policy
 
@@ -29,6 +30,7 @@ sources
     │   └── field_evidence (attachment source)
     ├── job_posts
     │   ├── job_positions
+    │   │   └── match_results → user_preferences
     │   └── validation_issues
     └── field_evidence (document source)
 ```
@@ -38,6 +40,8 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 `field_evidence.entity_type/entity_id` is intentionally a validated polymorphic reference to either `job_posts` or `job_positions`. The extraction repository validates that entity target while the database maintains a real foreign key to the source document or attachment that supplied the evidence. New extraction versions append post/position/evidence rows; old versions remain deletion-resistant.
 
 `validation_issues.post_id` is a real restricted foreign key to the exact `job_posts` extraction version that was validated. A new rule/extraction version appends a new post and new findings instead of mutating the historical decision.
+
+`match_results.position_id` and `preference_id` are restricted foreign keys to the exact position and singleton preference profile. New preference snapshots or score versions append results and move the one-current-result marker; `supersedes_id` retains the prior decision.
 
 ## Time handling
 
@@ -61,6 +65,7 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 - `review_status` is limited to `approved`, `review_required`, or `blocked`; `validation_issues.severity` is limited to `warning` or `error`. Any error sets `recommendation_eligible=false` in the same extraction transaction.
 - The current/eligibility index supports later recommendation queries without treating legacy or blocked rows as eligible. Legacy rows are backfilled as `review_required` and `legacy-unvalidated`, never silently approved.
 - `user_preferences` permits only `id=1`; JSON preference fields must remain arrays and `education` must be a supported deterministic enum or null. Empty values are unrestricted, never “match nothing.”
+- `match_results` constrains scores to 0–100, requires zero after any failed hard filter, validates all SHA-256 identities, and requires JSON arrays for component/rule explanations. One partial unique index permits one current result per position.
 
 ## Migrations
 
