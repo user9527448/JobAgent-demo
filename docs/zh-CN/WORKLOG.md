@@ -30,7 +30,7 @@
 | JAI-019 | 已完成、合并并推送到 `develop` | `develop` / `82797d1` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
 | JAI-020 | 已完成、合并并推送到 `develop` | `develop` / `f56365f` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
 | JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | 实现已完成；合格 Day 1/Day 2 观测已登记；还需最后一次连续自然日运行 |
-| JAI-022 | 实现完成，待重试推送 | `feature/jai-022-single-user-preferences` / `38cca14` | PostgreSQL 完整门禁通过；GitHub 443 不可达期间本地功能提交安全保留 |
+| JAI-022 | 实现完成并普通推送，待集成 | `feature/jai-022-single-user-preferences` / `38cca14` | PostgreSQL 完整门禁通过；遵守 JAI-021 先合并边界 |
 
 ## 2. 当前决策
 
@@ -282,7 +282,8 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 已启动 Docker Desktop 和既有 `db` 服务，未重建容器或删除数据卷；确认现有隔离库 `jobagent_test`。最终 `scripts/check.py` 通过：Ruff format 检查 164 个文件，Ruff lint 通过，109 个源文件的 Mypy 通过，224 项测试全部通过、无跳过，覆盖率 88.18%。
 - 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `38cca14`。两次普通推送均未更新远端：首次连接被重置，第二次在 GitHub 443 端口超时；只读 `ls-remote` 同样超时。DNS 仍将 `github.com` 解析为 `20.205.243.166`，Git 未配置代理，但直接 TCP 443 探测失败。本地提交和分支保持完整，没有使用 force/rebase。
 - 2026-08-30 01:27 +08:00 继续重试时，GitHub 443 仍然超时。只读诊断确认没有 `HTTP_PROXY`/`HTTPS_PROXY` 环境设置，WinHTTP 采用直接连接，Windows 用户代理已禁用，常见本地代理端口也没有监听。当前日期仍属于 JAI-021 合格 Day 2；2026-08-31 之前不能如实执行 Day 3。
-- 下一步：GitHub 443 恢复后重试同一普通推送，再核对本地 HEAD、跟踪引用与 `ls-remote`。JAI-021 完成并先合并后，把更新后的 `develop` 普通合并到本分支，保留两份双语日志、处理配对文档冲突、重跑 PostgreSQL 完整门禁，之后才合并 JAI-022。
+- 后续普通推送已经成功。本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为 `e8e29610bfe3d84051b75defa83adcb8c72a9ad3`；GitHub `develop` 保持 `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`，没有被改动。
+- 下一步：JAI-021 完成并先合并后，把更新后的 `develop` 普通合并到本分支，保留两份双语日志、处理配对文档冲突、重跑 PostgreSQL 完整门禁，之后才合并 JAI-022。
 
 ## 4. 检查与阻塞
 
@@ -296,8 +297,8 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 重试普通推送本地 JAI-022 提交 `38cca14`，并完成三端分支末端核验；暂不合并到 `develop`。
-2. 先完成并合并 JAI-021；再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，之后才集成 JAI-022。
+1. 不早于 2026-08-31 完成 JAI-021 Day 3，并先合并 JAI-021。
+2. 再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，之后才集成 JAI-022。
 3. JAI-023 评分、OCR JAI-B01 和 JAI-048 存量迁移保持在 JAI-022 范围外。
 
 ## 6. 更新模板

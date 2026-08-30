@@ -30,7 +30,7 @@
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
 | JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | Implementation complete; qualified Day 1/Day 2 observations recorded; final consecutive-day run remains |
-| JAI-022 | Implementation complete, push retry pending | `feature/jai-022-single-user-preferences` / `38cca14` | Full PostgreSQL gate passed; local feature commit is safe while GitHub 443 is unavailable |
+| JAI-022 | Implementation complete and normally pushed; integration pending | `feature/jai-022-single-user-preferences` / `38cca14` | Full PostgreSQL gate passed; waits for JAI-021-first merge boundary |
 
 ## 2. Current decisions
 
@@ -282,7 +282,8 @@ The same document/extraction version may be repeated only when its merged result
 - Docker Desktop and the existing `db` service were started without rebuilding or deleting volumes; the existing isolated `jobagent_test` database was confirmed. Final `scripts/check.py` passed: Ruff format checked 164 files, Ruff lint passed, Mypy passed across 109 source files, all 224 tests passed with no skips, and coverage was 88.18%.
 - Created feature commit `38cca14` with repository-local author `user9527448 <2537759248@qq.com>`. Two normal push attempts failed without updating the remote: the first connection was reset and the second timed out on GitHub port 443. A read-only `ls-remote` timed out as well; DNS still resolved `github.com` to `20.205.243.166`, no Git proxy was configured, and a direct TCP 443 probe failed. The local commit and branch remain intact and no force/rebase action was used.
 - A continuation retry at 2026-08-30 01:27 +08:00 also timed out on GitHub 443. Read-only diagnostics found no `HTTP_PROXY`/`HTTPS_PROXY` environment setting, WinHTTP uses direct access, Windows user proxy is disabled, and no common local proxy port was listening. The current date is still JAI-021 qualified Day 2; Day 3 cannot truthfully run before 2026-08-31.
-- Next action: retry the same normal push when GitHub 443 is reachable, then verify local HEAD/tracking/`ls-remote`. After JAI-021 completes and merges first, normally merge updated `develop` into this branch, preserve both bilingual logs, resolve paired-document conflicts, rerun the full PostgreSQL gate, and only then merge JAI-022.
+- The later normal push succeeded. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched `e8e29610bfe3d84051b75defa83adcb8c72a9ad3`; GitHub `develop` remained unchanged at `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`.
+- Next action: after JAI-021 completes and merges first, normally merge updated `develop` into this branch, preserve both bilingual logs, resolve paired-document conflicts, rerun the full PostgreSQL gate, and only then merge JAI-022.
 
 ## 4. Verification and blockers
 
@@ -296,8 +297,8 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Retry the normal push of local JAI-022 commit `38cca14`, then complete three-way branch-tip verification; do not merge it into `develop` yet.
-2. Complete and merge JAI-021 first; then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and only then integrate JAI-022.
+1. Complete JAI-021 Day 3 no earlier than 2026-08-31 and merge JAI-021 first.
+2. Then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and only then integrate JAI-022.
 3. Keep JAI-023 scoring, OCR JAI-B01, and JAI-048 legacy migration outside JAI-022.
 
 ## 6. Update template
