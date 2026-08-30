@@ -338,6 +338,7 @@ The same document/extraction version may be repeated only when its merged result
 - The observation remains bounded to the five `active`/`enabled` public official sources, concurrency 1, shared pacing/retries, GET-only source access, and JSON stdout. It must not enter login, CAPTCHA, resume/application flows, write the database/files, or retain live source bodies.
 - A qualified day 3 requires `observation_date=2026-08-31`, all 5 source runs to succeed, and no attempted detail failure; duplicates must remain within the MVP ceiling of 2%. Evidence-backed completeness is recorded without guessing: the 85% target or the already registered JAI-049 corrective path remains the documented acceptance alternative.
 - Merge order is fixed: complete JAI-021 and its final gate, then merge JAI-021 into `develop` first. Only afterward may JAI-022/JAI-023 synchronize the latest `develop` through normal merges, preserve both bilingual WORKLOG histories, resolve paired-document conflicts, and rerun their complete gates before later `develop` merges. Rebase, force push, and published-history rewriting remain prohibited.
+- Created the scoped preparation-record commit `dee0632` with repository-local author `user9527448 <2537759248@qq.com>`. Its first unchanged normal HTTPS push failed after about 21 seconds because GitHub port 443 was unreachable; a read-only `Test-NetConnection` resolved `github.com` to `20.205.243.166` but returned `TcpTestSucceeded=False`. The local commit remains safe, and no remote URL, protocol, branch history, or author was changed.
 
 ## 4. Verification and blockers
 
@@ -352,8 +353,9 @@ The same document/extraction version may be repeated only when its merged result
 ## 5. Next actions
 
 1. Run the replacement five-source observation on 2026-08-31 from the independent JAI-021 worktree. Only a full-source success completes the three-day sequence; do not close JAI-021 early.
-2. If day 3 qualifies, synchronize the paired stability/plan/backlog/work-log records, run the complete proportional gate, normally push JAI-021, and merge it into `develop` before synchronizing JAI-022/JAI-023.
-3. Keep OCR deferred to JAI-B01, all JAI-022/JAI-023 implementation outside this branch, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
+2. Retry the unchanged normal JAI-021 HTTPS push when GitHub port 443 is reachable; verify local HEAD, the tracking reference, and `ls-remote` before any merge.
+3. If day 3 qualifies, synchronize the paired stability/plan/backlog/work-log records, run the complete proportional gate, normally push JAI-021, and merge it into `develop` before synchronizing JAI-022/JAI-023.
+4. Keep OCR deferred to JAI-B01, all JAI-022/JAI-023 implementation outside this branch, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
 
