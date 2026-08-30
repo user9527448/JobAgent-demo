@@ -31,7 +31,7 @@
 | JAI-020 | 已完成、合并并推送到 `develop` | `develop` / `f56365f` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
 | JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | 实现已完成；合格 Day 1/Day 2 观测已登记；还需最后一次连续自然日运行 |
 | JAI-022 | 实现完成并普通推送，待集成 | `feature/jai-022-single-user-preferences` / `38cca14` | PostgreSQL 完整门禁通过；遵守 JAI-021 先合并边界 |
-| JAI-023 | 实现完成，待集成 | `feature/jai-023-hard-filter-versioned-scoring` / 待提交 | PostgreSQL 完整门禁通过；等待已记录的 JAI-021/JAI-022 合并列车 |
+| JAI-023 | 实现完成，推送受网络阻塞 | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | PostgreSQL 完整门禁通过；等待 GitHub 443 恢复后普通推送 |
 
 ## 2. 当前决策
 
@@ -315,6 +315,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 文档同步后的最终 `scripts/check.py` 门禁通过：Ruff format 检查 174 个文件，Ruff lint 通过，116 个源文件的 Mypy 通过，241 项测试全部通过、无跳过，覆盖率 88.47%。
 - 未新增 JAI-024 日报查询/分组/渲染/快照/通知、调度、LLM rerank、向量召回、公开匹配 API、凭据、个人数据、下载来源文件或运行数据。
 - 下一步：提交并普通推送该独立 feature 分支，核验本地/跟踪/GitHub 引用，再等待已记录的 JAI-021/JAI-022 集成顺序完成后同步 `develop`。
+- 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `8a334e5`。首次 HTTPS 普通推送在约 21 秒后因 GitHub 443 不可达而失败；只读 `ls-remote` 同样失败，TCP 探测把 `github.com` 解析到 `20.205.243.166`，但 443 端口不通。远程分支、协议、历史和作者均未改变；连通性恢复后重试相同的非强制推送。
 
 ## 4. 检查与阻塞
 

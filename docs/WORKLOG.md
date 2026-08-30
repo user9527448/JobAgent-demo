@@ -31,7 +31,7 @@
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
 | JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | Implementation complete; qualified Day 1/Day 2 observations recorded; final consecutive-day run remains |
 | JAI-022 | Implementation complete and normally pushed; integration pending | `feature/jai-022-single-user-preferences` / `38cca14` | Full PostgreSQL gate passed; waits for JAI-021-first merge boundary |
-| JAI-023 | Implementation complete; integration pending | `feature/jai-023-hard-filter-versioned-scoring` / pending commit | Full PostgreSQL gate passed; waits for the recorded JAI-021/JAI-022 merge train |
+| JAI-023 | Implementation complete; push blocked by network | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | Full PostgreSQL gate passed; normal push waits for GitHub 443 recovery |
 
 ## 2. Current decisions
 
@@ -315,6 +315,7 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 - The final post-documentation `scripts/check.py` gate passed: Ruff format checked 174 files, Ruff lint passed, Mypy passed across 116 source files, all 241 tests passed with no skips, and coverage was 88.47%.
 - No JAI-024 report query, grouping, rendering, snapshot, notification, scheduler, LLM reranking, embedding, public matching API, credential, personal data, downloaded source, or runtime data was added.
 - Next action: commit and normally push this dedicated feature branch, verify local/tracking/GitHub refs, then wait for the recorded JAI-021/JAI-022 integration sequence before synchronizing from `develop`.
+- Created feature commit `8a334e5` with repository-local author `user9527448 <2537759248@qq.com>`. The first normal HTTPS push failed after about 21 seconds because GitHub port 443 was unreachable; a read-only `ls-remote` failed the same way and a TCP probe resolved `github.com` to `20.205.243.166` but reported port 443 closed. No remote branch, protocol, history, or author was changed; retry the same non-force push when connectivity recovers.
 
 ## 4. Verification and blockers
 
