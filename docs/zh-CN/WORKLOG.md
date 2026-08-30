@@ -29,7 +29,7 @@
 | JAI-018 | 已完成、合并并推送到 `develop` | `develop` / `c013544` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
 | JAI-019 | 已完成、合并并推送到 `develop` | `develop` / `82797d1` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
 | JAI-020 | 已完成、合并并推送到 `develop` | `develop` / `f56365f` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
-| JAI-021 | 进行中 | `feature/jai-021-sources-four-five-stability` | 已启动来源 4、5 接入与连续三日稳定性验证 |
+| JAI-021 | 进行中，待 Day 3 | `feature/jai-021-sources-four-five-stability` / `dee0632` | 并行准备核验已完成并普通推送；最后观测仍须等到 2026-08-31 |
 
 ## 2. 当前决策
 
@@ -339,6 +339,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 合格第 3 日要求 `observation_date=2026-08-31`、5/5 来源全部成功且所有尝试详情无失败；重复率必须保持在 MVP 上限 2% 以内。有证据完整率只做真实记录、不猜测补值；85% 目标或已经登记的 JAI-049 整改路径仍是文档约定的验收二选一条件。
 - 合并顺序固定：完成 JAI-021 与最终门禁后，先把 JAI-021 合并到 `develop`；此后 JAI-022/JAI-023 才能通过普通合并同步最新 `develop`，保留两边双语 WORKLOG 历史、解决配对文档冲突，并在后续合并到 `develop` 前重跑各自完整门禁。继续禁止 rebase、force push 和改写已发布历史。
 - 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建仅含准备记录的提交 `dee0632`。首次保持不变的普通 HTTPS 推送在约 21 秒后因 GitHub 443 不可达而失败；只读 `Test-NetConnection` 把 `github.com` 解析为 `20.205.243.166`，但返回 `TcpTestSucceeded=False`。本地提交保持安全，远程 URL、协议、分支历史和作者均未改变。
+- 后续保持不变的普通推送已经成功。本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为阻塞记录末端 `00de7d1423482d99695a1de99dd451dd79c93f85`；JAI-022 与 JAI-023 继续隔离在各自 worktree。
 
 ## 4. 检查与阻塞
 
@@ -353,9 +354,8 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 ## 5. 下一步
 
 1. 于 2026-08-31 在独立 JAI-021 worktree 执行替换后五来源观测。只有全来源成功才完成连续三日序列；不得提前关闭 JAI-021。
-2. GitHub 443 恢复后重试保持不变的 JAI-021 HTTPS 普通推送；任何合并前核验本地 HEAD、跟踪引用和 `ls-remote` 三端一致。
-3. 若第 3 日合格，同步双语稳定性/计划/Backlog/工作日志记录，运行完整且相称的门禁，普通推送 JAI-021，并在同步 JAI-022/JAI-023 前先合并到 `develop`。
-4. OCR 继续延期至 JAI-B01；全部 JAI-022/JAI-023 实施保持在本分支范围外；JAI-049 在 MVP 发布闸门前处理；JAI-048 继续使用独立文档 Issue。
+2. 若第 3 日合格，同步双语稳定性/计划/Backlog/工作日志记录，运行完整且相称的门禁，普通推送 JAI-021，并在同步 JAI-022/JAI-023 前先合并到 `develop`。
+3. OCR 继续延期至 JAI-B01；全部 JAI-022/JAI-023 实施保持在本分支范围外；JAI-049 在 MVP 发布闸门前处理；JAI-048 继续使用独立文档 Issue。
 
 ## 6. 更新模板
 
