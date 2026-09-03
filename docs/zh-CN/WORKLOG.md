@@ -32,7 +32,7 @@
 | JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | 实现已完成；合格 Day 1/Day 2 观测已登记；还需最后一次连续自然日运行 |
 | JAI-022 | 实现完成并普通推送，待集成 | `feature/jai-022-single-user-preferences` / `38cca14` | PostgreSQL 完整门禁通过；遵守 JAI-021 先合并边界 |
 | JAI-023 | 实现完成并普通推送，待集成 | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | PostgreSQL 完整门禁通过；等待已记录的 JAI-021/JAI-022 合并顺序 |
-| JAI-024 | 在隔离的下游分支进行中 | `feature/jai-024-daily-report-rendering` | 日报查询/渲染已启动，未修改 JAI-023 |
+| JAI-024 | 实现与验收完成，等待推送 | `feature/jai-024-daily-report-rendering` | PostgreSQL 完整门禁：252 项通过、无跳过、覆盖率 88.53% |
 
 ## 2. 当前决策
 
@@ -328,7 +328,17 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 已确认 JAI-024 是 JAI-023 后下一项未完成计划 Issue，且仅依赖 JAI-023。从已推送的 JAI-023 末端 `9592a16d7dee12fbe6c555407a3607a492b2cd03` 创建 `feature/jai-024-daily-report-rendering` 和隔离 worktree `data/worktrees/jai024`；其与 JAI-023 的 merge base 完全一致。
 - 范围仅限优先投递、即将截止、今日新增、需要确认四组；同输入/同日期稳定排序；Markdown/HTML 渲染；日报快照和原文链接。JAI-025 质量评审、JAI-026 调度、JAI-027 通知发送及全部凭据/通道行为保持在范围外。
 - 集成边界明确：先合并 JAI-021，再依次合并 JAI-022、JAI-023，最后合并 JAI-024。每个分支都先普通合并最新 `develop`，保留双方 WORKLOG 历史、解决配对文档冲突，并在集成前重跑 PostgreSQL 完整门禁。
-- 下一步：检查持久化匹配/岗位/证据契约及现有 API/迁移模式，定义最小日报查询/快照契约，再实现确定性单元测试和 PostgreSQL 验收测试。
+- 新增纯日报版本 `jai-024-v1`。显式报告日期和时区定义本地自然日窗口，不读取进程时钟。当前硬过滤通过的匹配按稳定且各组独立的顺序进入优先投递（评分至少 70）、未来七日即将截止和今日新增组；需要复核或证据字段不完整的记录进入需要确认组。同一岗位可以出现在多个行动组，缺失字段只显示缺失，不进行猜测。
+- 新增确定性中文 Markdown 与转义后的独立 HTML 渲染。每条均包含单位、标题、地区、截止、规则理由、证据派生风险、评分和原文链接；四组始终保留，并在无内容时明确显示空组。
+- 新增迁移 `0008_daily_report_snapshots`、对应 ORM 模型、规范输入/内容 SHA-256 标识及幂等 SQLAlchemy 服务。同日期/时区/版本/输入会复用不可变快照；同一标识若生成不同内容则显式失败。新增生成、结构化读取、Markdown 和 HTML API，未加入调度或推送行为。
+- 新增构建器/渲染/API/模型/迁移/PostgreSQL 服务测试，并同步日报、数据库、索引双语文档。首轮静态检查发现 Ruff 歧义字符、导入及性能问题，以及递归 JSON 别名直接作为响应字段导致的 Pydantic 递归错误；均未使用抑制而是修正实现，API 通过非递归响应注解返回相同结构化对象。
+- 无数据库门禁中，Ruff format 检查 187 个文件、Ruff lint 以及 126 个源文件的 Mypy 均通过。首次完整门禁尝试成功执行 238 项，并因 `JOBAGENT_TEST_DATABASE_URL` 不可用跳过 13 项 PostgreSQL 测试；覆盖率相应为 81.58%，低于 85%，因此 `scripts/check.py` 仍如实记为失败，不能作为验收通过。后续新增 `Asia/Shanghai` 本地零点和七日右开边界测试，非数据库通过项增至 239。
+- Docker Desktop 4.85.0 已安装，但后端在启动任何引擎前崩溃。日志最初指向 Windows Unix socket 重解析点不可访问。已将易失的 `C:\Users\benbenhu\AppData\Local\Docker\run` 和 `C:\Users\benbenhu\AppData\Local\docker-secrets-engine` 目录改名为带 `.stale-20260903-*` 的备份并重启 Docker；未删除镜像、卷、项目数据或配置。新创建的 `dockerInference` 套接字仍发生相同故障，证明剩余阻塞属于 Docker Desktop/Windows 运行时，而非项目陈旧状态。5432 端口仍关闭，本机也没有独立 PostgreSQL 服务。
+- JAI-024 尚未标记完成，验收框保持未勾选，实现也未提交或推送。JAI-025 评分评审、JAI-026 调度/锁和 JAI-027 通知/渠道逻辑仍在范围外。
+- Windows 重启后，Docker Desktop 4.85.0 与现有 PostgreSQL 容器在未恢复出厂设置的情况下恢复，5432 端口上的数据库已健康。首次定向 PostgreSQL 测试中迁移/模型检查通过，但一项日报服务断言失败：测试假定持久化的人工确认原因总在风险数组首项，而既定确定性顺序会先放复核状态。断言已改为要求完整风险集合中存在该原因；没有修改生产排序或放宽验收。
+- 修正后的 PostgreSQL 迁移/模型/日报服务定向测试 7/7 通过。首次完整门禁随后在 Ruff format 停止，因为修正后的生成式断言需要规范化为单行；`ruff format` 只执行了这一项机械调整。
+- 最终启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 187 个文件、Ruff lint 通过、126 个源文件的 Mypy 通过、252 项测试全部通过且无跳过，覆盖率 88.53%。JAI-024 双语验收完成，未实现 JAI-025、JAI-026 或 JAI-027 行为。
+- 下一步：使用仓库本地作者创建范围明确的功能提交，普通推送并核验本地/跟踪/GitHub 三端引用；随后等待既定 JAI-021 → JAI-022 → JAI-023 集成序列完成，再从 `develop` 同步 JAI-024。
 
 ## 4. 检查与阻塞
 
@@ -345,7 +355,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 1. 于 2026-09-04 和 2026-09-05 完成重新开始的 JAI-021 序列，并先合并 JAI-021。
 2. 再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，并集成 JAI-022。
 3. JAI-023 已在独立分支完成实现并普通推送；JAI-022 合并后，把再次更新的 `develop` 普通合并到 JAI-023，并在集成前重跑完整门禁。
-4. 仅在隔离分支实现 JAI-024 日报查询/渲染/快照；通知、调度、JAI-025 评审、OCR JAI-B01 和 JAI-048 存量迁移保持在范围外。
+4. 提交并普通推送已验收的 JAI-024，核验三端引用；此后保持分支不变，直至既定上游合并序列到达 JAI-024。
 
 ## 6. 更新模板
 

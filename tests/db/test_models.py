@@ -10,6 +10,7 @@ from jobagent.db.models import Base, UTCDateTime
 EXPECTED_TABLES = {
     "attachments",
     "crawl_runs",
+    "daily_report_snapshots",
     "field_evidence",
     "job_positions",
     "job_posts",

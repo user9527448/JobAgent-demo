@@ -22,6 +22,7 @@ PROJECT_ROOT = Path(__file__).parents[2]
 CORE_TABLES = {
     "attachments",
     "crawl_runs",
+    "daily_report_snapshots",
     "field_evidence",
     "job_positions",
     "job_posts",

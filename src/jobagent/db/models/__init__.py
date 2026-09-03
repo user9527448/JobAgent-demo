@@ -4,6 +4,7 @@ from jobagent.db.models.base import Base, UTCDateTime
 from jobagent.db.models.entities import (
     Attachment,
     CrawlRun,
+    DailyReportSnapshot,
     FieldEvidence,
     JobPosition,
     JobPost,
@@ -18,6 +19,7 @@ __all__ = [
     "Attachment",
     "Base",
     "CrawlRun",
+    "DailyReportSnapshot",
     "FieldEvidence",
     "JobPosition",
     "JobPost",

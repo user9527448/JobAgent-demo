@@ -312,12 +312,13 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:report` `priority:P0` `size:L`
 - **Dependencies**: JAI-023
+- **Status**: deterministic grouping, rendering, snapshot migration, API, tests, and paired documentation completed on the dedicated branch on 2026-09-03. Seven focused PostgreSQL tests passed, and the complete gate passed all 252 tests with no skips and 88.53% coverage; commit and normal push remain.
 - **Goal**: produce an actionable report suitable for reading and delivery.
 - **Scope**: apply-first, closing-soon, added-today, needs-confirmation groups; templates, snapshots, source links.
 - **Acceptance**:
-  - [ ] Each item has organization, title, region, deadline, reason, risk, and links.
-  - [ ] Identical daily input has stable ordering.
-  - [ ] Empty input still creates an explicit empty report.
+  - [x] Each item has organization, title, region, deadline, reason, risk, and links.
+  - [x] Identical daily input has stable ordering.
+  - [x] Empty input still creates an explicit empty report.
 
 ### JAI-025 Review Top 20 quality with historical samples
 

@@ -450,3 +450,5 @@ JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-020 已依次合并并�
 用户随后批准 JAI-021 验收观测与后续开发继续并行，并要求完整记录合并边界。`feature/jai-023-hard-filter-versioned-scoring` 已从三端核验并推送的 JAI-022 末端 `44ed50292aa6609c7c4eaa1fb16e0793082d4e0a` 创建。集成顺序固定为：先把 JAI-021 合并到 `develop`；再把该 `develop` 普通合并到 JAI-022 并完成 JAI-022 合并；最后把更新后的 `develop` 普通合并到 JAI-023，保留所有双语 WORKLOG 历史、显式解决冲突并重跑完整 PostgreSQL 门禁。禁止 rebase 或改写已发布历史。JAI-023 只实现硬过滤、版本化规则评分、逐分项解释持久化和偏好触发的全量重算；JAI-024 日报与通知保持在范围外。
 
 JAI-023 的上述实现、迁移、边界测试和双语文档已于 2026-08-30 完成；PostgreSQL 启用的完整门禁为 241 项测试全部通过、无跳过、覆盖率 88.47%。该 feature 分支仍须遵守既定合并列车，在 JAI-021 与 JAI-022 依次进入 `develop` 后普通合并最新 `develop`、保留日志并再次通过完整门禁，之后才能集成。JAI-024 不得在此分支提前启动。
+
+用户已批准在保持版本边界和记录完整的前提下继续下游开发。`feature/jai-024-daily-report-rendering` 已从已推送的 JAI-023 末端 `9592a16d7dee12fbe6c555407a3607a492b2cd03` 创建为独立 worktree；合并列车扩展为 JAI-021 → JAI-022 → JAI-023 → JAI-024。JAI-024 的确定性四组日报、Markdown/HTML 渲染、不可变快照、原文链接及 API 已实现。Windows 重启恢复 Docker/PostgreSQL 后，7 项定向数据库测试通过；最终完整门禁通过 252 项测试、无跳过，覆盖率 88.53%。下一步提交并普通推送本独立分支；JAI-025 调权、JAI-026 调度与 JAI-027 通知仍不得提前实现，JAI-024 仍须按已记录顺序进入合并列车。

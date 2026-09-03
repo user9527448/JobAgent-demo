@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    Date,
     ForeignKey,
     Identity,
     Index,
@@ -686,4 +687,40 @@ class MatchResult(Base):
     supersedes: Mapped[MatchResult | None] = relationship(
         remote_side="MatchResult.id",
         foreign_keys=[supersedes_id],
+    )
+
+
+class DailyReportSnapshot(Base):
+    """One immutable rendered report for a deterministic input snapshot."""
+
+    __tablename__ = "daily_report_snapshots"
+    __table_args__ = (
+        UniqueConstraint(
+            "report_date",
+            "timezone",
+            "report_version",
+            "input_hash",
+            name="uq_daily_report_snapshots_input",
+        ),
+        CheckConstraint("length(timezone) > 0", name="timezone_present"),
+        CheckConstraint("length(report_version) > 0", name="report_version_present"),
+        CheckConstraint("input_hash ~ '^[0-9a-f]{64}$'", name="input_hash_sha256"),
+        CheckConstraint("content_hash ~ '^[0-9a-f]{64}$'", name="content_hash_sha256"),
+        CheckConstraint("jsonb_typeof(payload) = 'object'", name="payload_object"),
+        Index("ix_daily_report_snapshots_date_created", "report_date", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    report_date: Mapped[date] = mapped_column(Date, nullable=False)
+    timezone: Mapped[str] = mapped_column(String(100), nullable=False)
+    report_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[dict[str, JsonValue]] = mapped_column(JSONB, nullable=False)
+    markdown: Mapped[str] = mapped_column(Text, nullable=False)
+    html: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        UTCDateTime(),
+        nullable=False,
+        server_default=func.now(),
     )
