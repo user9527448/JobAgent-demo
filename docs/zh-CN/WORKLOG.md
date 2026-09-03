@@ -339,6 +339,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 修正后的 PostgreSQL 迁移/模型/日报服务定向测试 7/7 通过。首次完整门禁随后在 Ruff format 停止，因为修正后的生成式断言需要规范化为单行；`ruff format` 只执行了这一项机械调整。
 - 最终启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 187 个文件、Ruff lint 通过、126 个源文件的 Mypy 通过、252 项测试全部通过且无跳过，覆盖率 88.53%。JAI-024 双语验收完成，未实现 JAI-025、JAI-026 或 JAI-027 行为。
 - 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建范围明确的功能提交 `ffa065f2877c833b5b98e48640a61aa891a0bb4f`，并普通推送新分支。本状态记录提交前，本地 HEAD、跟踪引用和 GitHub `ls-remote` 均与该提交一致；未使用 force push、rebase，未修改远程地址或已发布历史。
+- 已创建配对的验收/推送状态提交 `1e60ee9`。首次普通推送及一次原样重试均因 GitHub 443 端口不可达而失败；直接 TCP 探测为 false，`ls-remote` 同样失败。已发布功能末端仍安全保持 `ffa065f`，本地仅领先状态文档，没有修改远端状态或改写历史。
 - 下一步：保持 JAI-024 独立且不变，直至 JAI-021、JAI-022、JAI-023 依次集成；随后把最新 `develop` 普通合并到 JAI-024，保留双方日志、显式解决双语文档冲突，并在集成前重跑 PostgreSQL 完整门禁。
 
 ## 4. 检查与阻塞
