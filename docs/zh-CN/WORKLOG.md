@@ -6,9 +6,9 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-08-30
+> 最后更新：2026-09-03
 >
-> 当前分支：`feature/jai-023-hard-filter-versioned-scoring`
+> 当前分支：`feature/jai-024-daily-report-rendering`
 
 ## 1. 当前状态
 
@@ -32,6 +32,7 @@
 | JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | 实现已完成；合格 Day 1/Day 2 观测已登记；还需最后一次连续自然日运行 |
 | JAI-022 | 实现完成并普通推送，待集成 | `feature/jai-022-single-user-preferences` / `38cca14` | PostgreSQL 完整门禁通过；遵守 JAI-021 先合并边界 |
 | JAI-023 | 实现完成并普通推送，待集成 | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | PostgreSQL 完整门禁通过；等待已记录的 JAI-021/JAI-022 合并顺序 |
+| JAI-024 | 在隔离的下游分支进行中 | `feature/jai-024-daily-report-rendering` | 日报查询/渲染已启动，未修改 JAI-023 |
 
 ## 2. 当前决策
 
@@ -102,6 +103,10 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 ### D-031 评估时间与偏好确认都是事务输入
 
 匹配引擎显式接收带时区的 `evaluated_at`，不会读取进程时钟，因此紧迫度和哈希可复现。全量重算会锁定 JAI-022 单例，并只在所有当前岗位结果写入的同一事务中确认粘性信号。失败会同时回滚结果与确认，成功确认则保留代表偏好值身份的 `updated_at`。
+
+### D-032 JAI-024 在不修改祖先分支的前提下扩展隔离合并列车
+
+用户已批准在 JAI-021 等待自然日观测时继续并行推进后续开发。JAI-024 从已推送的 JAI-023 末端 `9592a16d7dee12fbe6c555407a3607a492b2cd03` 在独立 worktree 创建。集成顺序为 JAI-021 → JAI-022 → JAI-023 → JAI-024；每个下游分支都通过普通合并接收最新 `develop`，保留双语日志、显式解决冲突并重跑 PostgreSQL 完整门禁。继续禁止 rebase、force push 和改写已发布历史。
 
 ## 3. 当前工作记录
 
@@ -318,6 +323,13 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `8a334e5`。首次 HTTPS 普通推送在约 21 秒后因 GitHub 443 不可达而失败；只读 `ls-remote` 同样失败，TCP 探测把 `github.com` 解析到 `20.205.243.166`，但 443 端口不通。远程分支、协议、历史和作者均未改变；连通性恢复后重试相同的非强制推送。
 - 后续保持不变的普通推送已经成功。本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为阻塞记录末端 `18cdc97c16cc02fbb2cdd6383258c811bd062cea`；`develop`、JAI-021 与 JAI-022 均保持不变并相互隔离。
 
+### 2026-09-03 — JAI-024 日报查询与渲染并行启动
+
+- 已确认 JAI-024 是 JAI-023 后下一项未完成计划 Issue，且仅依赖 JAI-023。从已推送的 JAI-023 末端 `9592a16d7dee12fbe6c555407a3607a492b2cd03` 创建 `feature/jai-024-daily-report-rendering` 和隔离 worktree `data/worktrees/jai024`；其与 JAI-023 的 merge base 完全一致。
+- 范围仅限优先投递、即将截止、今日新增、需要确认四组；同输入/同日期稳定排序；Markdown/HTML 渲染；日报快照和原文链接。JAI-025 质量评审、JAI-026 调度、JAI-027 通知发送及全部凭据/通道行为保持在范围外。
+- 集成边界明确：先合并 JAI-021，再依次合并 JAI-022、JAI-023，最后合并 JAI-024。每个分支都先普通合并最新 `develop`，保留双方 WORKLOG 历史、解决配对文档冲突，并在集成前重跑 PostgreSQL 完整门禁。
+- 下一步：检查持久化匹配/岗位/证据契约及现有 API/迁移模式，定义最小日报查询/快照契约，再实现确定性单元测试和 PostgreSQL 验收测试。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -330,10 +342,10 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 不早于 2026-08-31 完成 JAI-021 Day 3，并先合并 JAI-021。
+1. 于 2026-09-04 和 2026-09-05 完成重新开始的 JAI-021 序列，并先合并 JAI-021。
 2. 再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，并集成 JAI-022。
 3. JAI-023 已在独立分支完成实现并普通推送；JAI-022 合并后，把再次更新的 `develop` 普通合并到 JAI-023，并在集成前重跑完整门禁。
-4. JAI-024 日报/通知、OCR JAI-B01 和 JAI-048 存量迁移保持在 JAI-023 范围外。
+4. 仅在隔离分支实现 JAI-024 日报查询/渲染/快照；通知、调度、JAI-025 评审、OCR JAI-B01 和 JAI-048 存量迁移保持在范围外。
 
 ## 6. 更新模板
 

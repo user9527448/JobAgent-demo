@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-30
+> Last updated: 2026-09-03
 >
-> Active branch: `feature/jai-023-hard-filter-versioned-scoring`
+> Active branch: `feature/jai-024-daily-report-rendering`
 
 ## 1. Current status
 
@@ -32,6 +32,7 @@
 | JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | Implementation complete; qualified Day 1/Day 2 observations recorded; final consecutive-day run remains |
 | JAI-022 | Implementation complete and normally pushed; integration pending | `feature/jai-022-single-user-preferences` / `38cca14` | Full PostgreSQL gate passed; waits for JAI-021-first merge boundary |
 | JAI-023 | Implementation complete and normally pushed; integration pending | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | Full PostgreSQL gate passed; waiting for the recorded JAI-021/JAI-022 integration sequence |
+| JAI-024 | In progress on an isolated downstream branch | `feature/jai-024-daily-report-rendering` | Daily report query/rendering started without modifying JAI-023 |
 
 ## 2. Current decisions
 
@@ -102,6 +103,10 @@ An explicit insufficient education, reached deadline, exclusion hit, or JAI-020 
 ### D-031 Evaluation time and preference acknowledgement are transactional inputs
 
 The matching engine receives timezone-aware `evaluated_at`; it never reads the process clock, so urgency and hashes remain reproducible. Full recomputation locks the JAI-022 singleton and acknowledges its sticky signal only in the same transaction as all current-position results. A failure rolls back both writes and acknowledgement, while successful acknowledgement preserves the preference-value `updated_at` identity.
+
+### D-032 JAI-024 extends the isolated merge train without changing its ancestors
+
+The user approved continued downstream development while JAI-021 waits for calendar-day observations. JAI-024 starts from published JAI-023 tip `9592a16d7dee12fbe6c555407a3607a492b2cd03` in its own worktree. Integration order is JAI-021 → JAI-022 → JAI-023 → JAI-024; each downstream branch receives the newly updated `develop` through a normal merge, preserves both bilingual logs, resolves conflicts explicitly, and reruns the complete PostgreSQL gate. Rebase, force push, and published-history rewriting remain prohibited.
 
 ## 3. Active work history
 
@@ -318,6 +323,13 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 - Created feature commit `8a334e5` with repository-local author `user9527448 <2537759248@qq.com>`. The first normal HTTPS push failed after about 21 seconds because GitHub port 443 was unreachable; a read-only `ls-remote` failed the same way and a TCP probe resolved `github.com` to `20.205.243.166` but reported port 443 closed. No remote branch, protocol, history, or author was changed; retry the same non-force push when connectivity recovers.
 - The later unchanged normal push succeeded. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched blocker-record tip `18cdc97c16cc02fbb2cdd6383258c811bd062cea`; `develop`, JAI-021, and JAI-022 remained unchanged and isolated.
 
+### 2026-09-03 — JAI-024 daily report query and rendering started in parallel
+
+- Verified JAI-024 is the next incomplete planned Issue after JAI-023 and depends only on JAI-023. Created `feature/jai-024-daily-report-rendering` in isolated worktree `data/worktrees/jai024` from published JAI-023 tip `9592a16d7dee12fbe6c555407a3607a492b2cd03`; its merge base with JAI-023 is identical.
+- Scope is limited to four action-oriented groups—priority applications, closing soon, added today, and needs confirmation—stable same-input/day ordering, Markdown/HTML rendering, report snapshots, and original-source links. JAI-025 quality review, JAI-026 scheduling, JAI-027 notification delivery, and all credential/channel behavior remain out of scope.
+- Integration boundary is explicit: JAI-021 merges first, then JAI-022, JAI-023, and finally JAI-024. Each branch will normally merge the latest `develop`, preserve both WORKLOG histories, resolve paired-document conflicts, and rerun the full PostgreSQL-enabled gate before integration.
+- Next: inspect the persisted match/job/evidence contracts and existing API/migration patterns, define the smallest report/query/snapshot contract, then implement focused deterministic and PostgreSQL acceptance tests.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -330,10 +342,10 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 
 ## 5. Next actions
 
-1. Complete JAI-021 Day 3 no earlier than 2026-08-31 and merge JAI-021 first.
+1. Complete the restarted JAI-021 sequence on 2026-09-04 and 2026-09-05, then merge JAI-021 first.
 2. Then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and integrate JAI-022.
 3. JAI-023 implementation is complete and normally pushed on its independent branch; after JAI-022 merges, normally merge the newly updated `develop` into JAI-023 and rerun the full gate before integration.
-4. Keep JAI-024 reports/notifications, OCR JAI-B01, and JAI-048 legacy migration outside JAI-023.
+4. Implement only JAI-024 report querying/rendering/snapshots on its isolated branch; keep notifications, scheduling, JAI-025 review, OCR JAI-B01, and JAI-048 legacy migration out of scope.
 
 ## 6. Update template
 
