@@ -53,8 +53,10 @@ An observation with a failed source is not a qualified stability day. Empty succ
 | 2026-08-28 | No observation; sequence interrupted | — | — | — | — | No evidence-backed run was recorded, so the 2026-08-27 result cannot extend to a consecutive sequence |
 | 2026-08-29 | Qualified day 1 (sequence restarted) | 100% (5/5) | 100% (8/8) | 0% | 80% (32/40) | All active sources succeeded; NCSS and Firstjob returned valid empty lists, while Jiangsu, Shanghai public institutions, and China Mobile produced 2, 3, and 3 details |
 | 2026-08-30 | Qualified day 2 | 100% (5/5) | 100% (9/9) | 0% | 80% (36/45) | All active sources succeeded; Firstjob returned a valid empty list, while NCSS, Jiangsu, Shanghai public institutions, and China Mobile produced 1, 2, 3, and 3 details |
+| 2026-08-31 to 2026-09-02 | No observations; sequence interrupted | — | — | — | — | No evidence-backed run was recorded, so the 2026-08-29/30 pair cannot be completed retroactively |
+| 2026-09-03 | Qualified day 1 (sequence restarted) | 100% (5/5) | 100% (9/9) | 0% | 80% (36/45) | All active sources succeeded; Firstjob returned a valid empty list, while NCSS, Jiangsu, Shanghai public institutions, and China Mobile produced 1, 2, 3, and 3 details |
 
-The pre-replacement comparable diagnostic composite was 82.5% across NCSS (12/15), Jiangsu (6/10), and Shanghai (15/15). It was not a single all-source run and was not counted as day 1. The 2026-08-27 replacement run met the no-failed-source rule, but the missing 2026-08-28 observation interrupted that sequence. The sequence restarted on 2026-08-29, continued with qualified day 2 on 2026-08-30, and still requires a qualified 2026-08-31 run. Completeness remains evidence-only: missing fields are never invented to raise the percentage.
+The pre-replacement comparable diagnostic composite was 82.5% across NCSS (12/15), Jiangsu (6/10), and Shanghai (15/15). It was not a single all-source run and was not counted as day 1. The 2026-08-27 replacement run was interrupted by the missing 2026-08-28 observation; the later 2026-08-29/30 pair was interrupted by the missing 2026-08-31 through 2026-09-02 observations. The sequence restarted on 2026-09-03 and requires qualified runs on 2026-09-04 and 2026-09-05. Completeness remains evidence-only: missing fields are never invented to raise the percentage.
 
 ## 6. Known gap and corrective Issue
 

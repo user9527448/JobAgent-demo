@@ -29,7 +29,7 @@
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
-| JAI-021 | In progress; Day 3 pending | `feature/jai-021-sources-four-five-stability` / `dee0632` | Parallel preparation verified and normally pushed; final observation remains 2026-08-31 |
+| JAI-021 | In progress; restarted Day 1 recorded | `feature/jai-021-sources-four-five-stability` / `05f4140` | The missed 2026-08-31 run interrupted the prior sequence; new sequence started 2026-09-03 |
 
 ## 2. Current decisions
 
@@ -341,6 +341,14 @@ The same document/extraction version may be repeated only when its merged result
 - Created the scoped preparation-record commit `dee0632` with repository-local author `user9527448 <2537759248@qq.com>`. Its first unchanged normal HTTPS push failed after about 21 seconds because GitHub port 443 was unreachable; a read-only `Test-NetConnection` resolved `github.com` to `20.205.243.166` but returned `TcpTestSucceeded=False`. The local commit remains safe, and no remote URL, protocol, branch history, or author was changed.
 - The later unchanged normal push succeeded. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched blocker-record tip `00de7d1423482d99695a1de99dd451dd79c93f85`; JAI-022 and JAI-023 remained isolated in their own worktrees.
 
+### 2026-09-03 — JAI-021 stability sequence restarted
+
+- Resumed the clean, pushed JAI-021 worktree at `05f41406693f9d659dc53550b31102f1e0ddd2e8`; JAI-022 and JAI-023 remain isolated and no downstream commit entered this branch. Repository-local authorship remains `user9527448 <2537759248@qq.com>`.
+- No evidence-backed run was recorded on 2026-08-31, 2026-09-01, or 2026-09-02. The qualified 2026-08-29/30 pair therefore cannot be completed retroactively and the consecutive sequence restarts on 2026-09-03.
+- The bounded read-only 2026-09-03 observation qualified as new day 1: all 5 source runs and all 9 attempted details succeeded, no detail failed, duplicate rate was 0%, and evidence-backed completeness was 80% (36/45). Firstjob returned a valid empty list; NCSS, Jiangsu, Shanghai public institutions, and China Mobile returned 1, 2, 3, and 3 details respectively.
+- The command retained the approved boundary: at most 3 details per source, concurrency 1, shared pacing/retries, public official endpoints only, JSON stdout, and no database/file/source-body persistence. Missing deadlines, organizations, and regions remained empty rather than guessed.
+- Next qualified runs are required on 2026-09-04 and 2026-09-05. Any missing or failed calendar day restarts the sequence again; JAI-021 remains unmerged until the full sequence and final gate complete.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -353,8 +361,8 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Run the replacement five-source observation on 2026-08-31 from the independent JAI-021 worktree. Only a full-source success completes the three-day sequence; do not close JAI-021 early.
-2. If day 3 qualifies, synchronize the paired stability/plan/backlog/work-log records, run the complete proportional gate, normally push JAI-021, and merge it into `develop` before synchronizing JAI-022/JAI-023.
+1. Run the same replacement five-source observation on 2026-09-04 and, only if that qualifies, again on 2026-09-05. Do not count repeated same-day runs or close JAI-021 early.
+2. If the new day 3 qualifies, synchronize the paired stability/plan/backlog/work-log records, run the complete proportional gate, normally push JAI-021, and merge it into `develop` before synchronizing JAI-022/JAI-023.
 3. Keep OCR deferred to JAI-B01, all JAI-022/JAI-023 implementation outside this branch, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
