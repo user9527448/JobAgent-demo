@@ -32,7 +32,7 @@
 | JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | Implementation complete; qualified Day 1/Day 2 observations recorded; final consecutive-day run remains |
 | JAI-022 | Implementation complete and normally pushed; integration pending | `feature/jai-022-single-user-preferences` / `38cca14` | Full PostgreSQL gate passed; waits for JAI-021-first merge boundary |
 | JAI-023 | Implementation complete and normally pushed; integration pending | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | Full PostgreSQL gate passed; waiting for the recorded JAI-021/JAI-022 integration sequence |
-| JAI-024 | Implementation and acceptance complete; push pending | `feature/jai-024-daily-report-rendering` | Full PostgreSQL gate: 252 passed, no skips, 88.53% coverage |
+| JAI-024 | Complete and normally pushed; integration pending | `feature/jai-024-daily-report-rendering` / `ffa065f` | Full PostgreSQL gate: 252 passed, no skips, 88.53% coverage |
 
 ## 2. Current decisions
 
@@ -338,7 +338,8 @@ The user approved continued downstream development while JAI-021 waits for calen
 - After Windows restarted, Docker Desktop 4.85.0 and the existing PostgreSQL container recovered without a factory reset; the database became healthy on port 5432. The first focused PostgreSQL run passed the migration/model checks but failed one report-service assertion because the test assumed the persisted human-confirmation reason was always the first risk, while the documented deterministic order places review status first. The assertion was corrected to require that reason anywhere in the retained risk set; production ordering and acceptance were not weakened.
 - The corrected focused PostgreSQL migration/model/report-service set passed 7/7. The first complete-gate invocation then stopped at Ruff format because that corrected generator assertion required canonical one-line formatting; `ruff format` made only that mechanical change.
 - Final PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 187 files, Ruff lint passed, Mypy passed across 126 source files, all 252 tests passed with no skips, and coverage was 88.53%. Paired JAI-024 acceptance is complete without implementing JAI-025, JAI-026, or JAI-027 behavior.
-- Next: create the scoped feature commit with repository-local authorship, normally push, verify local/tracking/GitHub refs, then wait for the recorded JAI-021 → JAI-022 → JAI-023 integration sequence before synchronizing JAI-024 from `develop`.
+- Created scoped feature commit `ffa065f2877c833b5b98e48640a61aa891a0bb4f` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the new branch. Local HEAD, its tracking reference, and GitHub `ls-remote` all matched that commit before this status-only record; no force push, rebase, remote change, or published-history rewrite occurred.
+- Next: keep JAI-024 isolated and unchanged until JAI-021, JAI-022, and JAI-023 integrate in order; then normally merge the latest `develop` into JAI-024, preserve both logs, resolve paired-document conflicts explicitly, and rerun the complete PostgreSQL gate before integration.
 
 ## 4. Verification and blockers
 
@@ -355,7 +356,7 @@ The user approved continued downstream development while JAI-021 waits for calen
 1. Complete the restarted JAI-021 sequence on 2026-09-04 and 2026-09-05, then merge JAI-021 first.
 2. Then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and integrate JAI-022.
 3. JAI-023 implementation is complete and normally pushed on its independent branch; after JAI-022 merges, normally merge the newly updated `develop` into JAI-023 and rerun the full gate before integration.
-4. Commit and normally push accepted JAI-024, verify all three refs, then preserve it unchanged until the recorded upstream merge sequence reaches JAI-024.
+4. JAI-024 is complete and normally pushed; preserve it unchanged until the recorded upstream merge sequence reaches it, then synchronize from `develop` and rerun the complete gate before integration.
 
 ## 6. Update template
 

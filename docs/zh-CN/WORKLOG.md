@@ -32,7 +32,7 @@
 | JAI-021 | 进行中，仅验收观测 | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | 实现已完成；合格 Day 1/Day 2 观测已登记；还需最后一次连续自然日运行 |
 | JAI-022 | 实现完成并普通推送，待集成 | `feature/jai-022-single-user-preferences` / `38cca14` | PostgreSQL 完整门禁通过；遵守 JAI-021 先合并边界 |
 | JAI-023 | 实现完成并普通推送，待集成 | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | PostgreSQL 完整门禁通过；等待已记录的 JAI-021/JAI-022 合并顺序 |
-| JAI-024 | 实现与验收完成，等待推送 | `feature/jai-024-daily-report-rendering` | PostgreSQL 完整门禁：252 项通过、无跳过、覆盖率 88.53% |
+| JAI-024 | 完成并普通推送，等待集成 | `feature/jai-024-daily-report-rendering` / `ffa065f` | PostgreSQL 完整门禁：252 项通过、无跳过、覆盖率 88.53% |
 
 ## 2. 当前决策
 
@@ -338,7 +338,8 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - Windows 重启后，Docker Desktop 4.85.0 与现有 PostgreSQL 容器在未恢复出厂设置的情况下恢复，5432 端口上的数据库已健康。首次定向 PostgreSQL 测试中迁移/模型检查通过，但一项日报服务断言失败：测试假定持久化的人工确认原因总在风险数组首项，而既定确定性顺序会先放复核状态。断言已改为要求完整风险集合中存在该原因；没有修改生产排序或放宽验收。
 - 修正后的 PostgreSQL 迁移/模型/日报服务定向测试 7/7 通过。首次完整门禁随后在 Ruff format 停止，因为修正后的生成式断言需要规范化为单行；`ruff format` 只执行了这一项机械调整。
 - 最终启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 187 个文件、Ruff lint 通过、126 个源文件的 Mypy 通过、252 项测试全部通过且无跳过，覆盖率 88.53%。JAI-024 双语验收完成，未实现 JAI-025、JAI-026 或 JAI-027 行为。
-- 下一步：使用仓库本地作者创建范围明确的功能提交，普通推送并核验本地/跟踪/GitHub 三端引用；随后等待既定 JAI-021 → JAI-022 → JAI-023 集成序列完成，再从 `develop` 同步 JAI-024。
+- 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建范围明确的功能提交 `ffa065f2877c833b5b98e48640a61aa891a0bb4f`，并普通推送新分支。本状态记录提交前，本地 HEAD、跟踪引用和 GitHub `ls-remote` 均与该提交一致；未使用 force push、rebase，未修改远程地址或已发布历史。
+- 下一步：保持 JAI-024 独立且不变，直至 JAI-021、JAI-022、JAI-023 依次集成；随后把最新 `develop` 普通合并到 JAI-024，保留双方日志、显式解决双语文档冲突，并在集成前重跑 PostgreSQL 完整门禁。
 
 ## 4. 检查与阻塞
 
@@ -355,7 +356,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 1. 于 2026-09-04 和 2026-09-05 完成重新开始的 JAI-021 序列，并先合并 JAI-021。
 2. 再把更新后的 `develop` 普通合并到 JAI-022，保留两边日志、重跑完整门禁，并集成 JAI-022。
 3. JAI-023 已在独立分支完成实现并普通推送；JAI-022 合并后，把再次更新的 `develop` 普通合并到 JAI-023，并在集成前重跑完整门禁。
-4. 提交并普通推送已验收的 JAI-024，核验三端引用；此后保持分支不变，直至既定上游合并序列到达 JAI-024。
+4. JAI-024 已完成并普通推送；保持其不变，直至既定上游合并序列到达，再从 `develop` 同步并在集成前重跑完整门禁。
 
 ## 6. 更新模板
 
