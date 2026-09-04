@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-30
+> Last updated: 2026-09-04
 >
 > Active branch: `feature/jai-021-sources-four-five-stability`
 
@@ -29,7 +29,7 @@
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
-| JAI-021 | In progress; restarted Day 1 recorded | `feature/jai-021-sources-four-five-stability` / `05f4140` | The missed 2026-08-31 run interrupted the prior sequence; new sequence started 2026-09-03 |
+| JAI-021 | In progress; qualified Day 1/Day 2 recorded | `feature/jai-021-sources-four-five-stability` | Current sequence covers 2026-09-03/04; final qualified day remains 2026-09-05 |
 
 ## 2. Current decisions
 
@@ -351,6 +351,13 @@ The same document/extraction version may be repeated only when its merged result
 - The 32 focused offline adapter, stability-metric, runtime, and catalog tests passed in 1.68 seconds after the paired observation records were updated; bilingual heading parity and `git diff --check` also passed.
 - Next qualified runs are required on 2026-09-04 and 2026-09-05. Any missing or failed calendar day restarts the sequence again; JAI-021 remains unmerged until the full sequence and final gate complete.
 
+### 2026-09-04 — JAI-021 qualified stability day 2
+
+- Resumed cleanly from pushed observation-record commit `816bee92d09d6f080e7e705e6ee75f5f2cc83ac5`; local HEAD and its tracking reference matched before the run, and no downstream-branch change entered this worktree.
+- The bounded read-only observation qualified: all 5 source runs and 9/9 attempted details succeeded, no detail failed, duplicate rate was 0%, and evidence-backed completeness was 80% (36/45). Firstjob returned a valid empty list; NCSS, Jiangsu, Shanghai public institutions, and China Mobile returned 1, 2, 3, and 3 details respectively.
+- The 32 focused offline adapter, stability-metric, runtime, and catalog tests passed in 1.67 seconds. Paired WORKLOG/stability-guide headings match and `git diff --check` passed.
+- The current consecutive sequence is now 2026-09-03 day 1 plus 2026-09-04 day 2. Run the identical bounded observation once on 2026-09-05; only a fully qualified result may close JAI-021 and start its final gate/merge work.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -363,7 +370,7 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Run the same replacement five-source observation on 2026-09-04 and, only if that qualifies, again on 2026-09-05. Do not count repeated same-day runs or close JAI-021 early.
+1. Run the same replacement five-source observation once on 2026-09-05. Do not count repeated same-day runs or close JAI-021 early.
 2. If the new day 3 qualifies, synchronize the paired stability/plan/backlog/work-log records, run the complete proportional gate, normally push JAI-021, and merge it into `develop` before synchronizing JAI-022/JAI-023.
 3. Keep OCR deferred to JAI-B01, all JAI-022/JAI-023 implementation outside this branch, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
