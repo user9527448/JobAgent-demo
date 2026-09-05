@@ -33,7 +33,7 @@
 | JAI-022 | Complete, merged and pushed to `develop` | `develop` / `e7948c9` | JAI-021/JAI-022 histories preserved; post-merge PostgreSQL gate passed with 254 tests |
 | JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
-| JAI-025 | In progress; flow evidence complete, full gate and G5 pending | `feature/jai-025-top-20-quality-review` | Owner-approved flow-first exception is explicit; live human-review volume is deferred to JAI-049 |
+| JAI-025 | Complete under approved flow-first exception; merge authorized | `feature/jai-025-top-20-quality-review` | G5 approved; live human-review volume remains deferred to JAI-049 |
 
 ## 2. Current decisions
 
@@ -554,6 +554,12 @@ If this bounded run yields fewer than 50 distinct live positions, the shortfall 
 - The final PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 214 files, Ruff lint passed, Mypy passed across 140 source files, all 295 tests passed with no skips, and coverage was 87.82%. The offline evaluator reproduced v1 Precision@20/Recall@20 of 0.75/0.50 and v2 of 1.00/0.666667. Bilingual headings match for plans 45/45, backlogs 71/71, work logs 63/63, and quality guides 7/7; both backlogs retain the same 183 Issue IDs in order, all 65 tracked Markdown links resolve, and `git diff --check` passed.
 - Created flow-closure commit `29f4145ce1e5508137930123c0da61817e8b0797` with the repository-local author and normally pushed it through the command-local proxy without changing persistent Git configuration. Before this status-only update, local HEAD, its tracking reference, and GitHub `ls-remote` all matched that commit and the worktree was clean.
 
+### 2026-09-05 — JAI-025 G5 approved
+
+- After reviewing the exact synthetic-quality metrics, bounded live-flow counts, deferred-quality list, full PostgreSQL gate, and three-way Git state, the project owner explicitly approved G5.
+- JAI-025 may now be non-fast-forward merged into a three-way-verified `develop`. The approved completion claim is limited to deterministic evaluation mechanics and executable flow closure; it does not claim that the deferred >=50 live human-labelled benchmark is complete.
+- After the merge, rerun the complete PostgreSQL gate, normally push `develop`, verify local/tracking/GitHub equality, and only then create the independent JAI-026 branch. Rebase, force push, direct feature commits on `develop`, and premature JAI-027 work remain prohibited.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -569,10 +575,10 @@ If this bounded run yields fewer than 50 distinct live positions, the shortfall 
 
 ## 5. Next actions
 
-1. Run the final PostgreSQL-enabled quality gate and documentation parity/link checks on the complete flow-closure tree, then commit and normally push the feature branch.
-2. Present the exact final evidence for explicit G5 approval. Do not merge JAI-025 to `develop` or start JAI-026 before that approval.
-3. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change `jai-025-v2`.
-4. Keep JAI-026 scheduling, JAI-027 notifications, JAI-030 maintenance APIs, OCR/JAI-B01, and JAI-048 outside the active Issue.
+1. Commit and normally push the G5 approval record, then verify the current feature tip and `develop` baseline independently.
+2. Non-fast-forward merge JAI-025 into `develop`, rerun the full PostgreSQL gate, normally push, and verify local/tracking/GitHub equality.
+3. From that verified merge commit, create the independent JAI-026 branch and record its start before design work.
+4. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change `jai-025-v2` or start JAI-027.
 
 ## 6. Update template
 

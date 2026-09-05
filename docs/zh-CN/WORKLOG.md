@@ -33,7 +33,7 @@
 | JAI-022 | 已完成、合并并推送到 `develop` | `develop` / `e7948c9` | 已保留 JAI-021/JAI-022 双方历史；合并后 PostgreSQL 门禁以 254 项测试通过 |
 | JAI-023 | 已完成、合并并推送到 `develop` | `develop` / `5935b52` | 已保留 JAI-021 至 JAI-023 全部历史；合并后 PostgreSQL 门禁以 271 项测试通过 |
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
-| JAI-025 | 进行中；流程证据完成，等待完整门禁与 G5 | `feature/jai-025-top-20-quality-review` | 负责人批准的流程优先例外已明确；真实人工评审样本量延期到 JAI-049 |
+| JAI-025 | 按获批流程优先例外完成；已授权合并 | `feature/jai-025-top-20-quality-review` | G5 已批准；真实人工评审样本量仍延期到 JAI-049 |
 
 ## 2. 当前决策
 
@@ -554,6 +554,12 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 最终启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 214 个文件，Ruff lint 通过，140 个源文件的 Mypy 通过，295 项测试全部通过且无跳过，覆盖率为 87.82%。离线评估器复现 v1 Precision@20/Recall@20 为 0.75/0.50、v2 为 1.00/0.666667。开发计划 45/45、Backlog 71/71、WORKLOG 63/63、质量指南 7/7 的双语标题一致；两份 Backlog 保持相同的 183 个 Issue ID 顺序，65 份已跟踪 Markdown 的链接全部有效，`git diff --check` 通过。
 - 已使用仓库本地作者创建闭环提交 `29f4145ce1e5508137930123c0da61817e8b0797`，并通过命令级临时代理普通推送，未修改持久 Git 配置。本次仅状态更新前，本地 HEAD、跟踪引用与 GitHub `ls-remote` 均与该提交一致，工作区干净。
 
+### 2026-09-05 — JAI-025 G5 已批准
+
+- 项目负责人审核精确的合成质量指标、有界真实流程计数、延期质量清单、完整 PostgreSQL 门禁和 Git 三端状态后，已明确批准 G5。
+- JAI-025 现在可以非快进合入三端核验一致的 `develop`。获批完成声明仅限确定性评估机制与可执行流程闭环，不声称延期的至少 50 条真实人工标注基准已经完成。
+- 合并后必须重跑完整 PostgreSQL 门禁、普通推送 `develop`、核验本地/跟踪/GitHub 一致，然后才能创建独立 JAI-026 分支。继续禁止 rebase、force push、在 `develop` 上直接提交功能改动或提前开展 JAI-027。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -569,10 +575,10 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 在完整流程闭环工作树上运行最终 PostgreSQL 质量门禁及文档一致性/链接检查，然后提交并普通推送 feature 分支。
-2. 提交精确最终证据供负责人明确审批 G5；批准前不得把 JAI-025 合入 `develop`，也不得启动 JAI-026。
-3. 至少 50 条真实人工评审、附件衔接和来源诊断继续留在 JAI-049；不得静默修改 `jai-025-v2`。
-4. JAI-026 调度、JAI-027 通知、JAI-030 维护 API、OCR/JAI-B01 与 JAI-048 均保持在当前 Issue 范围外。
+1. 提交并普通推送 G5 批准记录，再分别核验当前 feature 末端与 `develop` 基线。
+2. 把 JAI-025 非快进合入 `develop`，重跑 PostgreSQL 完整门禁、普通推送并核验本地/跟踪/GitHub 一致。
+3. 从该已核验合并提交创建独立 JAI-026 分支，并在设计工作前登记启动。
+4. 至少 50 条真实人工评审、附件衔接和来源诊断继续留在 JAI-049；不得静默修改 `jai-025-v2` 或提前启动 JAI-027。
 
 ## 6. 更新模板
 

@@ -324,7 +324,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:test` `area:matching` `priority:P1` `size:M`
 - **Dependencies**: JAI-023, JAI-024
-- **Status**: the 60-case synthetic proposed-label comparison and nine-document live end-to-end flow are complete. The project owner approved the flow-first exception; the full gate and G5 merge approval remain. At least 50 live human labels are deferred to JAI-049, and the synthetic set must not be represented as historical human data.
+- **Status**: the 60-case synthetic proposed-label comparison, nine-document live end-to-end flow, and full gate are complete. The project owner approved the flow-first exception and G5 safe merge. At least 50 live human labels are deferred to JAI-049, and the synthetic set must not be represented as historical human data.
 - **Goal**: tune weights against human judgment.
 - **Scope**: the original scope requires at least 50 human-labelled positions. The current step first verifies Top 20/miss mechanics with 60 explicitly synthetic proposed labels and proves the collection-to-report flow with bounded live data; live human-review volume remains explicit quality debt.
 - **Acceptance**:
