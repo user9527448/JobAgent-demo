@@ -8,7 +8,7 @@
 >
 > 最后更新：2026-09-05
 >
-> 当前分支：`feature/jai-025-top-20-quality-review`
+> 当前分支：`feature/jai-026-daily-scheduling-recovery`
 
 ## 1. 当前状态
 
@@ -33,7 +33,8 @@
 | JAI-022 | 已完成、合并并推送到 `develop` | `develop` / `e7948c9` | 已保留 JAI-021/JAI-022 双方历史；合并后 PostgreSQL 门禁以 254 项测试通过 |
 | JAI-023 | 已完成、合并并推送到 `develop` | `develop` / `5935b52` | 已保留 JAI-021 至 JAI-023 全部历史；合并后 PostgreSQL 门禁以 271 项测试通过 |
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
-| JAI-025 | 按获批流程优先例外完成；已授权合并 | `feature/jai-025-top-20-quality-review` | G5 已批准；真实人工评审样本量仍延期到 JAI-049 |
+| JAI-025 | 按获批流程优先例外完成、合并并推送到 `develop` | `develop` / `a070030` | 合并后 PostgreSQL 门禁以 295 项测试和 87.82% 覆盖率通过；真实人工评审样本量仍延期到 JAI-049 |
+| JAI-026 | 已启动；设计等待负责人审核 | `feature/jai-026-daily-scheduling-recovery` | 仅限每日调度、单实例锁、misfire、阶段重试、恢复和手工补跑；JAI-027 仍在范围外 |
 
 ## 2. 当前决策
 
@@ -560,6 +561,14 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - JAI-025 现在可以非快进合入三端核验一致的 `develop`。获批完成声明仅限确定性评估机制与可执行流程闭环，不声称延期的至少 50 条真实人工标注基准已经完成。
 - 合并后必须重跑完整 PostgreSQL 门禁、普通推送 `develop`、核验本地/跟踪/GitHub 一致，然后才能创建独立 JAI-026 分支。继续禁止 rebase、force push、在 `develop` 上直接提交功能改动或提前开展 JAI-027。
 
+### 2026-09-05 — JAI-025 已合并并启动 JAI-026
+
+- G5 批准记录末端为 `d9a5764921ad32beb55e062c371ba30221939e5e`，已普通推送。合并前 feature 分支与其跟踪引用、GitHub 一致；本地 `develop`、`origin/develop` 和 GitHub 均为 JAI-024 基线 `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`，feature 的合并基点也是该提交。
+- JAI-025 通过非快进提交 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451` 合入 `develop`，仓库本地作者为 `user9527448 <2537759248@qq.com>`。合并后启用 PostgreSQL 的 `scripts/check.py` 通过 Ruff format/lint、140 个源文件的 Mypy、295 项无跳过测试和 87.82% 覆盖率。
+- `develop` 已普通推送，未改变 HTTPS 远程地址或持久代理配置。本地 `HEAD`、`origin/develop` 与 GitHub `ls-remote` 均为 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`，工作区干净。
+- 两份 Backlog 都把 JAI-026 列为下一项计划内未完成 Issue。已从核验后的合并提交创建独立分支 `feature/jai-026-daily-scheduling-recovery`。范围仅限 APScheduler、`Asia/Shanghai`、单实例锁、misfire、阶段重试、安全重启恢复/终止、手工补跑，以及采集、解析、评分与日报全链路可追踪。
+- 当前尚未决定或实施 JAI-026 架构。下一步先只读审计既有命令、服务和持久化边界，形成双语留档的设计方案并交负责人审批；JAI-027 通知行为继续保持范围外。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -572,12 +581,13 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - JAI-025 G1：Alembic current/check 在 `0008_daily_report_snapshots` 通过；精确五来源初始化后置条件通过；全部业务数据表仍为空。PostgreSQL 完整门禁以 294 项测试、无跳过和 87.80% 覆盖率通过。当前唯一运行限制是中国移动列表发现连接异常；按 0 配额记录，没有尝试绕过。
 - JAI-025 真实流程：获批的 9/9 条详情在三次成功运行中入库；9 次重解析全部完成；创建 2 条基线匹配与 1 份不可变日报快照；重复匹配/日报路径保持幂等。已提交的端到端回归在 PostgreSQL 上通过。
 - JAI-025 最终准备门禁：Ruff format/lint 与仓库配置的 Mypy 通过；295 项 PostgreSQL 启用测试全部通过且无跳过，覆盖率 87.82%；双语结构、Issue ID 顺序、Markdown 链接、评估器重放和差异检查均通过。
+- JAI-025 合并后再次得到同一权威门禁结果：Ruff format/lint 通过，140 个源文件的 Mypy 通过，295 项 PostgreSQL 启用测试全部通过且无跳过，覆盖率为 87.82%。推送后的 `develop` 三端均为 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`。
 
 ## 5. 下一步
 
-1. 提交并普通推送 G5 批准记录，再分别核验当前 feature 末端与 `develop` 基线。
-2. 把 JAI-025 非快进合入 `develop`，重跑 PostgreSQL 完整门禁、普通推送并核验本地/跟踪/GitHub 一致。
-3. 从该已核验合并提交创建独立 JAI-026 分支，并在设计工作前登记启动。
+1. 提交并普通推送 JAI-025 合并与 JAI-026 启动的双语记录，再核验新 feature 分支的本地、跟踪和 GitHub 指针。
+2. 在不改变行为的前提下审计既有采集、重解析、匹配和日报命令/服务/持久化边界。
+3. 在两份 WORKLOG 登记 JAI-026 调度器、持久运行台账/状态机、PostgreSQL 锁、重试/恢复和手工补跑设计及执行闸门，并在实施前取得项目负责人批准。
 4. 至少 50 条真实人工评审、附件衔接和来源诊断继续留在 JAI-049；不得静默修改 `jai-025-v2` 或提前启动 JAI-027。
 
 ## 6. 更新模板

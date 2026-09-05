@@ -8,7 +8,7 @@
 >
 > Last updated: 2026-09-05
 >
-> Active branch: `feature/jai-025-top-20-quality-review`
+> Active branch: `feature/jai-026-daily-scheduling-recovery`
 
 ## 1. Current status
 
@@ -33,7 +33,8 @@
 | JAI-022 | Complete, merged and pushed to `develop` | `develop` / `e7948c9` | JAI-021/JAI-022 histories preserved; post-merge PostgreSQL gate passed with 254 tests |
 | JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
-| JAI-025 | Complete under approved flow-first exception; merge authorized | `feature/jai-025-top-20-quality-review` | G5 approved; live human-review volume remains deferred to JAI-049 |
+| JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
+| JAI-026 | Started; design pending owner review | `feature/jai-026-daily-scheduling-recovery` | Daily scheduling, single-instance locks, misfires, stage retries, recovery, and manual makeup only; JAI-027 remains out of scope |
 
 ## 2. Current decisions
 
@@ -560,6 +561,14 @@ If this bounded run yields fewer than 50 distinct live positions, the shortfall 
 - JAI-025 may now be non-fast-forward merged into a three-way-verified `develop`. The approved completion claim is limited to deterministic evaluation mechanics and executable flow closure; it does not claim that the deferred >=50 live human-labelled benchmark is complete.
 - After the merge, rerun the complete PostgreSQL gate, normally push `develop`, verify local/tracking/GitHub equality, and only then create the independent JAI-026 branch. Rebase, force push, direct feature commits on `develop`, and premature JAI-027 work remain prohibited.
 
+### 2026-09-05 — JAI-025 merged and JAI-026 started
+
+- The G5 approval record ended at `d9a5764921ad32beb55e062c371ba30221939e5e` and was normally pushed. Before merge, the feature branch matched its tracking branch and GitHub, while local `develop`, `origin/develop`, and GitHub all matched the JAI-024 baseline `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`; the feature merge base was that same baseline.
+- JAI-025 was non-fast-forward merged into `develop` as `a070030c5c29b9aaddfd87b9d5b0cd174f66a451` with repository-local author `user9527448 <2537759248@qq.com>`. The post-merge PostgreSQL `scripts/check.py` gate passed Ruff format/lint, Mypy across 140 source files, all 295 tests with no skips, and 87.82% coverage.
+- `develop` was normally pushed without changing the HTTPS remote or persistent proxy configuration. Local `HEAD`, `origin/develop`, and GitHub `ls-remote` all matched `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`, and the worktree was clean.
+- Both backlogs identify JAI-026 as the next planned incomplete Issue. The independent `feature/jai-026-daily-scheduling-recovery` branch was created from the verified merge commit. Its scope is limited to APScheduler, `Asia/Shanghai`, single-instance locks, misfires, stage retries, safe restart recovery/termination, manual makeup runs, and traceability across collection, parsing, scoring, and reports.
+- No JAI-026 architecture decision or implementation has been made yet. The next step is a read-only audit of the existing command/service/persistence boundaries and a bilingual recorded design proposal for owner approval; JAI-027 notification behavior remains out of scope.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -572,12 +581,13 @@ If this bounded run yields fewer than 50 distinct live positions, the shortfall 
 - JAI-025 G1: Alembic current/check passed at `0008_daily_report_snapshots`; exact five-source bootstrap postconditions passed; all business-data tables remain empty. The PostgreSQL full gate passed 294 tests with no skips and 87.80% coverage. The only current operational limitation is China Mobile list discovery connectivity; it is recorded as a zero allocation rather than bypassed.
 - JAI-025 live flow: 9/9 approved details persisted across three successful runs; all nine reparses completed; 2 baseline matches and one immutable report snapshot were created; the repeat matching/report path was idempotent. The committed end-to-end regression passed against PostgreSQL.
 - JAI-025 final preparation gate: Ruff format/lint and repository-configured Mypy passed; all 295 PostgreSQL-enabled tests passed with no skips at 87.82% coverage; bilingual structure, Issue-ID order, Markdown links, evaluator replay, and diff checks passed.
+- JAI-025 post-merge gate repeated the same authoritative result: Ruff format/lint passed, Mypy passed across 140 source files, all 295 PostgreSQL-enabled tests passed with no skips, and coverage was 87.82%. The pushed `develop` triple matched `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`.
 
 ## 5. Next actions
 
-1. Commit and normally push the G5 approval record, then verify the current feature tip and `develop` baseline independently.
-2. Non-fast-forward merge JAI-025 into `develop`, rerun the full PostgreSQL gate, normally push, and verify local/tracking/GitHub equality.
-3. From that verified merge commit, create the independent JAI-026 branch and record its start before design work.
+1. Commit and normally push the bilingual JAI-025 merge and JAI-026 start record, then verify the new feature branch locally, through its tracking reference, and through GitHub.
+2. Audit the existing collection, reparsing, matching, and report command/service/persistence boundaries without changing behavior.
+3. Record the JAI-026 scheduler, durable run ledger/state machine, PostgreSQL lock, retry/recovery, and manual-makeup design plus execution gates in both work logs, and obtain project-owner approval before implementation.
 4. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change `jai-025-v2` or start JAI-027.
 
 ## 6. Update template
