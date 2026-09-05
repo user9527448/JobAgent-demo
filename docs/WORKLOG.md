@@ -33,7 +33,7 @@
 | JAI-022 | Complete, merged and pushed to `develop` | `develop` / `e7948c9` | JAI-021/JAI-022 histories preserved; post-merge PostgreSQL gate passed with 254 tests |
 | JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
-| JAI-025 | In progress; G1 passed, G2 owner approval pending | `feature/jai-025-top-20-quality-review` | Bounded crawl tooling and the controlled evidence store are ready; no live detail has been persisted |
+| JAI-025 | In progress; flow evidence complete, full gate and G5 pending | `feature/jai-025-top-20-quality-review` | Owner-approved flow-first exception is explicit; live human-review volume is deferred to JAI-049 |
 
 ## 2. Current decisions
 
@@ -120,6 +120,12 @@ The project owner approved this recovery path and G1 on 2026-09-05. It keeps JAI
 Persist immutable raw documents and deterministic extraction/evidence through existing services. Keep the source-facing review sheet and source URL mapping under ignored `data/`; commit only a sanitized benchmark after the project owner labels at least 50 distinct positions and confirms each relevance category/rationale. Do not delete rejected source records; exclude them through the review manifest. The published feature history is not rewritten: if real labels require changing the provisional `jai-025-v2` rules, the final candidate receives a new score version rather than silently changing v2. JAI-026 scheduling, JAI-027 delivery, JAI-030 source-maintenance APIs, LLM calls, and new source adapters remain out of scope.
 
 Approval gates are mandatory: G1 approves the database upgrade, active-source bootstrap, and bounded-crawl code change; G2 approves the read-only discovery counts and per-source allocation before persistent HTTP detail requests; G3 confirms the human labels and sanitized transformation before tuning; G4 approves any final weight/rule change and version identifier after seeing before/after Top 20 false positives and misses; G5 approves completion and safe merge after paired documentation and the PostgreSQL full gate. A mismatch, access restriction, insufficient distinct positions, or quality tradeoff stops at its current gate and is recorded; no automatic scope expansion or destructive rollback is allowed.
+
+### D-035 Close the executable MVP flow before quality-volume optimization
+
+On 2026-09-05 the project owner changed the immediate priority from blocking on the 50-position live-review volume to completing and validating the existing end-to-end flow. G2 allocation `3/0/2/5/0` is approved for source IDs 1–5. The run remains bounded to ten public details across three reachable sources, with the existing concurrency, pacing, evidence, and access-control rules unchanged.
+
+If this bounded run yields fewer than 50 distinct live positions, the shortfall is recorded as explicit quality debt rather than concealed or guessed. The current synthetic 60-case set may continue to verify deterministic evaluation mechanics, but it must remain labelled synthetic and cannot be represented as historical human review. Source-volume expansion, Firstjob's empty discovery, China Mobile connectivity, and a future >=50 live human-labelled benchmark are deferred optimization items; they do not authorize new adapters, larger quotas, or changes to published score versions in this step.
 
 ## 3. Active work history
 
@@ -531,6 +537,22 @@ Approval gates are mandatory: G1 approves the database upgrade, active-source bo
 - G1 is complete. Persistent detail requests, extraction, label confirmation, score retuning, completion, and merge remain unauthorized until the project owner reviews and explicitly approves or revises G2.
 - Created G1 implementation commit `4b737e4e8eeab3bda2e45af9c3adf0cd6d183c4c` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed it through the previously verified command-local proxy without changing `origin` or persistent Git configuration. Before this status-only update, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit and the worktree was clean.
 
+### 2026-09-05 — D-035 priority change and G2 approved
+
+- The project owner directed the team to prioritize closing the executable flow and to record newly discovered optimization needs for later adjustment. This approves the proposed G2 allocation `3/0/2/5/0`, while retaining the ten-detail total, three-source coverage, concurrency 1, at least one-second pacing, public-only access, and no bypass boundary.
+- The earlier requirement to stop immediately when the live run produces fewer than 50 distinct positions is superseded for flow validation only. Any shortfall remains visible quality debt; synthetic labels remain explicitly synthetic, and JAI-025 cannot claim a 50-position historical human review that did not occur.
+- Execution boundary: persist only the approved reachable details, inspect run/database evidence, continue through existing deterministic parse/extract/match/report components where supported, and record each unsupported handoff or missing operator command. Do not expand quotas, add sources/adapters, retune scoring, or implement JAI-026/JAI-027 behavior without a later decision.
+
+### 2026-09-05 — JAI-025 bounded live-flow validation completed
+
+- Ran only the approved source IDs and limits. Crawl run 1 (NCSS, limit 3) discovered and created 2 documents; run 2 (Jiangsu, limit 2) created 2; run 3 (Shanghai public institutions, limit 5) created 5. All three runs succeeded, all 9 attempted details were persisted, and no detail failed. Firstjob and China Mobile received no persistent run, so the approved total was not expanded.
+- All nine current documents contained visible body text. The attachment table remained empty because the current manual crawl stores detail bodies but does not hand discovered PDF/XLSX links to `AttachmentStorageService`. Deterministic reparse version `jai-025-live-v1` nevertheless completed for all documents: 9 posts, 2 positions, 38 field-evidence rows, and 41 validation issues. One position is recommendation-eligible and one is blocked; seven attachment-oriented notices produced no body-derived position. Missing values remained missing.
+- Preserved the default empty/unrestricted preference values, triggered one recomputation, and deliberately used published baseline `jai-023-v1` before G4 rather than treating candidate v2 as an approved live rule. Matching processed 2 positions, passed 1, filtered 1, and created 2 results. Report version `jai-024-v1` created one 2026-09-05 snapshot with group counts 1 priority, 0 closing soon, 1 added today, and 2 needs confirmation.
+- The first direct one-shot service invocation used Windows' default Proactor loop and failed before reading preferences because async psycopg requires a selector loop; it made no preference, match, or report write. The retry used the same `SelectorEventLoop` pattern as repository commands and succeeded. A repeat then returned matching `not_required`, processed zero rows, and reused report snapshot 1 with the same content hash.
+- Added a synthetic PostgreSQL end-to-end regression that protects raw-document reparse, validation, unchanged default preference update, v1 matching, all four report groups, matching no-op, and immutable report reuse in one test. Its focused Ruff and PostgreSQL test passed. A direct single-file Mypy invocation resolved project imports as untyped installed modules and reported import errors; the repository-configured full Mypy target remains the authoritative check and will run in the final gate.
+- Recorded deferred quality work in JAI-049: automatic bounded attachment handoff, Firstjob/China Mobile source diagnostics, at least 50 distinct live human labels, and a new score version if that benchmark requires rule changes. The synthetic 60-case result and the 2-position live smoke remain separately labelled and do not imply production quality.
+- The final PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 214 files, Ruff lint passed, Mypy passed across 140 source files, all 295 tests passed with no skips, and coverage was 87.82%. The offline evaluator reproduced v1 Precision@20/Recall@20 of 0.75/0.50 and v2 of 1.00/0.666667. Bilingual headings match for plans 45/45, backlogs 71/71, work logs 63/63, and quality guides 7/7; both backlogs retain the same 183 Issue IDs in order, all 65 tracked Markdown links resolve, and `git diff --check` passed.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -541,13 +563,15 @@ Approval gates are mandatory: G1 approves the database upgrade, active-source bo
 - JAI-012 final gate: Ruff format/lint passed; Mypy passed across 62 source files; 105 tests passed with PostgreSQL; coverage 88.38%. The offline JAI-012 acceptance performed no live-source request and left no repository runtime data.
 - JAI-012 handoff recheck on 2026-08-15: the first Mypy invocation named the non-existent planned `app` directory and was corrected to the repository-configured targets; the first test run omitted `JOBAGENT_TEST_DATABASE_URL`, so 98 tests passed, 7 PostgreSQL tests skipped, and coverage was 83.18%. After starting the existing Docker Desktop installation and using the existing `jobagent_test` database, Ruff format/lint, Mypy, all 105 tests, and 88.38% coverage passed.
 - JAI-025 G1: Alembic current/check passed at `0008_daily_report_snapshots`; exact five-source bootstrap postconditions passed; all business-data tables remain empty. The PostgreSQL full gate passed 294 tests with no skips and 87.80% coverage. The only current operational limitation is China Mobile list discovery connectivity; it is recorded as a zero allocation rather than bypassed.
+- JAI-025 live flow: 9/9 approved details persisted across three successful runs; all nine reparses completed; 2 baseline matches and one immutable report snapshot were created; the repeat matching/report path was idempotent. The committed end-to-end regression passed against PostgreSQL.
+- JAI-025 final preparation gate: Ruff format/lint and repository-configured Mypy passed; all 295 PostgreSQL-enabled tests passed with no skips at 87.82% coverage; bilingual structure, Issue-ID order, Markdown links, evaluator replay, and diff checks passed.
 
 ## 5. Next actions
 
-1. Await explicit project-owner approval or revision of G2 allocation `3/0/2/5/0` for source IDs 1–5. Until then, do not issue or persist any detail request.
-2. If G2 is approved, execute only the bounded 10-detail crawl, then run the existing deterministic parse/extraction/evidence path and report the distinct-position count. If it is below 50, stop for a new decision; do not add sources or exceed the approved allocation automatically.
-3. Continue G3–G5 only after their separate evidence and approvals; record each input, bounded action, result, deviation, and approval in both work logs.
-4. Keep JAI-026 scheduling, JAI-027 notifications, JAI-030 maintenance APIs, OCR/JAI-B01, JAI-049, and JAI-048 outside the active Issue.
+1. Run the final PostgreSQL-enabled quality gate and documentation parity/link checks on the complete flow-closure tree, then commit and normally push the feature branch.
+2. Present the exact final evidence for explicit G5 approval. Do not merge JAI-025 to `develop` or start JAI-026 before that approval.
+3. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change `jai-025-v2`.
+4. Keep JAI-026 scheduling, JAI-027 notifications, JAI-030 maintenance APIs, OCR/JAI-B01, and JAI-048 outside the active Issue.
 
 ## 6. Update template
 

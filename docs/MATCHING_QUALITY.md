@@ -2,7 +2,7 @@
 
 > Simplified Chinese: [JAI-025 Top 20 匹配质量评审](zh-CN/MATCHING_QUALITY.md)
 
-JAI-025 adds a deterministic offline comparison around the existing matching engine. It does not collect live data, alter report delivery, schedule jobs, call an LLM, or persist a generated evaluation report. The committed fixture and evaluator make every proposed relevance label, false positive, miss, score, and ranking reproducible.
+JAI-025 adds a deterministic offline comparison around the existing matching engine. The evaluator itself does not collect live data, alter report delivery, schedule jobs, call an LLM, or persist a generated evaluation report. The committed fixture and evaluator make every proposed relevance label, false positive, miss, score, and ranking reproducible. A separately approved bounded run validates the existing live-data flow without adding scheduling or delivery behavior.
 
 ## Review set
 
@@ -51,19 +51,33 @@ The five v1 false positives are fixture IDs 31–35, all classified `requirement
 
 Ranking is score-descending with position ID as the stable tie breaker. The evaluator rejects invalid Top-K bounds and compares both versions over exactly the same inputs, preferences, labels, and time.
 
+## Controlled live-flow evidence
+
+On 2026-09-05, the project owner approved a flow-first exception while retaining all public-access and evidence rules. Read-only discovery produced a bounded allocation across NCSS, Jiangsu personnel examination, and Shanghai public institutions. Three manual runs persisted nine public documents with no detail failure: two from NCSS, two from Jiangsu, and five from Shanghai.
+
+Deterministic reparse version `jai-025-live-v1` created nine current posts, two positions, 38 field-evidence rows, and 41 explicit validation issues. One position remained recommendation-eligible; one was blocked by evidenced validation. Seven document bodies produced no position because their useful position tables were in attachments and the current manual-crawl command does not automatically discover/store attachments.
+
+Using unchanged unrestricted default preferences and the published `jai-023-v1` baseline, matching processed both positions, passed one, filtered one, and created two results. Report version `jai-024-v1` created snapshot 1 for 2026-09-05 with one priority item, no closing-soon item, one added-today item, and two needs-confirmation items. A repeated match check was a `not_required` no-op and repeated report generation reused snapshot 1 with the same content hash. Live source bodies, URLs, and runtime output are not committed; only these aggregate verification facts are recorded.
+
 ## MVP limitations
 
 - The set is synthetic and pattern-based, not a statistically representative sample of all live sources, employers, regions, or job families.
 - Labels are binary and use one preference profile; they do not measure graded relevance or preference diversity.
 - Proposed labels require project-owner confirmation before they count as human-labelled acceptance evidence.
+- The controlled live run contains only nine documents and two extracted positions; it is end-to-end execution evidence, not a 50-position quality benchmark.
+- Attachment discovery/storage is not yet connected to the manual crawl command. This materially limits position yield from public-exam announcements whose tables are PDF/XLSX attachments.
 - Matching remains deterministic substring/rule scoring. It has no synonym expansion, semantic retrieval, negation understanding, LLM reranking, or learned calibration.
 - V2 deliberately ignores requirements-only positive direction terms. A position whose only reliable job-direction evidence is in requirements can therefore be missed.
 - Missing evidence is never guessed. Relevant but incomplete positions may remain outside Top 20 and should still appear in JAI-024's needs-confirmation section.
 - Precision/recall on 60 fixed samples is regression evidence, not a production quality guarantee. JAI-049 and later live review must continue tracking source quality and drift.
 
-## Owner review checklist
+## Closure and deferred review
 
-1. Inspect all 60 `label`, `reason_category`, and `rationale` entries in `review-set.json`.
-2. Confirm or edit disputed labels without changing the evaluator to fit the desired result.
-3. Re-run the evaluator and record the resulting metrics in both WORKLOG files.
-4. Mark JAI-025 complete only after the confirmed labels, focused checks, and full PostgreSQL gate pass in the same feature branch.
+The project owner prioritized an executable MVP flow over blocking on live review volume. Current closure evidence therefore combines the explicit synthetic comparison with the bounded live end-to-end run, without relabelling either artifact. The following quality work remains deferred to JAI-049:
+
+1. connect bounded attachment discovery/storage to the persisted collection flow;
+2. investigate Firstjob's empty discovery and China Mobile connectivity without bypasses;
+3. build and confirm at least 50 distinct live human-labelled positions;
+4. compare that benchmark with the current versions and create a new score version if rules must change.
+
+JAI-025 still requires the paired documentation, full PostgreSQL gate, and explicit G5 merge approval. The deferred benchmark does not authorize silent edits to `jai-025-v2` or a production-quality claim.

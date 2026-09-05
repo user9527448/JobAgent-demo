@@ -324,12 +324,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:test` `area:matching` `priority:P1` `size:M`
 - **Dependencies**: JAI-023, JAI-024
+- **Status**: the 60-case synthetic proposed-label comparison and nine-document live end-to-end flow are complete. The project owner approved the flow-first exception; the full gate and G5 merge approval remain. At least 50 live human labels are deferred to JAI-049, and the synthetic set must not be represented as historical human data.
 - **Goal**: tune weights against human judgment.
-- **Scope**: at least 50 human-labeled positions; review Top 20 and misses.
+- **Scope**: the original scope requires at least 50 human-labelled positions. The current step first verifies Top 20/miss mechanics with 60 explicitly synthetic proposed labels and proves the collection-to-report flow with bounded live data; live human-review volume remains explicit quality debt.
 - **Acceptance**:
-  - [ ] Classify obvious false positives and misses.
-  - [ ] Compare scores before/after changes and bump score version.
-  - [ ] Document MVP recommendation limitations.
+  - [x] Classify obvious false positives and misses.
+  - [x] Compare scores before/after changes and bump score version.
+  - [x] Document MVP recommendation limitations.
+  - [ ] Human-label and review at least 50 live positions (deferred to JAI-049 by owner decision and non-blocking for the current flow closure).
 
 ---
 
@@ -592,12 +594,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 ### JAI-049 Improve evidence-backed core-field completeness across heterogeneous official notices
 
 - **Labels**: `type:feature` `area:crawler` `area:extraction` `priority:P1` `size:M`
-- **Dependencies**: JAI-021
+- **Dependencies**: JAI-021, JAI-025
 - **Goal**: reach 85% completeness across the five core fields in controlled live samples without guessing critical values.
-- **Scope**: analyze missing NCSS deadlines and missing organization/deadline values in broad Jiangsu topics; prefer stable, narrower announcement endpoints owned by the same official body, add deterministic rules with direct quotes, or replace a low-value source under the W6 gate. Never treat publication time as a deadline or publisher as the hiring organization.
+- **Scope**: analyze missing NCSS deadlines and missing organization/deadline values in broad Jiangsu topics; connect bounded attachment discovery/storage to persisted collection and reparse; investigate Firstjob empty discovery and China Mobile connectivity; and complete at least 50 live human relevance labels. Prefer stable, narrower announcement endpoints owned by the same official body, add deterministic rules with direct quotes, or replace a low-value source under the W6 gate. Never treat publication time as a deadline or publisher as the hiring organization.
 - **Acceptance**:
   - [ ] Organization, title, region, application deadline, and source-link completeness reaches 85% in controlled live samples, or a source replacement decision is documented.
   - [ ] Every new organization/deadline value has a source quote and coordinates; fields without evidence remain empty.
+  - [ ] At least 50 distinct live positions receive human relevance labels and are compared with the fixed JAI-025 baseline; any rule change uses a new score version.
+  - [ ] Public PDF/XLSX position-table attachments can enter parsing through a bounded persisted path, with visible failures and no unsupported downloads.
   - [ ] Offline regressions, low-frequency live verification, and PostgreSQL idempotency acceptance pass.
 
 ---
