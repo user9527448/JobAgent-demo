@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-08-30
+> Last updated: 2026-09-05
 >
 > Active branch: `feature/jai-023-hard-filter-versioned-scoring`
 
@@ -29,9 +29,9 @@
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
-| JAI-021 | In progress, observation lane | `feature/jai-021-sources-four-five-stability` / `bd2bf78` | Implementation complete; qualified Day 1/Day 2 observations recorded; final consecutive-day run remains |
-| JAI-022 | Implementation complete and normally pushed; integration pending | `feature/jai-022-single-user-preferences` / `38cca14` | Full PostgreSQL gate passed; waits for JAI-021-first merge boundary |
-| JAI-023 | Implementation complete and normally pushed; integration pending | `feature/jai-023-hard-filter-versioned-scoring` / `8a334e5` | Full PostgreSQL gate passed; waiting for the recorded JAI-021/JAI-022 integration sequence |
+| JAI-021 | Complete, merged and pushed to `develop` | `develop` / `8cc0b2e` | Day 3 accepted under the recorded external-endpoint waiver; actual 4/5 result retained; post-merge PostgreSQL gate passed |
+| JAI-022 | Complete, merged and pushed to `develop` | `develop` / `e7948c9` | JAI-021/JAI-022 histories preserved; post-merge PostgreSQL gate passed with 254 tests |
+| JAI-023 | Complete; synchronized full gate passed, pending push/merge | `feature/jai-023-hard-filter-versioned-scoring` / `9592a16` | JAI-021–JAI-023 histories preserved; PostgreSQL-enabled combined gate passed |
 
 ## 2. Current decisions
 
@@ -318,6 +318,130 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 - Created feature commit `8a334e5` with repository-local author `user9527448 <2537759248@qq.com>`. The first normal HTTPS push failed after about 21 seconds because GitHub port 443 was unreachable; a read-only `ls-remote` failed the same way and a TCP probe resolved `github.com` to `20.205.243.166` but reported port 443 closed. No remote branch, protocol, history, or author was changed; retry the same non-force push when connectivity recovers.
 - The later unchanged normal push succeeded. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched blocker-record tip `18cdc97c16cc02fbb2cdd6383258c811bd062cea`; `develop`, JAI-021, and JAI-022 remained unchanged and isolated.
 
+### 2026-08-26 — JAI-021 sources 4–5 and three-day stability started
+
+- Reverified the clean JAI-020 feature branch at `9c86cad8eb621b20fa70e1e6a07a377f929608a3`; its local HEAD, tracking reference, and GitHub reference matched, and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
+- Merged JAI-020 into `develop` with non-fast-forward merge `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`, normally pushed it, and verified local `develop`, `origin/develop`, and GitHub `ls-remote` all match that commit.
+- Confirmed JAI-021 is the next incomplete Issue in both language plans and backlogs, then created `feature/jai-021-sources-four-five-stability` from the synchronized `develop` head.
+- Scope is limited to adding sources 4 and 5, bringing all five sources under Adapter contract tests, and recording success, duplicate, and core-field completeness metrics on three consecutive calendar days. Preferred sources are the National College Student Employment Service Platform and Shanghai public-institution announcements; only stable, public, read-only official endpoints may be used.
+- Dynamic pages that require login, CAPTCHA, application-system access, browser automation, or access-control evasion will be marked blocked or replaced by a stable endpoint owned by the same official body. No JAI-022 matching/preferences or later scheduling and operations features will be added.
+- The three-day acceptance period cannot be pre-recorded. Next: inspect the current catalog and Adapter contracts, verify official public endpoints, implement offline fixtures/contracts and proportional tests, then record day 1 only after a real bounded run succeeds.
+- Verified the official public boundary with low-frequency reads. NCSS exposes the same unauthenticated GET list used by its public page plus public details; login prompts belong only to application actions and are never invoked. Shanghai exposes a narrower public-institution column; the Adapter accepts only recruitment paths and excludes proposed-hire notices.
+- Added `NcssJobsAdapter` and `ShanghaiPublicInstitutionAdapter`, explicit manual/preview runtime wiring, active catalog entries, and three hand-authored synthetic detail contracts per source. No downloaded page, credential, applicant data, or runtime output was committed.
+- Added bounded JSON-only daily evaluation for source-run/detail success, canonical-URL/content-fingerprint duplicates, and evidence-backed organization/title/region/deadline/source-link completeness. It uses concurrency 1, the shared pacing/retry policy, at most 1-10 details per source, and performs no database/file write.
+- Extended deterministic dates only for directly evidenced official-notice formats: colon or `为`, a value on the next line, and a single explicit deadline after `即日起`/`自公告发布之日起`. The relative start remains absent. Shanghai organization is taken only from the exact title before a fixed recruitment suffix, with that title retained as evidence.
+- The first 2026-08-26 all-source observation is not a qualified stability day: SASAC exhausted three retries with retryable `PoolTimeout`; four of five source runs and all 8 attempted details succeeded, duplicate rate was 0%, and pre-correction completeness was 55%. Diagnostic reruns showed NCSS 80%, Jiangsu 60%, and corrected Shanghai 100%; the comparable post-correction composite is 82.5%, not one all-source run.
+- Registered JAI-049 as the explicit remediation Issue required by JAI-021 acceptance. It forbids treating publication time as deadline or publisher as hiring organization and must close the evidence-backed gap before the MVP release gate; JAI-022 remains the next main-line feature after JAI-021.
+- Focused Adapter/extraction/stability tests passed, and the PostgreSQL JAI-021 acceptance passed: six synthetic source-4/5 documents were `created` on the first write, `unchanged` on the second, and remained six version-1 rows. The first database invocation used the obsolete example password and failed authentication; rerunning with the repository-documented `jobagent-dev-only` test URL passed. One Ruff EN DASH finding in the new test docstring was also corrected.
+- The first complete PostgreSQL-enabled gate passed Ruff format/lint but stopped at one Mypy test narrowing error for `JsonValue`. After adding an explicit string check, the final `scripts/check.py` passed: Ruff format checked 168 files, Ruff lint passed, Mypy passed across 110 source files, all 238 tests passed with no skips, and coverage was 87.79%.
+- Because JAI-021 substantively changed the legacy Chinese source catalog, the repository rule required its English counterpart in this same commit. Added `docs/en-US/SOURCE_CATALOG.md`, synchronized the five-source state and current environment limitation, updated both indexes, and removed only this document from the bounded JAI-048 inventory; no other legacy migration was mixed into the feature.
+- Documentation verification passed across 54 Markdown files with no broken relative links. Paired heading counts match for plans (45/45), backlogs (71/71), active logs (34/34), indexes (5/5), the stability guide (7/7), and the source catalog (6/6). Both backlogs contain the same 168 Issue IDs in order, and `git diff --check` passed.
+- Created implementation baseline commit `52d435f35b8fb2a7ac013ac3f7d783261a97e0e5` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the new feature branch. Before this status-only handoff update, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit; the worktree was clean. JAI-021 remains in progress because no qualified three-consecutive-calendar-day sequence exists yet.
+- Created status-only bilingual handoff commit `da2d3c68f47a012177be1fdd9d5311c5baa32e8d`. Two unchanged normal HTTPS push attempts then failed because GitHub port 443 could not be reached after about 21 seconds; a direct read-only TCP probe also returned `TcpTestSucceeded=False`. No remote URL, protocol, branch history, or commit was changed. Retry the same non-force push after connectivity returns.
+- A final TCP probe returned `True`; the unchanged normal HTTPS push then succeeded through outage-record commit `5d67be09bc294d15af325c9279446a40ed7bfa81`. Before this final status-only update, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit and the worktree was clean.
+- Normally pushed final baseline-status commit `a2e3a15da994c97439d449b4be54a3248f236267` and verified local HEAD, its tracking reference, and GitHub `ls-remote` matched. A later same-day bounded all-source re-observation still did not qualify: SASAC exhausted three `PoolTimeout` retries, while the other four source runs and all 7 attempted details succeeded; duplicate rate was 0% and evidence-backed completeness was 82.86% (29/35). A no-body IPv4 `curl` diagnostic independently failed to connect to the official SASAC port 443 after about 21 seconds and returned HTTP `000`; the user separately confirmed the same public URL would not open in a normal browser. This corroborates a source/network-path outage rather than a Python-only parser problem, so no parser or access-control workaround was attempted.
+- Created observation-record commit `4efaf87a122c9a82e4e1378b9b3f4463b672e28e`. Its first unchanged normal HTTPS push was reset by the remote connection, and the immediate read-only GitHub port-443 probe returned `False`. The local commit and worktree remain safe; no remote URL, protocol, or history was changed.
+- A later port-443 probe still returned `False`, but the bounded normal Git HTTPS retry succeeded and published through interruption-record commit `b3fa11a9e2ce8140fab90a71af37f28faf018ffa`. Before this final status-only update, local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit and the worktree was clean.
+
+### 2026-08-27 — JAI-021 blocked-source replacement
+
+- Resumed the clean `feature/jai-021-sources-four-five-stability` branch at `24af39c9c3a6ad39caadef3d6afd2060418251ca`; local HEAD, its tracking reference, and GitHub `ls-remote` matched, and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
+- The bounded pre-replacement five-source observation again failed only at SASAC after three retryable `PoolTimeout` attempts. Four of five sources and all 8 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 80% (32/40). This is not a qualified stability day.
+- The user authorized replacing SASAC if it remained unavailable. The exact SASAC path is a public, search-indexed official URL rather than an intranet URL, but both the user browser and project environment still failed; the `www` CDN path could not establish port 443 and the official `wap` hostname presented an expired certificate. No TLS verification bypass or access-control workaround was attempted.
+- Evaluated official login-free alternatives with bounded read-only probes. China Telecom's static column, State Grid, and CNPC returned HTTP 412 locally, while the China Telecom recruitment portal required a JavaScript/digest flow. China Mobile's official announcement page returned HTTP 200 and declared a same-origin static list JSON containing current announcements; its detail shells likewise declared public same-origin detail JSON, so it was selected as the fifth active source.
+- Added `ChinaMobileRecruitmentAdapter`, runtime/preview registration, strict official URL and numeric-ID validation, title filtering, publication cursor support, and GET-only list/detail materialization. The Adapter preserves displayed organization, title, publication time, visible body, attachments, and provenance. The internal `text5`/`downTime` value is retained only as metadata because the public detail script does not display it; it is never guessed as an application deadline.
+- Marked SASAC `blocked` and disabled in catalog version 3, activated China Mobile, and absorbed the bounded JAI-041 public-announcement scope into JAI-021 under the user's priority change. Added three purely synthetic fixture groups and contract/error tests, updated catalog/runtime tests, and expanded the JAI-021 PostgreSQL acceptance to nine documents. The first live China Mobile preview succeeded; its result exposed an overly narrow maintenance-title exclusion, which was corrected from `系统升级` to `升级公告`. A second preview encountered a transient first-request `PoolTimeout`; proxy environment variables were absent and WinHTTP reported direct access.
+- The first PostgreSQL acceptance invocation stalled because Docker Desktop was not running and was interrupted without changing repository data. After starting the existing Docker Desktop installation and only the existing Compose `db` service, `jobagent-db-1` became healthy and the nine-document acceptance passed in 2.87 seconds. Focused tests and Mypy passed; Ruff's import-order and ambiguous full-width-colon findings were fixed without suppressions, and the focused rerun passed.
+- The first post-replacement all-source run reached four fully successful sources and 10/11 successful details; China Mobile announcement `54614` failed because its public body was only a same-origin image without visible text. Added a synthetic regression test and retained the validated image URL as evidence without downloading or OCR. The first version of that test produced invalid JSON due to unescaped HTML quotes and one Ruff full-width-colon finding; it was corrected to construct JSON structurally, after which all 17 focused tests, Ruff, and Mypy passed.
+- A subsequent all-source run again had four fully successful sources because China Mobile's list request transiently exhausted three `PoolTimeout` retries. One final bounded retry then qualified as day 1: 5/5 source runs and 11/11 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 78.18% (43/55). The completeness gap remains explicit under JAI-049; no missing organization, region, or deadline was invented.
+- The first complete gate after the image-only fix stopped immediately because Ruff format would reflow two assertions in the new regression test. Formatting that one file resolved it; the final PostgreSQL-enabled `scripts/check.py` passed with Ruff format/lint, Mypy across 112 source files, all 246 tests with no skips, and 87.45% coverage.
+- Documentation verification found no broken relative links across 55 Markdown files. The first read-only link-check command mishandled root-level files whose parent path was empty and emitted `Join-Path` errors; treating their parent as `.` fixed the command. Paired heading counts match for plans (45/45), backlogs (71/71), logs (35/35), stability guides (7/7), collection guides (11/11), source catalogs (6/6), and indexes (5/5); both backlogs contain the same 172 Issue references in order, and `git diff --check` passed.
+- Created replacement implementation commit `ea690a40cfc02d149d08776dcd23774808eda643` with repository-local author `user9527448 <2537759248@qq.com>`. The first normal HTTPS push was reset by the remote connection; an immediate read-only `ls-remote` and the second unchanged normal push both failed to connect to GitHub port 443 after about 21 seconds. The local commit and worktree remain safe; no remote URL, protocol, history, or author was changed.
+- Created bilingual outage-record commit `0f9102692735bd9995fd8244a6fb844ef208063e`. A third normal HTTPS push of the unchanged branch again failed to connect to GitHub port 443 after about 21 seconds. Local HEAD is two commits ahead of the unchanged tracking reference `24af39c9c3a6ad39caadef3d6afd2060418251ca`; both new commits retain the configured user author.
+- A later fourth normal push from local head `550d7629bd28e23b446eda21878d6b23dcfc45b6` failed at the same GitHub port-443 boundary. Read-only diagnostics found no Git proxy, proxy environment variable, WinHTTP proxy, or enabled Windows user proxy. DNS resolved `github.com` to `20.205.243.166`, but its TCP 443 connection failed. Further direct retries require an external network-path change; repository configuration remains untouched.
+- After the user restored a working external network path, the unchanged normal HTTPS push succeeded through network-diagnostic commit `6d30ad909e8af6c7947a4db7188d2081c22a9d75`. Local HEAD and the tracking reference matched immediately. The first sandboxed `ls-remote` check failed on its isolated network path after 11 ms; the read-only check in the same external network context as the push then succeeded and confirmed GitHub at the same commit.
+- Next action: continue daily replacement five-source observations from 2026-08-28 for days 2 and 3; do not close JAI-021 before three consecutive qualified calendar days exist.
+
+### 2026-08-29 — JAI-021 stability sequence restarted
+
+- Resumed the clean `feature/jai-021-sources-four-five-stability` branch at `a6bdcfbe3e96c3ab7d1257873aacf2749f8a1c04`; local HEAD and its tracking reference matched, and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
+- No evidence-backed run was recorded on 2026-08-28. The qualified 2026-08-27 result therefore cannot be backfilled or extended into a consecutive sequence.
+- The bounded 2026-08-29 replacement observation qualified: all 5 source runs and all 8 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 80% (32/40). NCSS and Firstjob returned valid empty lists; Jiangsu, Shanghai public institutions, and China Mobile returned 2, 3, and 3 details respectively. No database, runtime file, or source body was written.
+- The consecutive sequence restarts at day 1 on 2026-08-29. Next action: record qualified runs on 2026-08-30 and 2026-08-31; any missing or failed day restarts the sequence again.
+- The user explicitly approved parallel JAI-022 work while JAI-021 remains in observation-only acceptance. Verified JAI-020 is already in `develop`: local and tracking `develop` both point to non-fast-forward merge `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`, whose second parent is the JAI-020 final feature commit `9c86cad8eb621b20fa70e1e6a07a377f929608a3`. The active-branch status table already names the merge commit; the older `develop` copy seen by the user still shows the pre-JAI-021 wording and will receive the clarified table when JAI-021 merges.
+- A live GitHub `ls-remote` recheck of `develop` encountered the known intermittent port-443 timeout; branch creation requires a successful retry. Version-control boundary: create JAI-022 only from three-way-verified `develop`, keep JAI-021 observations on their existing branch, merge JAI-021 into `develop` first, then normally merge updated `develop` into JAI-022 and preserve both bilingual WORKLOG histories before rerunning the complete gate. Published history will not be rebased or rewritten.
+
+### 2026-08-30 — JAI-021 qualified stability day 2
+
+- Switched from the clean, pushed JAI-022 startup branch back to `feature/jai-021-sources-four-five-stability`; no JAI-022 commit or file change entered this branch.
+- The bounded read-only observation qualified: all 5 source runs and all 9 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 80% (36/45). Firstjob returned a valid empty list; NCSS, Jiangsu, Shanghai public institutions, and China Mobile returned 1, 2, 3, and 3 details respectively. No database, runtime file, or live source body was written.
+- The sequence now contains qualified 2026-08-29 day 1 and 2026-08-30 day 2. Next action: run the same bounded observation on 2026-08-31; only a full-source success completes JAI-021 acceptance.
+
+### 2026-08-30 — JAI-021 parallel verification lane prepared
+
+- The user explicitly approved running the remaining JAI-021 verification and later development work in parallel, with records and version-control isolation. This lane now uses the independent worktree `data/worktrees/jai021` on `feature/jai-021-sources-four-five-stability`; no JAI-022/JAI-023 commit or file change is carried into it.
+- The actual `Asia/Shanghai` time was `2026-08-30 11:47`. Day 2 had already been recorded today, so no repeated same-day run was executed or counted as day 3. The earliest valid day-3 observation remains 2026-08-31.
+- Offline preparation passed with the main repository's existing `.venv` and this worktree's `src`: 32 NCSS, Shanghai public-institution, China Mobile, stability-metric, runtime, and catalog tests passed in 2.11 seconds. The command help exited 0, while `--limit 0` was rejected with exit 2, confirming the 1-10 bound. No live source, database, runtime file, or source-body write was involved.
+- The exact 2026-08-31 command for this worktree is:
+
+  ```powershell
+  $env:PYTHONPATH = 'F:\CXG\JOBAGENTV1.0\data\worktrees\jai021\src'
+  & 'F:\CXG\JOBAGENTV1.0\.venv\Scripts\python.exe' 'F:\CXG\JOBAGENTV1.0\data\worktrees\jai021\scripts\evaluate_source_stability.py' --catalog 'F:\CXG\JOBAGENTV1.0\data\worktrees\jai021\config\source_catalog.toml' --limit 3
+  ```
+
+- The observation remains bounded to the five `active`/`enabled` public official sources, concurrency 1, shared pacing/retries, GET-only source access, and JSON stdout. It must not enter login, CAPTCHA, resume/application flows, write the database/files, or retain live source bodies.
+- A qualified day 3 requires `observation_date=2026-08-31`, all 5 source runs to succeed, and no attempted detail failure; duplicates must remain within the MVP ceiling of 2%. Evidence-backed completeness is recorded without guessing: the 85% target or the already registered JAI-049 corrective path remains the documented acceptance alternative.
+- Merge order is fixed: complete JAI-021 and its final gate, then merge JAI-021 into `develop` first. Only afterward may JAI-022/JAI-023 synchronize the latest `develop` through normal merges, preserve both bilingual WORKLOG histories, resolve paired-document conflicts, and rerun their complete gates before later `develop` merges. Rebase, force push, and published-history rewriting remain prohibited.
+- Created the scoped preparation-record commit `dee0632` with repository-local author `user9527448 <2537759248@qq.com>`. Its first unchanged normal HTTPS push failed after about 21 seconds because GitHub port 443 was unreachable; a read-only `Test-NetConnection` resolved `github.com` to `20.205.243.166` but returned `TcpTestSucceeded=False`. The local commit remains safe, and no remote URL, protocol, branch history, or author was changed.
+- The later unchanged normal push succeeded. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched blocker-record tip `00de7d1423482d99695a1de99dd451dd79c93f85`; JAI-022 and JAI-023 remained isolated in their own worktrees.
+
+### 2026-09-03 — JAI-021 stability sequence restarted
+
+- Resumed the clean, pushed JAI-021 worktree at `05f41406693f9d659dc53550b31102f1e0ddd2e8`; JAI-022 and JAI-023 remain isolated and no downstream commit entered this branch. Repository-local authorship remains `user9527448 <2537759248@qq.com>`.
+- No evidence-backed run was recorded on 2026-08-31, 2026-09-01, or 2026-09-02. The qualified 2026-08-29/30 pair therefore cannot be completed retroactively and the consecutive sequence restarts on 2026-09-03.
+- The bounded read-only 2026-09-03 observation qualified as new day 1: all 5 source runs and all 9 attempted details succeeded, no detail failed, duplicate rate was 0%, and evidence-backed completeness was 80% (36/45). Firstjob returned a valid empty list; NCSS, Jiangsu, Shanghai public institutions, and China Mobile returned 1, 2, 3, and 3 details respectively.
+- The command retained the approved boundary: at most 3 details per source, concurrency 1, shared pacing/retries, public official endpoints only, JSON stdout, and no database/file/source-body persistence. Missing deadlines, organizations, and regions remained empty rather than guessed.
+- At the user's request, a second bounded observation was run on the same 2026-09-03 calendar day. It again passed all 5 source runs and 9/9 attempted details with zero failures, zero duplicates, and 80% evidence-backed completeness (36/45); source counts were unchanged at NCSS 1, Firstjob 0, Jiangsu 2, Shanghai public institutions 3, and China Mobile 3. It is recorded as supplementary repeatability evidence only and does not advance the sequence beyond day 1.
+- The 32 focused offline adapter, stability-metric, runtime, and catalog tests passed in 1.68 seconds after the paired observation records were updated; bilingual heading parity and `git diff --check` also passed.
+- Next qualified runs are required on 2026-09-04 and 2026-09-05. Any missing or failed calendar day restarts the sequence again; JAI-021 remains unmerged until the full sequence and final gate complete.
+
+### 2026-09-04 — JAI-021 qualified stability day 2
+
+- Resumed cleanly from pushed observation-record commit `816bee92d09d6f080e7e705e6ee75f5f2cc83ac5`; local HEAD and its tracking reference matched before the run, and no downstream-branch change entered this worktree.
+- The bounded read-only observation qualified: all 5 source runs and 9/9 attempted details succeeded, no detail failed, duplicate rate was 0%, and evidence-backed completeness was 80% (36/45). Firstjob returned a valid empty list; NCSS, Jiangsu, Shanghai public institutions, and China Mobile returned 1, 2, 3, and 3 details respectively.
+- The 32 focused offline adapter, stability-metric, runtime, and catalog tests passed in 1.67 seconds. Paired WORKLOG/stability-guide headings match and `git diff --check` passed.
+- The current consecutive sequence is now 2026-09-03 day 1 plus 2026-09-04 day 2. Run the identical bounded observation once on 2026-09-05; only a fully qualified result may close JAI-021 and start its final gate/merge work.
+
+### 2026-09-05 — JAI-021 stability observation failed
+
+- Resumed the clean JAI-021 worktree at `94a0f7fba0c6630ae0cbaa80cdca9599e573abeb`; local HEAD and its tracking reference matched before the run, and no downstream-branch change entered this worktree.
+- The bounded read-only observation did not qualify: 4/5 source runs completed because the China Mobile public announcement endpoint exhausted three retries with a retryable `crawler.http_retry_exhausted` / `PoolTimeout`. The other four sources completed; Firstjob returned a valid empty list, while NCSS, Jiangsu, and Shanghai public institutions produced 1, 2, and 3 details.
+- All 6 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 86.67% (26/30). The command retained the approved limit of three details per source, concurrency 1, public GET-only access, and no database, file, or source-body persistence.
+- This failed daily result interrupts the qualified 2026-09-03/04 pair. No second same-day run will be used to select a better outcome; the next qualified calendar-day observation restarts the sequence at day 1.
+- All repository Markdown relative links passed. Paired WORKLOG, stability-guide, and plan heading counts matched at 41/41, 7/7, and 45/45; both backlogs retained identical Issue-ID order, and `git diff --check` passed.
+- Created observation-record commit `8e5fbecac1a95d32d5ba79af84e88aaeb79fd7ba` with repository-local author `user9527448 <2537759248@qq.com>`. Its first normal HTTPS push failed because direct access to GitHub port 443 timed out after about 21 seconds; the unchanged push then succeeded through the previously verified command-local proxy `127.0.0.1:7892`, without changing `origin` or persistent Git configuration. Local HEAD, the tracking reference, and GitHub `ls-remote` matched that commit before this network-status update.
+
+### 2026-09-05 — JAI-021 Day 3 waiver and merge-train authorization
+
+- The user explicitly determined that the isolated China Mobile timeout was probably a link or external network-path anomaly rather than a crawler defect and accepted the recorded 2026-09-05 run as Day 3. The source remains monitored; this decision does not change the actual 4/5 source success, three exhausted retries, or error classification.
+- JAI-021 acceptance is therefore complete by a documented product-owner exception across the 2026-09-03 through 2026-09-05 records. The user authorized the safe merge train in the established order JAI-021 → JAI-022 → JAI-023 → JAI-024.
+- Before each merge, synchronize the latest `develop` into that feature branch with an ordinary merge, preserve both bilingual WORKLOG histories, resolve paired-document conflicts consistently, and rerun the complete proportional gate. Do not rebase, force push, rewrite published commits, or change authorship.
+- The final PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 173 files, Ruff lint passed, Mypy passed across 112 source files, all 246 tests passed with no skips, and coverage was 87.45%.
+
+### 2026-09-05 — JAI-022 synchronized after JAI-021 merge
+
+- JAI-021 was merged into `develop` with non-fast-forward commit `8cc0b2eb37b5ec7e2c560ce35b687a687da47b43`; its post-merge PostgreSQL-enabled full gate passed with 246 tests, no skips, and 87.45% coverage. Local `develop`, `origin/develop`, and GitHub `ls-remote` matched before this synchronization.
+- Normally merged the latest `develop` into JAI-022. Code merged without conflict; the expected conflicts were limited to paired plans, backlogs, indexes, and WORKLOG files. Resolution preserves both Issue histories, the actual JAI-021 Day 3 metrics/waiver, and the complete JAI-022 implementation record.
+- Bilingual heading parity, backlog Issue-ID order, Markdown relative links, and `git diff --check` passed. The PostgreSQL-enabled combined `scripts/check.py` passed: Ruff format checked 183 files, Ruff lint passed, Mypy passed across 119 source files, all 254 tests passed with no skips, and coverage was 87.57%.
+- Next: commit and normally push the synchronization before merging JAI-022 into `develop`.
+
+### 2026-09-05 — JAI-023 synchronized after JAI-022 merge
+
+- JAI-022 was merged into `develop` with non-fast-forward commit `e7948c9225fba32e499786cc8400cf0dd975e4ca`; its post-merge PostgreSQL-enabled full gate passed with 254 tests, no skips, and 87.57% coverage. Local `develop`, `origin/develop`, and GitHub `ls-remote` matched before this synchronization.
+- Normally merged the latest `develop` into JAI-023. Code and migrations merged without conflict; expected conflicts were limited to paired plans, backlogs, indexes, and WORKLOG files. Resolution preserves all JAI-021, JAI-022, and JAI-023 histories and the Day 3 waiver's actual metrics.
+- Bilingual heading parity, backlog Issue-ID order, Markdown relative links, and `git diff --check` passed. The PostgreSQL-enabled combined `scripts/check.py` passed: Ruff format checked 193 files, Ruff lint passed, Mypy passed across 126 source files, all 271 tests passed with no skips, and coverage was 87.86%.
+- Next: commit and normally push before merging JAI-023 into `develop`.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -330,10 +454,9 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 
 ## 5. Next actions
 
-1. Complete JAI-021 Day 3 no earlier than 2026-08-31 and merge JAI-021 first.
-2. Then normally merge updated `develop` into JAI-022, preserve both logs, rerun the complete gate, and integrate JAI-022.
-3. JAI-023 implementation is complete and normally pushed on its independent branch; after JAI-022 merges, normally merge the newly updated `develop` into JAI-023 and rerun the full gate before integration.
-4. Keep JAI-024 reports/notifications, OCR JAI-B01, and JAI-048 legacy migration outside JAI-023.
+1. Complete the JAI-023 synchronization checks, normally push the feature branch, and merge it into `develop` after the full gate passes.
+2. Continue the authorized merge train through JAI-024 with the same ordinary-merge, bilingual-history, full-gate, and three-way-verification rules.
+3. Keep OCR deferred to JAI-B01, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
 

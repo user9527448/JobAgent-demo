@@ -1,5 +1,5 @@
-catalog_version = 1
-updated_on = "2026-08-11"
+catalog_version = 3
+updated_on = "2026-08-27"
 
 # 手工维护说明见 docs/SOURCE_CATALOG.md。planned 来源不得 enabled = true。
 
@@ -12,12 +12,12 @@ regions = ["national"]
 base_url = "https://www.sasac.gov.cn/"
 list_url = "https://www.sasac.gov.cn/n2588035/n2588325/n2588350/index.html"
 adapter = "sasac_recruitment"
-implementation_status = "active"
-enabled = true
+implementation_status = "blocked"
+enabled = false
 crawl_interval_minutes = 360
 include_keywords = ["招聘", "校园招聘", "应届毕业生"]
 exclude_keywords = ["公示", "结果公告"]
-notes = "JAI-011 首个 Adapter；仅访问公开列表与公开详情。"
+notes = "JAI-011 首个 Adapter；连续两日公网/TLS 不可达，JAI-021 已按 W6 稳定性闸门停用并由中国移动公开招聘公告替换。"
 
 [[sources]]
 key = "ncss-jobs"
@@ -26,14 +26,14 @@ official_owner = "教育部学生服务与素质发展中心"
 category = "campus"
 regions = ["national"]
 base_url = "https://www.ncss.cn/"
-list_url = "https://www.ncss.cn/student/jobs/index.html"
+list_url = "https://www.ncss.cn/student/jobs/jobslist/ajax/"
 adapter = "ncss_jobs"
-implementation_status = "planned"
-enabled = false
+implementation_status = "active"
+enabled = true
 crawl_interval_minutes = 360
 include_keywords = ["校招", "校园招聘", "应届", "毕业生"]
 exclude_keywords = ["实习"]
-notes = "候选来源；先验证公开列表是否可在无登录状态稳定获取。"
+notes = "JAI-021 来源 4；只读页面自身公开 GET 列表接口与公开详情，不访问登录、收藏或投递功能。"
 
 [[sources]]
 key = "shanghai-firstjob"
@@ -106,14 +106,14 @@ official_owner = "上海市人力资源和社会保障局"
 category = "public_exam"
 regions = ["shanghai"]
 base_url = "https://rsj.sh.gov.cn/"
-list_url = "https://rsj.sh.gov.cn/tgsgg_17341/"
+list_url = "https://rsj.sh.gov.cn/tsydwgkzp_17406/index.html"
 adapter = "shanghai_public_institution"
-implementation_status = "planned"
-enabled = false
+implementation_status = "active"
+enabled = true
 crawl_interval_minutes = 180
-include_keywords = ["事业单位", "公开招聘", "报名", "考试"]
+include_keywords = ["事业单位", "公开招聘", "招聘公告", "报名", "考试"]
 exclude_keywords = ["拟聘", "录用公示"]
-notes = "候选事业单位来源；跟踪公开招聘公告和考试时间。"
+notes = "JAI-021 来源 5；只读事业单位专栏中的招聘公告路径，不进入报名系统，并排除拟聘公示。"
 
 [[sources]]
 key = "state-grid-recruitment"
@@ -138,14 +138,14 @@ official_owner = "中国移动通信集团有限公司"
 category = "state_owned"
 regions = ["national", "jiangsu", "zhejiang", "shanghai"]
 base_url = "https://job.10086.cn/"
-list_url = "https://job.10086.cn/"
+list_url = "https://job.10086.cn/personal/notice/"
 adapter = "china_mobile_recruitment"
-implementation_status = "planned"
-enabled = false
+implementation_status = "active"
+enabled = true
 crawl_interval_minutes = 360
-include_keywords = ["校园招聘", "应届毕业生", "春季招聘", "秋季招聘"]
-exclude_keywords = ["实习"]
-notes = "候选央企来源；只采集无需登录的公告。"
+include_keywords = ["招聘", "校招", "应届毕业生"]
+exclude_keywords = ["升级公告", "维护公告", "实习"]
+notes = "JAI-021 稳定性替代来源；只读公告页自身声明的同源静态 JSON 与公开详情，不访问注册、登录、简历或投递功能。"
 
 [[sources]]
 key = "china-telecom-recruitment"
