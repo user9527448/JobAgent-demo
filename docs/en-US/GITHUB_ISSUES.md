@@ -287,12 +287,13 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:matching` `area:api` `priority:P0` `size:M`
 - **Dependencies**: JAI-006
+- **Status**: implementation, paired documentation, and the PostgreSQL-enabled full gate completed on 2026-08-30; dedicated branch `feature/jai-022-single-user-preferences` awaits JAI-021 integration first, then synchronization from updated `develop` before integration.
 - **Goal**: store structured filters and preferences.
 - **Scope**: region, education, major, keywords, organization type, exclusions, read/update API.
 - **Acceptance**:
-  - [ ] Schema and enum validation protects input.
-  - [ ] Changes record update time and can trigger recomputation.
-  - [ ] Defaults do not accidentally filter every job.
+  - [x] Schema and enum validation protects input.
+  - [x] Changes record update time and can trigger recomputation.
+  - [x] Defaults do not accidentally filter every job.
 
 ### JAI-023 Implement hard filters and versioned rule scoring
 
@@ -627,4 +628,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-Complete JAI-047 bilingual migration baseline → JAI-012 run/retry capability → implement JAI-013–JAI-021 in order. On 2026-08-29 the user explicitly approved one bounded WIP exception: while JAI-021 is in calendar-day acceptance observation only, JAI-022 may proceed independently from `develop`. JAI-021 must complete and merge first; then normally merge the latest `develop` into JAI-022, preserve both logs, and rerun the full gate, never using rebase or history rewriting to avoid conflicts. The minimum China Mobile public-announcement scope from JAI-041 was pulled into JAI-021 early because SASAC was blocked and must not be implemented twice → remediate the JAI-021 live completeness gap under JAI-049 before the MVP release gate → execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable. Execute JAI-048 as an independent documentation Issue before the next substantive change to any listed legacy document; never mix it into feature branches. Except for the explicitly approved JAI-021 observation lane, the personal WIP limit remains one primary feature plus one small test/docs Issue. If a dynamic portal cannot satisfy public-access and terms boundaries, record `blocked` and continue; never force coverage with login, CAPTCHA, Playwright, or evasion.
+JAI-021 has completed under the user's explicitly recorded Day 3 external-endpoint waiver and merged into `develop` first. The authorized safe merge train now proceeds through JAI-022 → JAI-023 → JAI-024: normally merge the latest `develop` into each feature branch, preserve both bilingual logs, rerun the PostgreSQL-enabled full gate, and only then create a non-fast-forward `develop` merge. Never rebase, force push, or rewrite history. The minimum China Mobile public-announcement scope from JAI-041 was absorbed into JAI-021 and must not be duplicated; JAI-049 tracks the live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.

@@ -8,7 +8,7 @@
 >
 > 最后更新：2026-09-05
 >
-> 当前分支：`feature/jai-021-sources-four-five-stability`
+> 当前分支：`feature/jai-022-single-user-preferences`
 
 ## 1. 当前状态
 
@@ -29,7 +29,8 @@
 | JAI-018 | 已完成、合并并推送到 `develop` | `develop` / `c013544` | 可替换 provider、严格结构化输出、Prompt 版本、受限重试、用量/成本记录和单日预算排队已验证 |
 | JAI-019 | 已完成、合并并推送到 `develop` | `develop` / `82797d1` | 确定性正文/附件优先级、显式冲突、抽取版本与持久字段证据已验证 |
 | JAI-020 | 已完成、合并并推送到 `develop` | `develop` / `f56365f` | 校验严重度、复核/推荐资格和指定文档幂等重解析已验证 |
-| JAI-021 | 已完成，最终门禁通过，等待推送/合并 | `feature/jai-021-sources-four-five-stability` | 2026-09-05 实际结果仍为 4/5 并适用明确的外部入口豁免；PostgreSQL 启用的完整门禁通过 |
+| JAI-021 | 已完成、合并并推送到 `develop` | `develop` / `8cc0b2e` | Day 3 按已记录的外部入口豁免接受；实际 4/5 结果保留；合并后 PostgreSQL 门禁通过 |
+| JAI-022 | 已完成，同步后完整门禁通过，等待推送/合并 | `feature/jai-022-single-user-preferences` / `44ed502` | 已保留 JAI-021/JAI-022 双方历史；PostgreSQL 启用的组合门禁通过 |
 
 ## 2. 当前决策
 
@@ -264,6 +265,26 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 所有文档和防御性测试完成后，最终启用 PostgreSQL 的 `scripts/check.py` 通过：Ruff format 检查 154 个文件，Ruff lint 通过，102 个源文件的 Mypy 通过，216 项测试全部通过、无跳过，覆盖率为 88.07%。
 - 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `67120101ea0c926f327b781a6e69c05350d41df7`，并普通推送新 feature 分支。在本次最终状态更新之前，本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为该提交；GitHub `develop` 仍为 `82797d1fa91b1f5e77296d04e3138a9fabe7b499`。
 
+### 2026-08-29 — JAI-022 单用户偏好并行启动
+
+- 已确认 JAI-020 完成合并：本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 均为非快进合并 `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`，其第二父提交是 JAI-020 feature 末端 `9c86cad8eb621b20fa70e1e6a07a377f929608a3`。
+- 用户明确批准 JAI-021 只剩自然日观测期间的一次有边界 WIP 例外。已直接从三端核验一致的 `develop` 创建 `feature/jai-022-single-user-preferences`；其 `git log` 祖先不包含任何未合并的 JAI-021 提交。
+- 合并边界固定：JAI-021 只在自己的分支继续并必须先完成/合并；随后把最新 `develop` 普通合并到 JAI-022，保留两份双语 WORKLOG 历史，显式处理文档冲突并重跑启用 PostgreSQL 的完整门禁。绝不 rebase 或改写已发布历史。
+- JAI-022 只实现一个结构化用户偏好模型和读取/更新 API，覆盖地区、学历、专业、岗位关键词、单位类型和排除词；必须具备输入校验、更新时间、重算信号和不会过滤全部岗位的默认值。JAI-023 评分/过滤保持在范围外。
+- 下一步：检查现有模型、迁移、API 约定和测试，在实施前定义最小偏好契约与持久化边界。
+
+### 2026-08-30 — JAI-022 实现与功能分支验收完成
+
+- 新增迁移 `0006_single_user_preferences` 和固定 `id=1` 的 ORM 单例。迁移插入不会筛空的默认值：地区/专业/关键词/单位类型/排除词均为空数组，`education=null`，且没有待处理重算。数据库约束会校验 JSON 数组形状和学历值。
+- 新增 `GET /preferences` 和全量替换 `PUT /preferences`。地区和学历复用确定性抽取枚举；单位类型有意使用独立的 `government`/`public_institution`/`state_owned`/`private`/`foreign_enterprise` 词表，避免把来源分类误作单位属性。文本会进行 NFKC/空白规范化，并按稳定顺序去重。
+- 更新会锁定单例行并保存 `updated_at`。`trigger_recompute=true` 会设置粘性的待处理标志和请求时间；延迟重算的更新不能抹除已有请求。信号消费、硬过滤、评分与实际重算属于 JAI-023，本分支没有提前实现。
+- 新增 API/模型/迁移/仓库/枚举对齐测试，并同步偏好、数据库、索引、计划、Backlog 和日志双语文档。首次定向仓库测试仅因新 Windows 测试使用默认 Proactor 事件循环而失败，psycopg async 不支持该循环；改为仓库既有的 `asyncio.SelectorEventLoop` 后，3 项定向 PostgreSQL 测试全部通过。首次枚举测试 Mypy/完整门禁还暴露了重复的裸模块名 `test_contracts`；将其改名为 `test_preference_contracts` 后修复包发现，不改变断言。
+- 已启动 Docker Desktop 和既有 `db` 服务，未重建容器或删除数据卷；确认现有隔离库 `jobagent_test`。最终 `scripts/check.py` 通过：Ruff format 检查 164 个文件，Ruff lint 通过，109 个源文件的 Mypy 通过，224 项测试全部通过、无跳过，覆盖率 88.18%。
+- 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建功能提交 `38cca14`。两次普通推送均未更新远端：首次连接被重置，第二次在 GitHub 443 端口超时；只读 `ls-remote` 同样超时。DNS 仍将 `github.com` 解析为 `20.205.243.166`，Git 未配置代理，但直接 TCP 443 探测失败。本地提交和分支保持完整，没有使用 force/rebase。
+- 2026-08-30 01:27 +08:00 继续重试时，GitHub 443 仍然超时。只读诊断确认没有 `HTTP_PROXY`/`HTTPS_PROXY` 环境设置，WinHTTP 采用直接连接，Windows 用户代理已禁用，常见本地代理端口也没有监听。当前日期仍属于 JAI-021 合格 Day 2；2026-08-31 之前不能如实执行 Day 3。
+- 后续普通推送已经成功。本地 HEAD、跟踪引用和 GitHub `ls-remote` 均为 `e8e29610bfe3d84051b75defa83adcb8c72a9ad3`；GitHub `develop` 保持 `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`，没有被改动。
+- 下一步：JAI-021 完成并先合并后，把更新后的 `develop` 普通合并到本分支，保留两份双语日志、处理配对文档冲突、重跑 PostgreSQL 完整门禁，之后才合并 JAI-022。
+
 ### 2026-08-26 — JAI-021 来源 4、5 与三日稳定性验证启动
 
 - 已重新核验干净的 JAI-020 feature 分支为 `9c86cad8eb621b20fa70e1e6a07a377f929608a3`；本地 HEAD、跟踪引用与 GitHub 引用一致，仓库本地作者仍为 `user9527448 <2537759248@qq.com>`。
@@ -374,6 +395,13 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 每次合并前使用普通 merge 将最新 `develop` 同步进对应 feature 分支，保留双方双语 WORKLOG 历史，一致处理配对文档冲突，并重新运行完整且相称的门禁。禁止 rebase、force push、改写已发布提交或更改作者。
 - PostgreSQL 启用的最终 `scripts/check.py` 通过：Ruff format 检查 173 个文件，Ruff lint 通过，Mypy 检查 112 个源文件通过，246 项测试全部通过且无跳过，覆盖率为 87.45%。
 
+### 2026-09-05 — JAI-021 合并后同步 JAI-022
+
+- JAI-021 已通过非快进提交 `8cc0b2eb37b5ec7e2c560ce35b687a687da47b43` 合入 `develop`；合并后启用 PostgreSQL 的完整门禁以 246 项测试、无跳过和 87.45% 覆盖率通过。同步前本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 一致。
+- 已将最新 `develop` 普通合并进 JAI-022。代码无冲突；预期冲突仅限配对计划、Backlog、索引和 WORKLOG。解决结果保留双方 Issue 历史、JAI-021 Day 3 的实际指标/豁免以及完整 JAI-022 实现记录。
+- 双语标题一致性、Backlog Issue 编号顺序、Markdown 相对链接和 `git diff --check` 均通过。启用 PostgreSQL 的组合 `scripts/check.py` 通过：Ruff format 检查 183 个文件，Ruff lint 通过，Mypy 检查 119 个源文件通过，254 项测试全部通过且无跳过，覆盖率 87.57%。
+- 下一步：提交并普通推送同步结果，再将 JAI-022 合入 `develop`。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -386,9 +414,9 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 运行 JAI-021 完整门禁，普通推送验收更新，并在核验后将 JAI-021 合并到 `develop`。
-2. 按顺序继续已授权的合并火车：依次将 `develop` 普通同步进 JAI-022、JAI-023、JAI-024，保留双语历史，并在每次合入 `develop` 前重新运行完整门禁。
-3. OCR 继续延期至 JAI-B01；全部 JAI-022/JAI-023 实施保持在本分支范围外；JAI-049 在 MVP 发布闸门前处理；JAI-048 继续使用独立文档 Issue。
+1. 完成 JAI-022 同步检查，普通推送 feature 分支，并在完整门禁通过后合入 `develop`。
+2. 按相同的普通合并、双语历史、完整门禁和三方核验规则，继续已授权的 JAI-023、JAI-024 合并火车。
+3. OCR 继续延期至 JAI-B01；JAI-049 在 MVP 发布闸门前处理；JAI-048 保持独立文档 Issue。
 
 ## 6. 更新模板
 

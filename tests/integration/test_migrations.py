@@ -14,7 +14,7 @@ from sqlalchemy.engine import URL, Engine, make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from jobagent.db.models import RawDocument, Source
+from jobagent.db.models import RawDocument, Source, UserPreference
 
 pytestmark = pytest.mark.integration
 
@@ -27,6 +27,7 @@ CORE_TABLES = {
     "job_posts",
     "raw_documents",
     "sources",
+    "user_preferences",
     "validation_issues",
 }
 
@@ -181,6 +182,29 @@ def _reset_test_schema(engine: Engine) -> None:
 
 
 def _verify_persistence_invariants(engine: Engine) -> None:
+    with Session(engine) as session:
+        preferences = session.get(UserPreference, 1)
+        assert preferences is not None
+        assert preferences.regions == []
+        assert preferences.education is None
+        assert preferences.majors == []
+        assert preferences.job_keywords == []
+        assert preferences.organization_types == []
+        assert preferences.exclusions == []
+        assert preferences.recompute_required is False
+        assert preferences.recompute_requested_at is None
+
+    with Session(engine) as session:
+        session.add(UserPreference(id=2))
+        with pytest.raises(IntegrityError):
+            session.commit()
+
+    with pytest.raises(IntegrityError), engine.begin() as connection:
+        connection.execute(text("UPDATE user_preferences SET education = 'unknown' WHERE id = 1"))
+
+    with pytest.raises(IntegrityError), engine.begin() as connection:
+        connection.execute(text("UPDATE user_preferences SET regions = '{}'::jsonb WHERE id = 1"))
+
     source = Source(
         name="JAI-006 integration source",
         base_url="https://example.invalid",

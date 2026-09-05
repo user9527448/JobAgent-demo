@@ -8,7 +8,7 @@
 >
 > Last updated: 2026-09-05
 >
-> Active branch: `feature/jai-021-sources-four-five-stability`
+> Active branch: `feature/jai-022-single-user-preferences`
 
 ## 1. Current status
 
@@ -29,7 +29,8 @@
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
-| JAI-021 | Complete; final gate passed, pending push/merge | `feature/jai-021-sources-four-five-stability` | Actual 2026-09-05 result remains 4/5 under the explicit external-endpoint waiver; PostgreSQL-enabled full gate passed |
+| JAI-021 | Complete, merged and pushed to `develop` | `develop` / `8cc0b2e` | Day 3 accepted under the recorded external-endpoint waiver; actual 4/5 result retained; post-merge PostgreSQL gate passed |
+| JAI-022 | Complete; synchronized full gate passed, pending push/merge | `feature/jai-022-single-user-preferences` / `44ed502` | JAI-021/JAI-022 histories preserved; PostgreSQL-enabled combined gate passed |
 
 ## 2. Current decisions
 
@@ -264,6 +265,26 @@ The same document/extraction version may be repeated only when its merged result
 - The final PostgreSQL-enabled `scripts/check.py` passed after all documentation and defensive tests: Ruff format checked 154 files, Ruff lint passed, Mypy passed across 102 source files, all 216 tests passed with no skips, and coverage was 88.07%.
 - Created feature commit `67120101ea0c926f327b781a6e69c05350d41df7` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the new feature branch. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched that commit before this final status-only update; GitHub `develop` remained at `82797d1fa91b1f5e77296d04e3138a9fabe7b499`.
 
+### 2026-08-29 — JAI-022 single-user preferences started in parallel
+
+- Verified JAI-020 is merged: local `develop`, `origin/develop`, and GitHub `ls-remote` all matched non-fast-forward merge `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`, whose second parent is JAI-020 feature tip `9c86cad8eb621b20fa70e1e6a07a377f929608a3`.
+- The user explicitly approved one bounded WIP exception while JAI-021 waits only for calendar-day observations. Created `feature/jai-022-single-user-preferences` directly from verified `develop`; `git log` ancestry therefore contains no unmerged JAI-021 commit.
+- Merge boundary is fixed: JAI-021 continues only on its own branch and must complete/merge first. Then normally merge the latest `develop` into JAI-022, preserve both bilingual WORKLOG histories, resolve any documentation conflict explicitly, and rerun the complete PostgreSQL-enabled gate. Never rebase or rewrite published history.
+- JAI-022 scope remains limited to one structured user preference model and read/update API for regions, education, majors, job keywords, organization types, and exclusions; validation, update timestamps, recalculation signaling, and a non-filtering default are required. JAI-023 scoring/filtering remains out of scope.
+- Next action: inspect existing models, migrations, API conventions, and tests; define the smallest preference contract and persistence boundary before implementation.
+
+### 2026-08-30 — JAI-022 implementation and feature-branch acceptance completed
+
+- Added migration `0006_single_user_preferences` and an ORM singleton constrained to `id=1`. The migration inserts a non-filtering default: empty region/major/keyword/organization/exclusion arrays, `education=null`, and no pending recomputation. JSON array shape and education values are database-constrained.
+- Added `GET /preferences` and full-replacement `PUT /preferences`. Region and education values reuse deterministic extraction enums; organization type intentionally uses the separate `government`/`public_institution`/`state_owned`/`private`/`foreign_enterprise` vocabulary rather than confusing source category with employer type. Text is NFKC/whitespace normalized and deduplicated in stable order.
+- Updates lock the singleton row and store `updated_at`. `trigger_recompute=true` sets a sticky pending flag and request timestamp; a deferred update cannot erase an existing request. JAI-023 owns signal consumption, hard filtering, scoring, and recomputation execution and remains unimplemented here.
+- Added API/model/migration/repository/enum-alignment tests and paired preference/database/index/plan/backlog/log documentation. The first focused repository run failed only because the new Windows test used the default Proactor event loop, which psycopg async rejects; it was corrected to the repository-standard `asyncio.SelectorEventLoop`, after which all three focused PostgreSQL tests passed. The first enum-test Mypy/full-gate attempt exposed the duplicate bare module name `test_contracts`; renaming it to `test_preference_contracts` fixed package discovery without changing assertions.
+- Docker Desktop and the existing `db` service were started without rebuilding or deleting volumes; the existing isolated `jobagent_test` database was confirmed. Final `scripts/check.py` passed: Ruff format checked 164 files, Ruff lint passed, Mypy passed across 109 source files, all 224 tests passed with no skips, and coverage was 88.18%.
+- Created feature commit `38cca14` with repository-local author `user9527448 <2537759248@qq.com>`. Two normal push attempts failed without updating the remote: the first connection was reset and the second timed out on GitHub port 443. A read-only `ls-remote` timed out as well; DNS still resolved `github.com` to `20.205.243.166`, no Git proxy was configured, and a direct TCP 443 probe failed. The local commit and branch remain intact and no force/rebase action was used.
+- A continuation retry at 2026-08-30 01:27 +08:00 also timed out on GitHub 443. Read-only diagnostics found no `HTTP_PROXY`/`HTTPS_PROXY` environment setting, WinHTTP uses direct access, Windows user proxy is disabled, and no common local proxy port was listening. The current date is still JAI-021 qualified Day 2; Day 3 cannot truthfully run before 2026-08-31.
+- The later normal push succeeded. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched `e8e29610bfe3d84051b75defa83adcb8c72a9ad3`; GitHub `develop` remained unchanged at `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`.
+- Next action: after JAI-021 completes and merges first, normally merge updated `develop` into this branch, preserve both bilingual logs, resolve paired-document conflicts, rerun the full PostgreSQL gate, and only then merge JAI-022.
+
 ### 2026-08-26 — JAI-021 sources 4–5 and three-day stability started
 
 - Reverified the clean JAI-020 feature branch at `9c86cad8eb621b20fa70e1e6a07a377f929608a3`; its local HEAD, tracking reference, and GitHub reference matched, and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
@@ -374,6 +395,13 @@ The same document/extraction version may be repeated only when its merged result
 - Before each merge, synchronize the latest `develop` into that feature branch with an ordinary merge, preserve both bilingual WORKLOG histories, resolve paired-document conflicts consistently, and rerun the complete proportional gate. Do not rebase, force push, rewrite published commits, or change authorship.
 - The final PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 173 files, Ruff lint passed, Mypy passed across 112 source files, all 246 tests passed with no skips, and coverage was 87.45%.
 
+### 2026-09-05 — JAI-022 synchronized after JAI-021 merge
+
+- JAI-021 was merged into `develop` with non-fast-forward commit `8cc0b2eb37b5ec7e2c560ce35b687a687da47b43`; its post-merge PostgreSQL-enabled full gate passed with 246 tests, no skips, and 87.45% coverage. Local `develop`, `origin/develop`, and GitHub `ls-remote` matched before this synchronization.
+- Normally merged the latest `develop` into JAI-022. Code merged without conflict; the expected conflicts were limited to paired plans, backlogs, indexes, and WORKLOG files. Resolution preserves both Issue histories, the actual JAI-021 Day 3 metrics/waiver, and the complete JAI-022 implementation record.
+- Bilingual heading parity, backlog Issue-ID order, Markdown relative links, and `git diff --check` passed. The PostgreSQL-enabled combined `scripts/check.py` passed: Ruff format checked 183 files, Ruff lint passed, Mypy passed across 119 source files, all 254 tests passed with no skips, and coverage was 87.57%.
+- Next: commit and normally push the synchronization before merging JAI-022 into `develop`.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -386,9 +414,9 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Run the complete JAI-021 gate, normally push the acceptance update, and merge JAI-021 into `develop` after verification.
-2. Continue the authorized merge train in order by normally synchronizing `develop` into JAI-022, JAI-023, and JAI-024, preserving bilingual histories and rerunning each complete gate before its `develop` merge.
-3. Keep OCR deferred to JAI-B01, all JAI-022/JAI-023 implementation outside this branch, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
+1. Complete the JAI-022 synchronization checks, normally push the feature branch, and merge it into `develop` after the full gate passes.
+2. Continue the authorized merge train through JAI-023 and JAI-024 with the same ordinary-merge, bilingual-history, full-gate, and three-way-verification rules.
+3. Keep OCR deferred to JAI-B01, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
 

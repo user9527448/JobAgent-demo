@@ -22,6 +22,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | Replaceable LLM extraction service | [English](../LLM_EXTRACTION.md) | [中文](../zh-CN/LLM_EXTRACTION.md) |
 | Extraction merging and field evidence | [English](../MERGING_AND_EVIDENCE.md) | [中文](../zh-CN/MERGING_AND_EVIDENCE.md) |
 | Validation, review, and reparsing | [English](../VALIDATION_AND_REPARSING.md) | [中文](../zh-CN/VALIDATION_AND_REPARSING.md) |
+| Single-user preferences | [English](../PREFERENCES.md) | [中文](../zh-CN/PREFERENCES.md) |
 | Sources 4-5 and stability verification | [English](../SOURCE_STABILITY.md) | [中文](../zh-CN/SOURCE_STABILITY.md) |
 | Recruitment source catalog | [English](SOURCE_CATALOG.md) | [中文](../SOURCE_CATALOG.md) |
 | JAI-005 Jining source Spike | [English](../spikes/JAI-005-JINING-SOURCE.md) | [中文](../zh-CN/spikes/JAI-005-JINING-SOURCE.md) |
