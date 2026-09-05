@@ -80,11 +80,13 @@ JAI-012 命令同步执行：运行到达终态后返回，并输出包含 run I
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/manage_crawl.py run --source-id 7
+.\.venv\Scripts\python.exe scripts/manage_crawl.py run --source-id 7 --limit 10
 .\.venv\Scripts\python.exe scripts/manage_crawl.py show --run-id 101
 .\.venv\Scripts\python.exe scripts/manage_crawl.py retry --run-id 101
 ```
 
 - `run` 只接受数据库中已启用、与一个可运行网站库条目精确匹配、且已有显式运行时接线的来源。命令发现公开条目、抓取详情，并通过幂等原始公告仓储保存每个成功详情。
+- `run --limit N` 不改变发现过程，但只按来源稳定顺序抓取并持久化前 `N` 条。运行同时记录入选的 `discovered` 与来源 `discovered_total`；可选上限必须为正数，且绝不截断失败条目重试。
 - `show` 不访问来源网站，只读取一条持久化的 `crawl_runs` 摘要，并在完整 `stats` 之外单独展示结构化 `failures` 列表。
 - `retry` 要求原运行已经结束且存在失败条目 URL。它重新执行公开列表发现以恢复来源元数据，再把结果过滤为原失败 URL 后才抓取详情；原运行中的成功 URL 不会再次抓取。
 - 重跑命令不接受任意 URL。原失败 URL 若不再能从公开列表发现，会记录为 `crawler.retry_item_not_discovered`，不会直接访问该 URL。

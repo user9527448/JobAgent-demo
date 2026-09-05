@@ -257,6 +257,51 @@ def test_persistence_counts_created_updated_and_skipped_documents() -> None:
     }
 
 
+def test_detail_limit_selects_a_stable_prefix_and_records_total() -> None:
+    adapter = FakeAdapter()
+    repository = FakeRepository(_source())
+
+    result = asyncio.run(_orchestrator(adapter, repository).run(7, detail_limit=2))
+
+    assert adapter.fetched_urls == [
+        "https://example.invalid/1",
+        "https://example.invalid/2",
+    ]
+    assert result.stats["detail_limit"] == 2
+    assert result.stats["discovered"] == 2
+    assert result.stats["discovered_total"] == 3
+    assert result.stats["steps"] == {
+        "discover": {"status": "succeeded", "count": 2, "total": 3},
+        "fetch_detail": {"status": "succeeded", "succeeded": 2, "failed": 0},
+        "persist": {"status": "skipped"},
+    }
+
+
+@pytest.mark.parametrize("detail_limit", [0, -1])
+def test_detail_limit_must_be_positive(detail_limit: int) -> None:
+    repository = FakeRepository(_source())
+
+    with pytest.raises(ValueError, match="positive"):
+        asyncio.run(_orchestrator(FakeAdapter(), repository).run(7, detail_limit=detail_limit))
+
+    assert repository.started == 0
+
+
+def test_detail_limit_cannot_truncate_retry_urls() -> None:
+    repository = FakeRepository(_source())
+
+    with pytest.raises(ValueError, match="cannot truncate"):
+        asyncio.run(
+            _orchestrator(FakeAdapter(), repository).run(
+                7,
+                detail_limit=1,
+                retry_urls=["https://example.invalid/1"],
+            )
+        )
+
+    assert repository.started == 0
+
+
 def test_persistence_failure_is_isolated_and_safe() -> None:
     adapter = FakeAdapter()
     repository = FakeRepository(_source())

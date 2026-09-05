@@ -24,6 +24,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | Validation, review, and reparsing | [English](../VALIDATION_AND_REPARSING.md) | [中文](../zh-CN/VALIDATION_AND_REPARSING.md) |
 | Single-user preferences | [English](../PREFERENCES.md) | [中文](../zh-CN/PREFERENCES.md) |
 | Deterministic matching and versioned scoring | [English](../MATCHING.md) | [中文](../zh-CN/MATCHING.md) |
+| Top 20 matching-quality review | [English](../MATCHING_QUALITY.md) | [中文](../zh-CN/MATCHING_QUALITY.md) |
 | Daily report queries, rendering, and snapshots | [English](../REPORTS.md) | [中文](../zh-CN/REPORTS.md) |
 | Sources 4-5 and stability verification | [English](../SOURCE_STABILITY.md) | [中文](../zh-CN/SOURCE_STABILITY.md) |
 | Recruitment source catalog | [English](SOURCE_CATALOG.md) | [中文](../SOURCE_CATALOG.md) |
@@ -34,6 +35,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | JAI-021 NCSS fixtures | [English](../../tests/fixtures/ncss/README.md) | [中文](../zh-CN/fixtures/NCSS.md) |
 | JAI-021 Shanghai RSJ fixtures | [English](../../tests/fixtures/shanghai_rsj/README.md) | [中文](../zh-CN/fixtures/SHANGHAI_RSJ.md) |
 | JAI-021 China Mobile replacement fixtures | [English](../../tests/fixtures/china_mobile/README.md) | [中文](../zh-CN/fixtures/CHINA_MOBILE.md) |
+| JAI-025 matching-quality review fixture | [English](../../tests/fixtures/matching_quality/README.md) | [中文](../zh-CN/fixtures/MATCHING_QUALITY.md) |
 
 ## Historical archive
 

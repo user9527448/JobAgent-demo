@@ -443,6 +443,6 @@ Issue 开始前必须具备：目标、范围、验收标准、依赖、测试�
 
 ## 13. 当前下一步
 
-JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-023 已依次合并并普通推送到 `develop`，当前基线为 JAI-023 非快进合并 `5935b5206a933e8a14cb80b0421ed90f1a0e336c`。JAI-021 Day 3 的中国移动 `PoolTimeout` 实际 4/5 指标和用户豁免记录完整保留；JAI-049 继续在 MVP 发布闸门前跟踪有证据完整率和来源风险。
+JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-024 已依次合并并普通推送到 `develop`，当前基线为 JAI-024 非快进合并 `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`。JAI-021 Day 3 的中国移动 `PoolTimeout` 实际 4/5 指标和用户豁免记录完整保留；JAI-049 继续在 MVP 发布闸门前跟踪有证据完整率和来源风险。
 
-JAI-024 的确定性四组日报、Markdown/HTML 渲染、不可变快照、原文链接、API、迁移、测试与双语文档已完成。最新 `develop` 正普通同步进 `feature/jai-024-daily-report-rendering`；必须保留 JAI-021 至 JAI-024 的双语 WORKLOG 历史并重新通过 PostgreSQL 完整门禁，之后才可合入 `develop`。JAI-025 调权、JAI-026 调度和 JAI-027 通知仍保持范围外；禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。
+当前在独立分支 `feature/jai-025-top-20-quality-review` 完成 JAI-025。项目负责人已批准“先闭合可执行流程、再优化质量样本量”的调整及 G5 安全合并：60 条明确标记为合成的拟议标注完成 `jai-023-v1` 与 `jai-025-v2` 对比；另以 3 个来源、9 条真实公告打通采集、确定性抽取/校验、v1 基线匹配和不可变日报快照，并验证幂等复用。至少 50 条真实人工标注、采集后附件自动入链、Firstjob 空发现和中国移动连接延期到 JAI-049，且不得被描述为已经完成。JAI-025 合入并完成合并后门禁/三端核验后，从最新 `develop` 创建 JAI-026；JAI-027 通知仍保持范围外。禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。

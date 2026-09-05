@@ -80,11 +80,13 @@ The JAI-012 command is synchronous: it returns after the run reaches a terminal 
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/manage_crawl.py run --source-id 7
+.\.venv\Scripts\python.exe scripts/manage_crawl.py run --source-id 7 --limit 10
 .\.venv\Scripts\python.exe scripts/manage_crawl.py show --run-id 101
 .\.venv\Scripts\python.exe scripts/manage_crawl.py retry --run-id 101
 ```
 
 - `run` accepts only an enabled database source that exactly matches one runnable catalog entry and an explicitly wired Adapter. It discovers public items, fetches details, and saves each successful detail through the idempotent raw-document repository.
+- `run --limit N` keeps discovery unchanged but fetches and persists only the first `N` items in stable source order. The run records both selected `discovered` and source `discovered_total`; the optional cap must be positive and never truncates failed-item retries.
 - `show` performs no source-site request. It reads one persisted `crawl_runs` summary and exposes the structured `failures` list separately from the complete `stats` payload.
 - `retry` requires a terminal run with failed item URLs. It repeats public list discovery to reconstruct source metadata, then filters the result to the prior failed URLs before detail fetches. Successful URLs from the prior run are never fetched again.
 - Retry never accepts an arbitrary URL from the command line. A prior failed URL that is no longer rediscovered is recorded as `crawler.retry_item_not_discovered`; it is not fetched directly.

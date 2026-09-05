@@ -2,7 +2,7 @@
 
 > Simplified Chinese: [确定性匹配与版本化评分](zh-CN/MATCHING.md)
 
-JAI-023 converts one explicit position snapshot and the JAI-022 preference snapshot into a deterministic, explainable result. The engine is pure: it performs no database, network, LLM, report, or notification operation, and receives the evaluation instant explicitly.
+JAI-023 converts one explicit position snapshot and the JAI-022 preference snapshot into a deterministic, explainable result. JAI-025 retains that baseline and adds an explicitly versioned quality-tuned formula. The engine is pure: it performs no database, network, LLM, report, or notification operation, and receives the evaluation instant explicitly.
 
 ## Hard filters
 
@@ -21,7 +21,7 @@ Education ranks are deterministic: `no_requirement` < `high_school`/`secondary_v
 
 ## Component scores
 
-When all hard filters pass, `jai-023-v1` uses the planned 100-point formula:
+When all hard filters pass, `jai-023-v1` remains replayable with the original 100-point formula:
 
 | Component | Maximum | Rule |
 |---|---:|---|
@@ -34,11 +34,13 @@ When all hard filters pass, `jai-023-v1` uses the planned 100-point formula:
 
 For persisted extraction data, employer type is derived only from categories whose meaning is direct: `civil_service → government`, `public_institution → public_institution`, and `state_owned → state_owned`. `campus` and `social` do not prove an employer type and remain unknown rather than being guessed.
 
+`jai-025-v2` is the current version. It uses region 25, job direction 35, major 20, organization type 10, urgency 5, and completeness 5. Positive direction matches use position name, announcement title, and department only; an incidental preferred term found only in requirements does not earn direction points. Requirements still participate in the exclusion hard filter. See [JAI-025 Top 20 matching-quality review](MATCHING_QUALITY.md) for the fixed comparison and limitations.
+
 Each hard filter persists its rule, inputs, pass/fail decision, and explanation. Each component persists its component name, rule version, inputs, score, maximum, and explanation. Reports and user-facing recommendation narratives remain JAI-024.
 
 ## Determinism and versioning
 
-`DeterministicMatchingEngine.evaluate()` requires the position data, normalized preferences, timezone-aware `evaluated_at`, and score version. UTC-normalized canonical JSON produces separate SHA-256 hashes for the position/time input, preferences, and complete result. Identical inputs and `jai-023-v1` therefore produce identical decisions, scores, components, explanations, and hashes.
+`DeterministicMatchingEngine.evaluate()` requires the position data, normalized preferences, timezone-aware `evaluated_at`, and score version. UTC-normalized canonical JSON produces separate SHA-256 hashes for the position/time input, preferences, and complete result. Identical inputs and an explicit supported version therefore produce identical decisions, scores, components, explanations, and hashes.
 
 Unknown score versions fail explicitly. Changing a rule or weight requires a new version; it must never silently change the meaning of `jai-023-v1`. Database `generated_at` is audit metadata and is excluded from deterministic result hashing.
 
@@ -58,4 +60,4 @@ Repeated consumption with no pending signal is a no-op. Repeating the same posit
 
 ## Scope boundary
 
-JAI-023 does not implement daily-report queries, grouping, Markdown/HTML rendering, snapshots, delivery, notifications, scheduling, LLM ranking, embeddings, or user-facing matching APIs. JAI-024 owns reports; later pipeline/API Issues may call the reusable matching service.
+The matching package does not implement delivery, notifications, scheduling, LLM ranking, embeddings, or live quality collection. JAI-024 owns reports; JAI-025 adds only offline quality evaluation and v2 scoring. Later pipeline/API Issues may call the reusable matching service.

@@ -324,12 +324,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:test` `area:matching` `priority:P1` `size:M`
 - **Dependencies**: JAI-023, JAI-024
+- **Status**: the 60-case synthetic proposed-label comparison, nine-document live end-to-end flow, and full gate are complete. The project owner approved the flow-first exception and G5 safe merge. At least 50 live human labels are deferred to JAI-049, and the synthetic set must not be represented as historical human data.
 - **Goal**: tune weights against human judgment.
-- **Scope**: at least 50 human-labeled positions; review Top 20 and misses.
+- **Scope**: the original scope requires at least 50 human-labelled positions. The current step first verifies Top 20/miss mechanics with 60 explicitly synthetic proposed labels and proves the collection-to-report flow with bounded live data; live human-review volume remains explicit quality debt.
 - **Acceptance**:
-  - [ ] Classify obvious false positives and misses.
-  - [ ] Compare scores before/after changes and bump score version.
-  - [ ] Document MVP recommendation limitations.
+  - [x] Classify obvious false positives and misses.
+  - [x] Compare scores before/after changes and bump score version.
+  - [x] Document MVP recommendation limitations.
+  - [ ] Human-label and review at least 50 live positions (deferred to JAI-049 by owner decision and non-blocking for the current flow closure).
 
 ---
 
@@ -592,12 +594,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 ### JAI-049 Improve evidence-backed core-field completeness across heterogeneous official notices
 
 - **Labels**: `type:feature` `area:crawler` `area:extraction` `priority:P1` `size:M`
-- **Dependencies**: JAI-021
+- **Dependencies**: JAI-021, JAI-025
 - **Goal**: reach 85% completeness across the five core fields in controlled live samples without guessing critical values.
-- **Scope**: analyze missing NCSS deadlines and missing organization/deadline values in broad Jiangsu topics; prefer stable, narrower announcement endpoints owned by the same official body, add deterministic rules with direct quotes, or replace a low-value source under the W6 gate. Never treat publication time as a deadline or publisher as the hiring organization.
+- **Scope**: analyze missing NCSS deadlines and missing organization/deadline values in broad Jiangsu topics; connect bounded attachment discovery/storage to persisted collection and reparse; investigate Firstjob empty discovery and China Mobile connectivity; and complete at least 50 live human relevance labels. Prefer stable, narrower announcement endpoints owned by the same official body, add deterministic rules with direct quotes, or replace a low-value source under the W6 gate. Never treat publication time as a deadline or publisher as the hiring organization.
 - **Acceptance**:
   - [ ] Organization, title, region, application deadline, and source-link completeness reaches 85% in controlled live samples, or a source replacement decision is documented.
   - [ ] Every new organization/deadline value has a source quote and coordinates; fields without evidence remain empty.
+  - [ ] At least 50 distinct live positions receive human relevance labels and are compared with the fixed JAI-025 baseline; any rule change uses a new score version.
+  - [ ] Public PDF/XLSX position-table attachments can enter parsing through a bounded persisted path, with visible failures and no unsupported downloads.
   - [ ] Offline regressions, low-frequency live verification, and PostgreSQL idempotency acceptance pass.
 
 ---
@@ -630,4 +634,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-021 and JAI-022 have completed and merged into `develop` in order. The merge train now processes JAI-023 and then JAI-024: normally merge the latest `develop` into each feature branch, preserve both bilingual logs, rerun the PostgreSQL-enabled full gate, and only then create a non-fast-forward `develop` merge. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
+JAI-021 through JAI-024 have completed and merged into `develop` in order. From the triple-verified JAI-024 merge baseline `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`, JAI-025 is now running on its independent branch. The quality review must retain the `jai-023-v1` baseline and compare it with an explicit new version; JAI-026 scheduling and JAI-027 notifications must not be implemented early. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
