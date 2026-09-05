@@ -33,7 +33,7 @@
 | JAI-022 | Complete, merged and pushed to `develop` | `develop` / `e7948c9` | JAI-021/JAI-022 histories preserved; post-merge PostgreSQL gate passed with 254 tests |
 | JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
-| JAI-025 | In progress; implementation gate passed, owner decision pending | `feature/jai-025-top-20-quality-review` / `0aa6b23` base | No historical rows exist locally; synthetic proposed labels are not represented as human-labelled history |
+| JAI-025 | In progress; implementation gate passed, owner decision pending | `feature/jai-025-top-20-quality-review` / `4fe0274` | No historical rows exist locally; synthetic proposed labels are not represented as human-labelled history |
 
 ## 2. Current decisions
 
@@ -495,7 +495,8 @@ The quality review must replay `jai-023-v1` unchanged and compare it with a new 
 - The first focused check exposed one malformed `__all__` insertion and three v1 expectations that needed explicit v2 values; after correction, focused Ruff and Mypy passed and all 22 matching tests passed. This was a local implementation check, not a production failure.
 - The PostgreSQL-enabled full `scripts/check.py` passed: Ruff format checked 213 files, Ruff lint passed, Mypy passed across 139 source files, all 288 tests passed with no skips, and coverage was 87.77%. `git diff --check` also passed.
 - A read-only check of the existing local development database found `raw_documents=0`, `job_posts=0`, and `job_positions=0`; it also has not yet applied the JAI-023 `match_results` migration. There are therefore no 50 actual historical positions available locally, so the Issue's historical/human-labelled acceptance cannot be claimed honestly from current data.
-- Next: preserve and normally push this review-ready feature work, then obtain an explicit project-owner decision on whether the 60 sanitized proposed labels are accepted as a scoped substitute. Without that plan change—or a supplied/populated historical set with human labels—JAI-025 remains incomplete and must not merge to `develop`.
+- Created review-preparation commit `4fe0274cdc2fadbfe50c71086771fb50c0522a4b` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the feature branch through the verified command-local proxy without changing `origin` or persistent Git settings. Local HEAD, its tracking reference, and GitHub `ls-remote` all matched that commit after the push.
+- Next: obtain an explicit project-owner decision on whether the 60 sanitized proposed labels are accepted as a scoped substitute. Without that plan change—or a supplied/populated historical set with human labels—JAI-025 remains incomplete and must not merge to `develop`.
 
 ## 4. Verification and blockers
 
