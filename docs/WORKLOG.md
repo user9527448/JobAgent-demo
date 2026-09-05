@@ -113,6 +113,14 @@ The user approved continued downstream development while JAI-021 waits for calen
 
 The quality review must replay `jai-023-v1` unchanged and compare it with a new score version over the same fixed, sanitized, manually reviewable sample set. Labels, reasons, Top 20 false positives, and misses remain explicit artifacts; tuning may change only the new version. Scheduling, delivery, LLM reranking, embeddings, and live-source collection remain outside JAI-025.
 
+### D-034 Proposed recovery path for the missing historical review set — approval required
+
+This proposal is not yet an approved implementation decision. The recommended path keeps JAI-025's original historical/manual-review intent instead of declaring the synthetic dry-run set sufficient. After project-owner approval, use the empty local `jobagent` database as the controlled evidence store: upgrade it from Alembic `0003_attachment_storage` to repository head, transactionally bootstrap only the five catalog entries already marked `active` and `enabled`, and add a backward-compatible optional detail limit to the existing manual crawl path before any persistent live run. Collect public data only, with concurrency 1, at least one second pacing, no login/CAPTCHA/access-control bypass, a maximum of 60 detail attempts, at least three contributing sources, and no source contributing more than 30 accepted review candidates.
+
+Persist immutable raw documents and deterministic extraction/evidence through existing services. Keep the source-facing review sheet and source URL mapping under ignored `data/`; commit only a sanitized benchmark after the project owner labels at least 50 distinct positions and confirms each relevance category/rationale. Do not delete rejected source records; exclude them through the review manifest. The published feature history is not rewritten: if real labels require changing the provisional `jai-025-v2` rules, the final candidate receives a new score version rather than silently changing v2. JAI-026 scheduling, JAI-027 delivery, JAI-030 source-maintenance APIs, LLM calls, and new source adapters remain out of scope.
+
+Approval gates are mandatory: G1 approves the database upgrade, active-source bootstrap, and bounded-crawl code change; G2 approves the read-only discovery counts and per-source allocation before persistent HTTP detail requests; G3 confirms the human labels and sanitized transformation before tuning; G4 approves any final weight/rule change and version identifier after seeing before/after Top 20 false positives and misses; G5 approves completion and safe merge after paired documentation and the PostgreSQL full gate. A mismatch, access restriction, insufficient distinct positions, or quality tradeoff stops at its current gate and is recorded; no automatic scope expansion or destructive rollback is allowed.
+
 ## 3. Active work history
 
 ### 2026-08-14 — JAI-046 bilingual documentation and Git identity rules completed
@@ -498,6 +506,15 @@ The quality review must replay `jai-023-v1` unchanged and compare it with a new 
 - Created review-preparation commit `4fe0274cdc2fadbfe50c71086771fb50c0522a4b` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the feature branch through the verified command-local proxy without changing `origin` or persistent Git settings. Local HEAD, its tracking reference, and GitHub `ls-remote` all matched that commit after the push.
 - Next: obtain an explicit project-owner decision on whether the 60 sanitized proposed labels are accepted as a scoped substitute. Without that plan change—or a supplied/populated historical set with human labels—JAI-025 remains incomplete and must not merge to `develop`.
 
+### 2026-09-05 — JAI-025 missing-data recovery proposal recorded for approval
+
+- Rechecked the local state without writes: the business database is at Alembic `0003_attachment_storage`; `sources`, `raw_documents`, `job_posts`, and `job_positions` all contain zero rows. The repository head is `0008_daily_report_snapshots`.
+- Existing `scripts/manage_crawl.py run` requires a matching enabled database source and persists every item returned by one source discovery; it has no operator-supplied item limit. The source catalog has five `active`/`enabled` public sources, but the empty runtime table means no persistent run can start yet.
+- Recorded proposed decision D-034 and gates G1–G5. The recommended path preserves the original plan: upgrade the empty local business schema, transactionally bootstrap only already-approved active catalog sources, add a tested optional detail cap, collect at most 60 public details across at least three sources, run existing deterministic extraction/evidence persistence, keep source-facing review material ignored locally, and commit only the owner-confirmed sanitized benchmark.
+- Alternative B is to accept the current synthetic set as a scope substitute; it is faster but does not meet the original historical-sample intent and is not recommended. Alternative C is to wait for JAI-026 to accumulate data; it reverses the planned JAI-025 → JAI-026 order and is also not recommended without an explicit priority change.
+- No migration, database insert, persistent crawl, additional code change, score retuning, completion checkbox, merge, or destructive action was performed while awaiting approval.
+- Next: project owner reviews and approves/rejects G1 and the overall D-034 path. Only after explicit approval may implementation begin; later gates still require separate evidence and approval.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -510,9 +527,9 @@ The quality review must replay `jai-023-v1` unchanged and compare it with a new 
 
 ## 5. Next actions
 
-1. Complete JAI-025's fixed review set, Top 20/miss comparison, score-version update, and paired limitation documentation.
-2. Run focused matching-quality tests followed by the complete PostgreSQL-enabled gate; then commit, normally push, and verify all three refs before safe integration.
-3. Keep JAI-026 scheduling, JAI-027 notifications, OCR/JAI-B01, JAI-049, and JAI-048 outside the active Issue.
+1. Await explicit project-owner approval of D-034/G1 before changing the local database, source runtime rows, or bounded-crawl code.
+2. If approved, execute G1–G5 in order and record each input, bounded action, result, deviation, and approval in both WORKLOG files before advancing.
+3. Keep JAI-026 scheduling, JAI-027 notifications, JAI-030 maintenance APIs, OCR/JAI-B01, JAI-049, and JAI-048 outside the active Issue.
 
 ## 6. Update template
 
