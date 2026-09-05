@@ -128,6 +128,18 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 如果本次有界运行得到的线上不同岗位少于 50 条，必须把差额明确记录为质量债务，不得隐藏或猜测补齐。现有 60 条合成集可继续验证确定性评估机制，但必须保持“合成”标识，不得表述为历史人工评审。来源样本量扩充、Firstjob 空发现、中国移动连接、未来至少 50 条线上人工标注基准均延期为优化项；本步骤不因此授权新 Adapter、更大配额或修改已发布评分版本。
 
+### D-036 拟议独立调度进程与持久流水线台账（等待审批）
+
+JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`），不采用仍为预发布状态的 4 系列。运行一个与 FastAPI worker 分离的专用 `AsyncIOScheduler` 进程，使用 PostgreSQL `SQLAlchemyJobStore`、固定且可导入的任务目标/ID、`Asia/Shanghai`、`replace_existing=True`、`coalesce=True`、`max_instances=1`；本地执行时间可配置，默认 08:00，`misfire_grace_time` 默认六小时。Compose 只运行一个 scheduler 服务；APScheduler 3 的 job store 不协调多个 scheduler，因此不支持扩容该服务。
+
+迁移 `0009` 拟统一管理 APScheduler job-store 表以及 `pipeline_runs`、`pipeline_stage_runs`。唯一逻辑身份 `(job_name, scheduled_for)` 防止同一计划时刻的计划运行或补跑重复。运行台账保存触发类型、本地报告日期、时区、状态、当前阶段、时间戳和安全错误元数据；每次阶段尝试保存状态、尝试次数、输入/输出计数，以及追溯采集运行、原始公告/结构化公告、匹配结果和日报快照所需的准确既有记录 ID 或版本。完整流水线期间由 session 级 PostgreSQL advisory lock 提供跨进程权威，并在 `finally` 显式释放；APScheduler 的 `max_instances` 仅作为进程内第一道保护。
+
+固定阶段顺序为采集 → 确定性抽取/校验 → 匹配 → 日报。采集通过现有 Adapter 和限速策略按来源 ID 稳定遍历已启用来源；抽取只选择尚无显式 `jai-026-v1` 抽取版本的当前原始公告；匹配使用 `CURRENT_SCORE_VERSION` 和从 `scheduled_for` 派生的固定评估时刻，并增加显式 force 路径，使新增岗位和随时间变化的截止评分可以重算而不修改未变化的用户偏好；日报使用计划时刻对应的本地日期和现有不可变日报服务。附件衔接仍属于 JAI-049，投递仍属于 JAI-027，不增加来源、API 或 LLM 范围。
+
+只有 `TransientJobAgentError` 才最多执行三次阶段尝试，注入式指数退避为 30 秒、60 秒；永久错误立即停止。采集部分成功时继续下游阶段，并把最终流水线标记为 `partial`，保留可用日报及全部失败证据。重启后在取得 advisory lock 后，把持久化的 `running` 阶段标记为 `interrupted`，以原 `scheduled_for` 从第一个未成功阶段恢复；现有不可变/幂等写入保证安全重放。手工 `makeup --date YYYY-MM-DD` 映射到同一配置时区的计划时刻，因此恢复/复用相同逻辑运行，不创建重复运行。
+
+批准本方案只授权在 feature 分支实施，并只允许对受 `_test` 名称保护的数据库执行破坏性 Schema 测试。执行顺序为：G1 完成依赖、设置、迁移/模型、台账/锁契约和单元测试；G2 完成可注入四阶段协调器、重试/恢复、强制重算支持及 PostgreSQL 并发/恢复测试；G3 完成调度命令、单一 Compose 服务、双语调度/数据库/配置文档、集成测试和完整门禁。把迁移 `0009` 应用于已有数据的本地业务数据库或启动真实调度器，必须在代码与证据审阅后另行取得 G4 运行批准。本方案不授权 rebase、force push、持久化凭据、线上来源运行或 JAI-027 工作。
+
 ## 3. 当前工作记录
 
 ### 2026-08-14 — JAI-046 双语文档与 Git 身份规则完成
@@ -569,6 +581,13 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 两份 Backlog 都把 JAI-026 列为下一项计划内未完成 Issue。已从核验后的合并提交创建独立分支 `feature/jai-026-daily-scheduling-recovery`。范围仅限 APScheduler、`Asia/Shanghai`、单实例锁、misfire、阶段重试、安全重启恢复/终止、手工补跑，以及采集、解析、评分与日报全链路可追踪。
 - 当前尚未决定或实施 JAI-026 架构。下一步先只读审计既有命令、服务和持久化边界，形成双语留档的设计方案并交负责人审批；JAI-027 通知行为继续保持范围外。
 
+### 2026-09-05 — JAI-026 设计审计与审批材料
+
+- 只读检查确认已有可复用的幂等边界：单来源采集、单文档确定性重解析、原子全量匹配和不可变日报生成。原始公告/抽取身份、包含评估时间的匹配输入哈希、偏好行锁和日报输入哈希支持安全重放。
+- JAI-026 尚缺少的边界已明确：未安装 APScheduler；没有持久流水线/阶段台账或跨进程流水线锁；采集没有启用来源批量查询；抽取没有待处理文档批量查询；匹配只响应偏好信号，因此需要针对新增/时间敏感数据的显式 force 路径；Compose 没有 scheduler 进程。
+- 本次审计时 PyPI 的稳定版本为 APScheduler 3.11.3，4.0 仍为 alpha 系列。官方 3.x 指南推荐以 PostgreSQL `SQLAlchemyJobStore` 支持重启持久化，明确 `misfire_grace_time`、coalescing 和单任务 `max_instances`，并警告一个 job store 不得被多个 scheduler 共用。因此 D-036 拟采用专用单调度进程，再叠加 PostgreSQL advisory lock 与领域台账，不把调度器嵌入 API worker。
+- 上述 D-036 及 G1～G4 已登记但尚未批准。本次审计未修改依赖、迁移、代码、Compose、数据库或线上来源。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -585,10 +604,10 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 提交并普通推送 JAI-025 合并与 JAI-026 启动的双语记录，再核验新 feature 分支的本地、跟踪和 GitHub 指针。
-2. 在不改变行为的前提下审计既有采集、重解析、匹配和日报命令/服务/持久化边界。
-3. 在两份 WORKLOG 登记 JAI-026 调度器、持久运行台账/状态机、PostgreSQL 锁、重试/恢复和手工补跑设计及执行闸门，并在实施前取得项目负责人批准。
-4. 至少 50 条真实人工评审、附件衔接和来源诊断继续留在 JAI-049；不得静默修改 `jai-025-v2` 或提前启动 JAI-027。
+1. 提交并普通推送双语 D-036 审批材料，再核验 JAI-026 feature 分支的本地、跟踪和 GitHub 指针。
+2. 取得项目负责人对 D-036 及实施闸门 G1～G3 的明确批准或修改意见；等待审批期间不实施。
+3. 获批后按顺序执行 G1～G3，只对受 `_test` 保护的 PostgreSQL 数据库执行破坏性测试，并在已有数据业务库迁移或真实调度器启动前停止。
+4. 至少 50 条真实人工评审、附件衔接和来源诊断继续留在 JAI-049；不得静默修改已发布版本或提前启动 JAI-027。
 
 ## 6. 更新模板
 

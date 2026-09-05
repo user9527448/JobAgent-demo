@@ -445,4 +445,4 @@ Issue 开始前必须具备：目标、范围、验收标准、依赖、测试�
 
 JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-025 已依次合并并普通推送到 `develop`，当前基线为 JAI-025 非快进合并 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`。JAI-021 Day 3 的中国移动 `PoolTimeout` 实际 4/5 指标和用户豁免记录完整保留；JAI-025 的流程优先例外与延期质量债务也完整保留在 JAI-049。
 
-当前已从三端一致的 `develop` 创建独立分支 `feature/jai-026-daily-scheduling-recovery` 并启动 JAI-026。先审计既有采集、解析、评分和日报边界，再把 APScheduler、`Asia/Shanghai`、单实例锁、misfire、阶段重试、重启恢复/终止、手工补跑及全链路追踪方案登记到双语 WORKLOG 供项目负责人审核；取得批准后才实施。JAI-027 通知仍保持范围外。禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。
+当前已从三端一致的 `develop` 创建独立分支 `feature/jai-026-daily-scheduling-recovery` 并启动 JAI-026。只读审计已完成，拟议 D-036 采用 APScheduler 3 稳定系列、独立单 scheduler 进程、PostgreSQL 持久 job store、领域运行/阶段台账和 advisory lock，按采集、抽取/校验、匹配、日报顺序执行，并支持有界重试、重启恢复和同逻辑运行的手工补跑。D-036 及 G1～G3 等待项目负责人批准；批准前不实施，已有数据业务库迁移和真实调度启动另设 G4。JAI-027 通知仍保持范围外。禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。

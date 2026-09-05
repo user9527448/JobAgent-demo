@@ -128,6 +128,18 @@ On 2026-09-05 the project owner changed the immediate priority from blocking on 
 
 If this bounded run yields fewer than 50 distinct live positions, the shortfall is recorded as explicit quality debt rather than concealed or guessed. The current synthetic 60-case set may continue to verify deterministic evaluation mechanics, but it must remain labelled synthetic and cannot be represented as historical human review. Source-volume expansion, Firstjob's empty discovery, China Mobile connectivity, and a future >=50 live human-labelled benchmark are deferred optimization items; they do not authorize new adapters, larger quotas, or changes to published score versions in this step.
 
+### D-036 Proposed standalone scheduler and durable pipeline ledger (approval pending)
+
+JAI-026 should use the current stable APScheduler 3 line (`APScheduler>=3.11.3,<4`) rather than the still pre-release 4 line. Run one dedicated `AsyncIOScheduler` process, separate from FastAPI workers, with PostgreSQL `SQLAlchemyJobStore`, a fixed importable job target/ID, `Asia/Shanghai`, `replace_existing=True`, `coalesce=True`, `max_instances=1`, a configurable local schedule defaulting to 08:00, and a six-hour default `misfire_grace_time`. Compose runs exactly one scheduler service; scaling that service is unsupported because APScheduler 3 job stores do not coordinate multiple schedulers.
+
+Migration `0009` should own the APScheduler job-store table plus `pipeline_runs` and `pipeline_stage_runs`. A unique logical identity `(job_name, scheduled_for)` prevents duplicate scheduled or makeup runs. The run ledger stores trigger, local report date, timezone, status, current stage, timestamps, and safe error metadata. Each stage attempt stores status, attempt number, input/output counts, and the exact existing artifact identifiers or versions needed to trace crawl runs, raw documents/job posts, match results, and report snapshots. A session-scoped PostgreSQL advisory lock, held for the complete pipeline and explicitly released in `finally`, is the cross-process authority; APScheduler's `max_instances` is only the local first line of defense.
+
+The fixed stage order is collection → deterministic extraction/validation → matching → report. Collection visits enabled sources in stable ID order through existing adapters and pacing. Extraction selects current raw documents that do not yet have the explicit `jai-026-v1` extraction version. Matching uses `CURRENT_SCORE_VERSION` and a fixed evaluation instant derived from `scheduled_for`; it must support a force mode so new positions and time-sensitive deadline scores are evaluated without mutating unchanged user preferences. Report generation uses the scheduled local date and the existing immutable report service. Attachment handoff remains JAI-049, delivery remains JAI-027, and no source/API/LLM scope is added.
+
+Only `TransientJobAgentError` outcomes receive at most three stage attempts with injected exponential delays of 30 and 60 seconds; permanent failures stop immediately. A partially successful collection continues downstream and makes the final pipeline status `partial`, preserving a usable report and all failure evidence. On restart, after acquiring the advisory lock, a persisted `running` stage is marked `interrupted` and the coordinator resumes from the first non-successful stage using the original `scheduled_for`. Existing immutable/idempotent writes make replay safe. Manual `makeup --date YYYY-MM-DD` resolves to the same configured local schedule slot and therefore resumes/reuses the same logical run instead of creating a duplicate.
+
+Approval authorizes feature-branch implementation and destructive-schema tests only against the guarded `_test` database. Execution order is G1: dependency, settings, migration/models, ledger/lock contracts and unit tests; G2: injected four-stage coordinator, retry/recovery, force-recompute support and PostgreSQL concurrency/recovery tests; G3: scheduler command, single Compose service, bilingual scheduling/database/configuration documentation, integration test, and full gate. Applying migration `0009` to the populated local business database or starting a live scheduler remains a separate G4 runtime approval after the code and evidence are reviewed. No rebase, force push, credential persistence, live-source run, or JAI-027 work is authorized by this proposal.
+
 ## 3. Active work history
 
 ### 2026-08-14 — JAI-046 bilingual documentation and Git identity rules completed
@@ -569,6 +581,13 @@ If this bounded run yields fewer than 50 distinct live positions, the shortfall 
 - Both backlogs identify JAI-026 as the next planned incomplete Issue. The independent `feature/jai-026-daily-scheduling-recovery` branch was created from the verified merge commit. Its scope is limited to APScheduler, `Asia/Shanghai`, single-instance locks, misfires, stage retries, safe restart recovery/termination, manual makeup runs, and traceability across collection, parsing, scoring, and reports.
 - No JAI-026 architecture decision or implementation has been made yet. The next step is a read-only audit of the existing command/service/persistence boundaries and a bilingual recorded design proposal for owner approval; JAI-027 notification behavior remains out of scope.
 
+### 2026-09-05 — JAI-026 design audit and approval packet
+
+- Read-only inspection found reusable idempotent boundaries for one-source collection, one-document deterministic reparse, atomic full matching, and immutable report generation. Raw-document and extraction identities, time-inclusive matching input hashes, preference locking, and report input hashes support safe replay.
+- Missing JAI-026 boundaries are explicit: APScheduler is not installed; no durable pipeline/stage ledger or cross-process pipeline lock exists; collection has no enabled-source batch query; extraction has no pending-document batch query; matching only runs on the preference signal and therefore needs an explicit force path for new/time-sensitive data; Compose has no scheduler process.
+- As of this audit, PyPI lists APScheduler 3.11.3 as the stable release while 4.0 remains an alpha series. The official 3.x guide recommends PostgreSQL `SQLAlchemyJobStore` for restart persistence, documents `misfire_grace_time`, coalescing, and per-job `max_instances`, and warns that one job store must not be shared by multiple schedulers. D-036 therefore proposes a dedicated single scheduler process plus a PostgreSQL advisory lock and domain ledger rather than embedding a scheduler in API workers.
+- D-036 and gates G1–G4 are recorded above but remain unapproved. No dependency, migration, code, Compose, database, or live-source change was made during this audit.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -585,10 +604,10 @@ If this bounded run yields fewer than 50 distinct live positions, the shortfall 
 
 ## 5. Next actions
 
-1. Commit and normally push the bilingual JAI-025 merge and JAI-026 start record, then verify the new feature branch locally, through its tracking reference, and through GitHub.
-2. Audit the existing collection, reparsing, matching, and report command/service/persistence boundaries without changing behavior.
-3. Record the JAI-026 scheduler, durable run ledger/state machine, PostgreSQL lock, retry/recovery, and manual-makeup design plus execution gates in both work logs, and obtain project-owner approval before implementation.
-4. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change `jai-025-v2` or start JAI-027.
+1. Commit and normally push the bilingual D-036 approval packet, then verify the JAI-026 feature branch locally, through its tracking reference, and through GitHub.
+2. Obtain explicit project-owner approval or requested changes for D-036 and implementation gates G1–G3. Do not implement while approval is pending.
+3. After approval, execute G1–G3 in order with PostgreSQL `_test` safeguards and stop before any populated business-database migration or live scheduler start.
+4. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change published versions or start JAI-027.
 
 ## 6. Update template
 
