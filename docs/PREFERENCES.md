@@ -49,7 +49,7 @@ The response repeats the normalized fields and adds `created_at`, `updated_at`, 
 
 Migration `0006_single_user_preferences` creates `user_preferences` and inserts exactly one row with `id=1`. A check constraint rejects any second user ID. JSON fields must be arrays, the education value is database-constrained, and all audit times are timezone-aware UTC instants.
 
-Updates lock the singleton row, replace all values in one transaction, and set `updated_at`. `trigger_recompute` defaults to `true`; when enabled, it sets the sticky `recompute_required` flag and records `recompute_requested_at`. An update with `trigger_recompute=false` never clears an already pending signal. JAI-023 may consume and acknowledge that signal as part of its versioned matching transaction; JAI-022 intentionally provides no scoring logic or public acknowledgement endpoint.
+Updates lock the singleton row, replace all values in one transaction, and set `updated_at`. `trigger_recompute` defaults to `true`; when enabled, it sets the sticky `recompute_required` flag and records `recompute_requested_at`. An update with `trigger_recompute=false` never clears an already pending signal. JAI-023's [`SqlAlchemyMatchingService`](MATCHING.md) consumes and acknowledges that signal only in the same transaction as a complete versioned recomputation. Successful acknowledgement preserves `updated_at` as the identity of the preference values used; failures roll back without losing the sticky signal. JAI-022 intentionally provides no scoring logic or public acknowledgement endpoint.
 
 ## Scope boundary
 

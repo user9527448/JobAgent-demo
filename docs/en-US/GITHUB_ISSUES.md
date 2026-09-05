@@ -299,13 +299,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:matching` `priority:P0` `size:L`
 - **Dependencies**: JAI-020, JAI-022
+- **Status**: implementation, migration, paired documentation, and the PostgreSQL-enabled complete gate finished on 2026-08-30. Dedicated branch `feature/jai-023-hard-filter-versioned-scoring` is based on published JAI-022 tip `44ed502` and will synchronize from updated `develop` only after JAI-021 and JAI-022 integrate in the recorded order.
 - **Goal**: stable, explainable, recomputable ranking.
 - **Scope**: education/deadline/exclusion hard filters; region/direction/major/organization/urgency/completeness components.
 - **Acceptance**:
-  - [ ] Identical input/version yields identical output.
-  - [ ] Persist each component's rule, input, score, and explanation.
-  - [ ] Preference changes support full recomputation.
-  - [ ] Unit tests cover boundaries.
+  - [x] Identical input/version yields identical output.
+  - [x] Persist each component's rule, input, score, and explanation.
+  - [x] Preference changes support full recomputation.
+  - [x] Unit tests cover boundaries.
 
 ### JAI-024 Implement report query and Markdown/HTML rendering
 
@@ -628,4 +629,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-021 has completed under the user's explicitly recorded Day 3 external-endpoint waiver and merged into `develop` first. The authorized safe merge train now proceeds through JAI-022 → JAI-023 → JAI-024: normally merge the latest `develop` into each feature branch, preserve both bilingual logs, rerun the PostgreSQL-enabled full gate, and only then create a non-fast-forward `develop` merge. Never rebase, force push, or rewrite history. The minimum China Mobile public-announcement scope from JAI-041 was absorbed into JAI-021 and must not be duplicated; JAI-049 tracks the live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
+JAI-021 and JAI-022 have completed and merged into `develop` in order. The merge train now processes JAI-023 and then JAI-024: normally merge the latest `develop` into each feature branch, preserve both bilingual logs, rerun the PostgreSQL-enabled full gate, and only then create a non-fast-forward `develop` merge. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.

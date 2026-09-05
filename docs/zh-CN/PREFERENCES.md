@@ -49,7 +49,7 @@ JAI-022 新增一个本地用户的结构化偏好档案，以及读取/全量�
 
 迁移 `0006_single_user_preferences` 创建 `user_preferences`，并插入唯一一行 `id=1`。检查约束会拒绝任何第二个用户 ID。JSON 字段必须是数组，学历值受数据库约束，所有审计时间都是带时区的 UTC 时刻。
 
-更新会锁定单例行，在一个事务中替换全部值并设置 `updated_at`。`trigger_recompute` 默认为 `true`；启用时设置粘性的 `recompute_required` 标志，并记录 `recompute_requested_at`。`trigger_recompute=false` 的更新绝不会清除已经待处理的信号。JAI-023 可在版本化匹配事务中消费并确认该信号；JAI-022 有意不提供评分逻辑或公开确认端点。
+更新会锁定单例行，在一个事务中替换全部值并设置 `updated_at`。`trigger_recompute` 默认为 `true`；启用时设置粘性的 `recompute_required` 标志，并记录 `recompute_requested_at`。`trigger_recompute=false` 的更新绝不会清除已经待处理的信号。JAI-023 的 [`SqlAlchemyMatchingService`](MATCHING.md) 只会在完整版本化重算的同一事务中消费并确认该信号；成功确认会保留 `updated_at`，以标识本批次使用的偏好值，任何失败都会回滚且不丢失粘性信号。JAI-022 有意不提供评分逻辑或公开确认端点。
 
 ## 范围边界
 

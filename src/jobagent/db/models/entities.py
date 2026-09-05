@@ -394,6 +394,10 @@ class JobPosition(Base):
     )
 
     post: Mapped[JobPost] = relationship(back_populates="positions")
+    match_results: Mapped[list[MatchResult]] = relationship(
+        back_populates="position",
+        passive_deletes=True,
+    )
 
 
 class ValidationIssue(Base):
@@ -594,3 +598,92 @@ class UserPreference(TimestampMixin, Base):
         server_default=text("false"),
     )
     recompute_requested_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    match_results: Mapped[list[MatchResult]] = relationship(
+        back_populates="preference",
+        passive_deletes=True,
+    )
+
+
+class MatchResult(Base):
+    """One immutable versioned hard-filter and component-score result."""
+
+    __tablename__ = "match_results"
+    __table_args__ = (
+        UniqueConstraint(
+            "position_id",
+            "score_version",
+            "input_hash",
+            "preference_hash",
+            "preference_updated_at",
+            name="uq_match_results_calculation",
+        ),
+        CheckConstraint("length(score_version) > 0", name="score_version_present"),
+        CheckConstraint("input_hash ~ '^[0-9a-f]{64}$'", name="input_hash_sha256"),
+        CheckConstraint(
+            "preference_hash ~ '^[0-9a-f]{64}$'",
+            name="preference_hash_sha256",
+        ),
+        CheckConstraint("result_hash ~ '^[0-9a-f]{64}$'", name="result_hash_sha256"),
+        CheckConstraint("score >= 0 AND score <= 100", name="score_range"),
+        CheckConstraint(
+            "hard_filter_passed OR score = 0",
+            name="filtered_score_zero",
+        ),
+        CheckConstraint("jsonb_typeof(components) = 'array'", name="components_array"),
+        CheckConstraint("jsonb_typeof(matched_rules) = 'array'", name="matched_rules_array"),
+        CheckConstraint(
+            "supersedes_id IS NULL OR supersedes_id <> id",
+            name="supersedes_other_result",
+        ),
+        Index(
+            "uq_match_results_position_current",
+            "position_id",
+            unique=True,
+            postgresql_where=text("is_current"),
+        ),
+        Index("ix_match_results_current_score", "is_current", "score"),
+        Index("ix_match_results_score_version", "score_version"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    position_id: Mapped[int] = mapped_column(
+        ForeignKey("job_positions.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    preference_id: Mapped[int] = mapped_column(
+        ForeignKey("user_preferences.id", ondelete="RESTRICT"),
+        nullable=False,
+        default=1,
+        server_default=text("1"),
+    )
+    score_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    preference_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    result_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    hard_filter_passed: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    score: Mapped[int] = mapped_column(Integer, nullable=False)
+    components: Mapped[list[dict[str, JsonValue]]] = mapped_column(JSONB, nullable=False)
+    matched_rules: Mapped[list[dict[str, JsonValue]]] = mapped_column(JSONB, nullable=False)
+    evaluated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    preference_updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    generated_at: Mapped[datetime] = mapped_column(
+        UTCDateTime(),
+        nullable=False,
+        server_default=func.now(),
+    )
+    is_current: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=text("true"),
+    )
+    supersedes_id: Mapped[int | None] = mapped_column(
+        ForeignKey("match_results.id", ondelete="RESTRICT")
+    )
+
+    position: Mapped[JobPosition] = relationship(back_populates="match_results")
+    preference: Mapped[UserPreference] = relationship(back_populates="match_results")
+    supersedes: Mapped[MatchResult | None] = relationship(
+        remote_side="MatchResult.id",
+        foreign_keys=[supersedes_id],
+    )

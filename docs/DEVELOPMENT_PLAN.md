@@ -443,6 +443,6 @@ Issue 开始前必须具备：目标、范围、验收标准、依赖、测试�
 
 ## 13. 当前下一步
 
-JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-021 已依次合并并普通推送到 `develop`，当前基线为 JAI-021 非快进合并 `8cc0b2eb37b5ec7e2c560ce35b687a687da47b43`。JAI-021 的三日记录覆盖 2026-09-03 至 2026-09-05；最后一日实际为中国移动 `PoolTimeout` 导致来源成功 4/5，用户在保留真实指标和入口风险的前提下明确豁免并计为 Day 3。JAI-049 继续在 MVP 发布闸门前跟踪有证据完整率差距及来源风险。
+JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-022 已依次合并并普通推送到 `develop`，当前基线为 JAI-022 非快进合并 `e7948c9225fba32e499786cc8400cf0dd975e4ca`。JAI-021 Day 3 的中国移动 `PoolTimeout` 实际 4/5 指标和用户豁免记录完整保留；JAI-049 继续在 MVP 发布闸门前跟踪有证据完整率和来源风险。
 
-JAI-022 的单用户模型、读取/全量替换 API、Schema/枚举校验、重算信号、无限制默认值、迁移、测试与双语文档已完成。最新 `develop` 正按授权的合并火车普通同步进 `feature/jai-022-single-user-preferences`；必须保留 JAI-021/JAI-022 双语 WORKLOG 历史并重新通过 PostgreSQL 完整门禁，之后才可合入 `develop`。随后按相同规则依次处理 JAI-023 和 JAI-024；禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。
+JAI-023 的硬过滤、版本化规则评分、逐分项解释持久化、偏好触发的全量重算、迁移、测试与双语文档已完成。最新 `develop` 正普通同步进 `feature/jai-023-hard-filter-versioned-scoring`；必须保留 JAI-021 至 JAI-023 的双语 WORKLOG 历史并重新通过 PostgreSQL 完整门禁，之后才可合入 `develop`。随后按相同规则处理 JAI-024；禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。
