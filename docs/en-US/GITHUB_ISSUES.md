@@ -276,7 +276,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Scope**: prefer the National College Student Employment Service Platform and Shanghai public-institution announcements; when an existing source remains unreachable, mark it `blocked` and, after user confirmation, replace it with a stable login-free official announcement endpoint, never a login/application system. On 2026-08-27 the unreachable SASAC column was disabled and the minimum China Mobile public-announcement scope from JAI-041 was absorbed as the fifth active source.
 - **Acceptance**:
   - [x] Five sources have Adapter contract tests.
-  - [ ] Record success, duplicate, and completeness metrics for three consecutive days.
+  - [x] Record success, duplicate, and completeness metrics for three consecutive days (the actual 4/5 result from China Mobile's 2026-09-05 `PoolTimeout` remains intact and was explicitly accepted by the user as an external-endpoint waiver).
   - [x] Core fields reach 85%, or a corrective Issue documents the gap (the current comparable live diagnostic is 82.5%, tracked by JAI-049).
 
 ---

@@ -29,7 +29,7 @@
 | JAI-018 | Complete, merged and pushed to `develop` | `develop` / `c013544` | Replaceable provider, strict structured output, versioned prompts, bounded retries, usage/cost records, and daily-budget queueing verified |
 | JAI-019 | Complete, merged and pushed to `develop` | `develop` / `82797d1` | Deterministic body/attachment precedence, explicit conflicts, extraction versions, and durable field evidence verified |
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
-| JAI-021 | In progress; consecutive sequence interrupted | `feature/jai-021-sources-four-five-stability` | The 2026-09-03/04 pair was interrupted by a failed China Mobile source run on 2026-09-05; the next qualified day restarts Day 1 |
+| JAI-021 | Complete; final gate passed, pending push/merge | `feature/jai-021-sources-four-five-stability` | Actual 2026-09-05 result remains 4/5 under the explicit external-endpoint waiver; PostgreSQL-enabled full gate passed |
 
 ## 2. Current decisions
 
@@ -367,6 +367,13 @@ The same document/extraction version may be repeated only when its merged result
 - All repository Markdown relative links passed. Paired WORKLOG, stability-guide, and plan heading counts matched at 41/41, 7/7, and 45/45; both backlogs retained identical Issue-ID order, and `git diff --check` passed.
 - Created observation-record commit `8e5fbecac1a95d32d5ba79af84e88aaeb79fd7ba` with repository-local author `user9527448 <2537759248@qq.com>`. Its first normal HTTPS push failed because direct access to GitHub port 443 timed out after about 21 seconds; the unchanged push then succeeded through the previously verified command-local proxy `127.0.0.1:7892`, without changing `origin` or persistent Git configuration. Local HEAD, the tracking reference, and GitHub `ls-remote` matched that commit before this network-status update.
 
+### 2026-09-05 — JAI-021 Day 3 waiver and merge-train authorization
+
+- The user explicitly determined that the isolated China Mobile timeout was probably a link or external network-path anomaly rather than a crawler defect and accepted the recorded 2026-09-05 run as Day 3. The source remains monitored; this decision does not change the actual 4/5 source success, three exhausted retries, or error classification.
+- JAI-021 acceptance is therefore complete by a documented product-owner exception across the 2026-09-03 through 2026-09-05 records. The user authorized the safe merge train in the established order JAI-021 → JAI-022 → JAI-023 → JAI-024.
+- Before each merge, synchronize the latest `develop` into that feature branch with an ordinary merge, preserve both bilingual WORKLOG histories, resolve paired-document conflicts consistently, and rerun the complete proportional gate. Do not rebase, force push, rewrite published commits, or change authorship.
+- The final PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 173 files, Ruff lint passed, Mypy passed across 112 source files, all 246 tests passed with no skips, and coverage was 87.45%.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -379,8 +386,8 @@ The same document/extraction version may be repeated only when its merged result
 
 ## 5. Next actions
 
-1. Run the same replacement five-source observation once on the next calendar day. A fully qualified result restarts the consecutive sequence at day 1; do not count repeated same-day runs or close JAI-021 early.
-2. After three new consecutive qualified days exist, synchronize the paired stability/plan/backlog/work-log records, run the complete proportional gate, normally push JAI-021, and merge it into `develop` before synchronizing JAI-022/JAI-023.
+1. Run the complete JAI-021 gate, normally push the acceptance update, and merge JAI-021 into `develop` after verification.
+2. Continue the authorized merge train in order by normally synchronizing `develop` into JAI-022, JAI-023, and JAI-024, preserving bilingual histories and rerunning each complete gate before its `develop` merge.
 3. Keep OCR deferred to JAI-B01, all JAI-022/JAI-023 implementation outside this branch, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template
