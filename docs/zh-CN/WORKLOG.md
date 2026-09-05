@@ -8,7 +8,7 @@
 >
 > 最后更新：2026-09-05
 >
-> 当前分支：`feature/jai-024-daily-report-rendering`
+> 当前分支：`feature/jai-025-top-20-quality-review`
 
 ## 1. 当前状态
 
@@ -32,7 +32,8 @@
 | JAI-021 | 已完成、合并并推送到 `develop` | `develop` / `8cc0b2e` | Day 3 按已记录的外部入口豁免接受；实际 4/5 结果保留；合并后 PostgreSQL 门禁通过 |
 | JAI-022 | 已完成、合并并推送到 `develop` | `develop` / `e7948c9` | 已保留 JAI-021/JAI-022 双方历史；合并后 PostgreSQL 门禁以 254 项测试通过 |
 | JAI-023 | 已完成、合并并推送到 `develop` | `develop` / `5935b52` | 已保留 JAI-021 至 JAI-023 全部历史；合并后 PostgreSQL 门禁以 271 项测试通过 |
-| JAI-024 | 已完成，同步后完整门禁通过，等待推送/合并 | `feature/jai-024-daily-report-rendering` / `742b14a` | 已保留 JAI-021 至 JAI-024 全部历史；PostgreSQL 启用的组合门禁通过 |
+| JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
+| JAI-025 | 进行中；实现门禁通过，等待负责人决策 | `feature/jai-025-top-20-quality-review` / 基点 `0aa6b23` | 本地不存在历史记录；合成拟议标注未被描述为历史人工标注 |
 
 ## 2. 当前决策
 
@@ -107,6 +108,10 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 ### D-032 JAI-024 在不修改祖先分支的前提下扩展隔离合并列车
 
 用户已批准在 JAI-021 等待自然日观测时继续并行推进后续开发。JAI-024 从已推送的 JAI-023 末端 `9592a16d7dee12fbe6c555407a3607a492b2cd03` 在独立 worktree 创建。集成顺序为 JAI-021 → JAI-022 → JAI-023 → JAI-024；每个下游分支都通过普通合并接收最新 `develop`，保留双语日志、显式解决冲突并重跑 PostgreSQL 完整门禁。继续禁止 rebase、force push 和改写已发布历史。
+
+### D-033 JAI-025 保留 v1 基线并显式评估 v2
+
+质量评审必须原样重放 `jai-023-v1`，并在同一份固定、脱敏、可人工复核的样本集上与新评分版本对比。标注、原因、Top 20 误推荐与漏召回都作为显式产物保留；调权只能改变新版本。调度、投递、LLM 重排、向量召回和线上来源采集均不属于 JAI-025。
 
 ## 3. 当前工作记录
 
@@ -474,6 +479,24 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - 双语标题一致性、Backlog Issue 编号顺序、Markdown 相对链接和 `git diff --check` 均通过。启用 PostgreSQL 的组合 `scripts/check.py` 通过：Ruff format 检查 206 个文件，Ruff lint 通过，Mypy 检查 136 个源文件通过，282 项测试全部通过且无跳过，覆盖率 87.96%。
 - 下一步：提交并普通推送，再将 JAI-024 合入 `develop`。
 
+### 2026-09-05 — 合并火车完成并启动 JAI-025
+
+- JAI-024 同步末端 `11551331a403942d9b78c758997c6ae7536a94e7` 已普通推送，随后通过非快进提交 `0aa6b233ea8216aecdbe1d1dce4031ad6884a442` 合入 `develop`。
+- 合并后启用 PostgreSQL 的完整门禁通过：Ruff format 检查 206 个文件，Ruff lint 通过，Mypy 检查 136 个源文件通过，282 项测试全部通过且无跳过，覆盖率 87.96%。本地 `develop`、`origin/develop` 与 GitHub `ls-remote` 均为 `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`；JAI-021 至 JAI-024 最终 feature 末端的祖先检查全部通过。
+- 已核验两份 Backlog 均把 JAI-025 列为下一项未完成计划 Issue，随后从三端一致的 `develop` 基线创建 `feature/jai-025-top-20-quality-review`。仓库本地作者仍为 `user9527448 <2537759248@qq.com>`。
+- 范围仅限至少 50 条脱敏、可人工复核的相关性标注，确定性 Top 20/漏召回分析，不变的 v1 基线，显式新评分版本，前后对比证据及 MVP 局限说明。JAI-026 调度和 JAI-027 通知行为继续保持范围外。
+- 下一步：实现离线质量评审契约与固定样本，分类误推荐/漏召回，只调整新评分版本，并在完整 PostgreSQL 门禁前先运行定向测试。
+
+### 2026-09-05 — JAI-025 评估实现与验收边界
+
+- 新增离线质量评审契约、严格 JSON 加载器、稳定 Top-K 评估器、JSON 命令，以及 60 条完全合成/脱敏、带显式分类与依据的拟议标注。产物明确标记为等待项目负责人复核的“拟议”状态，没有把它描述成历史人工标注数据。
+- 保留 `jai-023-v1` 作为可支持的重放基线，并新增候选版本 `jai-025-v2`。V2 提高直接岗位方向/专业权重，降低紧迫度/完整度权重；仅在要求正文出现的词不参与正向方向评分，但要求正文仍参与排除词硬过滤。
+- 在拟议固定集上，v1 的 Top 20 有 15 个真阳性、5 个 `requirements_context_false_positive` 误推荐和 15 个漏召回（Precision@20 为 0.75，Recall@20 为 0.50）。V2 有 20 个真阳性、无 Top 20 误推荐，并显式保留 10 个漏召回（Precision@20 为 1.00，Recall@20 为 0.666667）。
+- 首轮定向检查暴露一个 `__all__` 插入位置错误，以及三处需要明确更新为 v2 数值的 v1 预期；修正后定向 Ruff、Mypy 通过，22 项匹配测试全部通过。这是本地实现检查，不是生产故障。
+- 启用 PostgreSQL 的完整 `scripts/check.py` 通过：Ruff format 检查 213 个文件，Ruff lint 通过，Mypy 检查 139 个源文件通过，288 项测试全部通过且无跳过，覆盖率 87.77%。`git diff --check` 也通过。
+- 只读核对现有本地开发数据库得到 `raw_documents=0`、`job_posts=0`、`job_positions=0`；该库也尚未应用 JAI-023 的 `match_results` 迁移。因此本地没有 50 条真实历史岗位，不能基于当前数据如实声称已完成本 Issue 的历史/人工标注验收。
+- 下一步：保留并普通推送这批可评审的 feature 工作，然后取得项目负责人对“是否接受 60 条脱敏拟议标注作为范围替代”的显式决定。如果没有该计划变更，也没有提供/写入带人工标注的历史样本，JAI-025 保持未完成且不得合入 `develop`。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -486,9 +509,9 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 ## 5. 下一步
 
-1. 完成 JAI-024 同步检查，普通推送 feature 分支，并在完整门禁通过后合入 `develop`。
-2. 合并火车完成后，先核验 JAI-025 是下一项计划内未完成 Issue，再创建其独立 feature 分支。
-3. OCR 继续延期至 JAI-B01；JAI-049 在 MVP 发布闸门前处理；JAI-048 保持独立文档 Issue。
+1. 完成 JAI-025 固定评审集、Top 20/漏召回对比、评分版本更新及双语局限说明。
+2. 先运行定向匹配质量测试，再运行启用 PostgreSQL 的完整门禁；随后提交、普通推送，并在安全集成前核验三端引用。
+3. JAI-026 调度、JAI-027 通知、OCR/JAI-B01、JAI-049 与 JAI-048 均保持在当前 Issue 范围外。
 
 ## 6. 更新模板
 

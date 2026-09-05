@@ -443,6 +443,6 @@ Issue 开始前必须具备：目标、范围、验收标准、依赖、测试�
 
 ## 13. 当前下一步
 
-JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-023 已依次合并并普通推送到 `develop`，当前基线为 JAI-023 非快进合并 `5935b5206a933e8a14cb80b0421ed90f1a0e336c`。JAI-021 Day 3 的中国移动 `PoolTimeout` 实际 4/5 指标和用户豁免记录完整保留；JAI-049 继续在 MVP 发布闸门前跟踪有证据完整率和来源风险。
+JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-024 已依次合并并普通推送到 `develop`，当前基线为 JAI-024 非快进合并 `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`。JAI-021 Day 3 的中国移动 `PoolTimeout` 实际 4/5 指标和用户豁免记录完整保留；JAI-049 继续在 MVP 发布闸门前跟踪有证据完整率和来源风险。
 
-JAI-024 的确定性四组日报、Markdown/HTML 渲染、不可变快照、原文链接、API、迁移、测试与双语文档已完成。最新 `develop` 正普通同步进 `feature/jai-024-daily-report-rendering`；必须保留 JAI-021 至 JAI-024 的双语 WORKLOG 历史并重新通过 PostgreSQL 完整门禁，之后才可合入 `develop`。JAI-025 调权、JAI-026 调度和 JAI-027 通知仍保持范围外；禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。
+当前在独立分支 `feature/jai-025-top-20-quality-review` 实施 JAI-025：建立至少 50 条脱敏、可人工复核的相关性标注，原样重放 `jai-023-v1`，用显式新版本比较 Top 20 误推荐与漏召回，并同步记录 MVP 局限。JAI-026 调度和 JAI-027 通知仍保持范围外；禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。

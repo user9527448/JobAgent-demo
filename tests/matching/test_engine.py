@@ -7,6 +7,7 @@ import pytest
 
 from jobagent.matching import (
     CURRENT_SCORE_VERSION,
+    LEGACY_SCORE_VERSION,
     ComponentScore,
     DeterministicMatchingEngine,
     HardFilterDecision,
@@ -84,18 +85,18 @@ def test_deadline_at_evaluation_instant_is_closed_and_missing_is_not_guessed() -
     assert expired.score == 0
     assert _hard_filter(missing, HardFilterRule.DEADLINE).passed is True
     assert _component(missing, ScoreComponent.DEADLINE_URGENCY).score == 0
-    assert _component(missing, ScoreComponent.INFORMATION_COMPLETENESS).score == 8
+    assert _component(missing, ScoreComponent.INFORMATION_COMPLETENESS).score == 4
 
 
 def test_urgency_buckets_include_exact_boundaries() -> None:
     engine = DeterministicMatchingEngine()
     cases = (
-        (timedelta(hours=72), 10),
-        (timedelta(hours=72, microseconds=1), 8),
-        (timedelta(days=7), 8),
-        (timedelta(days=7, microseconds=1), 5),
-        (timedelta(days=14), 5),
-        (timedelta(days=14, microseconds=1), 2),
+        (timedelta(hours=72), 5),
+        (timedelta(hours=72, microseconds=1), 4),
+        (timedelta(days=7), 4),
+        (timedelta(days=7, microseconds=1), 2),
+        (timedelta(days=14), 2),
+        (timedelta(days=14, microseconds=1), 1),
     )
 
     for remaining, expected in cases:
@@ -142,8 +143,8 @@ def test_empty_preferences_are_neutral_and_never_filter_everything() -> None:
 
     assert result.hard_filter_passed is True
     assert _component(result, ScoreComponent.REGION).score == 25
-    assert _component(result, ScoreComponent.JOB_DIRECTION).score == 30
-    assert _component(result, ScoreComponent.MAJOR).score == 15
+    assert _component(result, ScoreComponent.JOB_DIRECTION).score == 35
+    assert _component(result, ScoreComponent.MAJOR).score == 20
     assert _component(result, ScoreComponent.ORGANIZATION_TYPE).score == 10
 
 
@@ -162,7 +163,7 @@ def test_nonmatching_preferences_zero_only_the_relevant_components() -> None:
     )
 
     assert result.hard_filter_passed is True
-    assert result.score == 20
+    assert result.score == 10
     assert [
         _component(result, component).score
         for component in (
@@ -172,8 +173,36 @@ def test_nonmatching_preferences_zero_only_the_relevant_components() -> None:
             ScoreComponent.ORGANIZATION_TYPE,
         )
     ] == [0, 0, 0, 0]
-    assert _component(result, ScoreComponent.DEADLINE_URGENCY).score == 10
-    assert _component(result, ScoreComponent.INFORMATION_COMPLETENESS).score == 10
+    assert _component(result, ScoreComponent.DEADLINE_URGENCY).score == 5
+    assert _component(result, ScoreComponent.INFORMATION_COMPLETENESS).score == 5
+
+
+def test_v1_remains_replayable_while_v2_ignores_requirement_only_direction_terms() -> None:
+    match_input = replace(
+        _complete_input(),
+        position_name="Legal Counsel",
+        department="Legal Affairs",
+        major="Law",
+        requirements="Review contracts for Python services; no engineering duties.",
+    )
+    preferences = _matching_preferences()
+    engine = DeterministicMatchingEngine()
+
+    legacy = engine.evaluate(
+        match_input,
+        preferences,
+        evaluated_at=NOW,
+        score_version=LEGACY_SCORE_VERSION,
+    )
+    current = engine.evaluate(match_input, preferences, evaluated_at=NOW)
+
+    assert legacy.score == 85
+    assert _component(legacy, ScoreComponent.JOB_DIRECTION).score == 30
+    assert current.score == 45
+    assert _component(current, ScoreComponent.JOB_DIRECTION).score == 0
+    assert _component(current, ScoreComponent.JOB_DIRECTION).rule == (
+        "job-keyword-direct-fields-v2"
+    )
 
 
 def test_national_region_matches_any_explicit_region_preference() -> None:

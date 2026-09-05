@@ -8,7 +8,7 @@
 >
 > Last updated: 2026-09-05
 >
-> Active branch: `feature/jai-024-daily-report-rendering`
+> Active branch: `feature/jai-025-top-20-quality-review`
 
 ## 1. Current status
 
@@ -32,7 +32,8 @@
 | JAI-021 | Complete, merged and pushed to `develop` | `develop` / `8cc0b2e` | Day 3 accepted under the recorded external-endpoint waiver; actual 4/5 result retained; post-merge PostgreSQL gate passed |
 | JAI-022 | Complete, merged and pushed to `develop` | `develop` / `e7948c9` | JAI-021/JAI-022 histories preserved; post-merge PostgreSQL gate passed with 254 tests |
 | JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
-| JAI-024 | Complete; synchronized full gate passed, pending push/merge | `feature/jai-024-daily-report-rendering` / `742b14a` | JAI-021–JAI-024 histories preserved; PostgreSQL-enabled combined gate passed |
+| JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
+| JAI-025 | In progress; implementation gate passed, owner decision pending | `feature/jai-025-top-20-quality-review` / `0aa6b23` base | No historical rows exist locally; synthetic proposed labels are not represented as human-labelled history |
 
 ## 2. Current decisions
 
@@ -107,6 +108,10 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 ### D-032 JAI-024 extends the isolated merge train without changing its ancestors
 
 The user approved continued downstream development while JAI-021 waits for calendar-day observations. JAI-024 starts from published JAI-023 tip `9592a16d7dee12fbe6c555407a3607a492b2cd03` in its own worktree. Integration order is JAI-021 → JAI-022 → JAI-023 → JAI-024; each downstream branch receives the newly updated `develop` through a normal merge, preserves both bilingual logs, resolves conflicts explicitly, and reruns the complete PostgreSQL gate. Rebase, force push, and published-history rewriting remain prohibited.
+
+### D-033 JAI-025 preserves the v1 baseline and evaluates an explicit v2
+
+The quality review must replay `jai-023-v1` unchanged and compare it with a new score version over the same fixed, sanitized, manually reviewable sample set. Labels, reasons, Top 20 false positives, and misses remain explicit artifacts; tuning may change only the new version. Scheduling, delivery, LLM reranking, embeddings, and live-source collection remain outside JAI-025.
 
 ## 3. Active work history
 
@@ -474,6 +479,24 @@ The user approved continued downstream development while JAI-021 waits for calen
 - Bilingual heading parity, backlog Issue-ID order, Markdown relative links, and `git diff --check` passed. The PostgreSQL-enabled combined `scripts/check.py` passed: Ruff format checked 206 files, Ruff lint passed, Mypy passed across 136 source files, all 282 tests passed with no skips, and coverage was 87.96%.
 - Next: commit and normally push before merging JAI-024 into `develop`.
 
+### 2026-09-05 — Merge train completed and JAI-025 started
+
+- JAI-024 synchronization tip `11551331a403942d9b78c758997c6ae7536a94e7` was normally pushed and then merged into `develop` with non-fast-forward commit `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`.
+- The post-merge PostgreSQL-enabled full gate passed: Ruff format checked 206 files, Ruff lint passed, Mypy passed across 136 source files, all 282 tests passed with no skips, and coverage was 87.96%. Local `develop`, `origin/develop`, and GitHub `ls-remote` all matched `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`; ancestry checks for the final JAI-021 through JAI-024 feature tips all passed.
+- Verified both backlogs identify JAI-025 as the next incomplete planned Issue, then created `feature/jai-025-top-20-quality-review` from the triple-verified `develop` baseline. Repository-local authorship remains `user9527448 <2537759248@qq.com>`.
+- Scope is limited to at least 50 sanitized, manually reviewable relevance labels, deterministic Top 20/miss analysis, an unchanged v1 baseline, an explicit new score version, before/after evidence, and MVP limitations. JAI-026 scheduling and JAI-027 notification behavior remain out of scope.
+- Next: implement the offline quality-review contracts and fixture, classify false positives/misses, tune only the new score version, and run focused tests before the complete PostgreSQL gate.
+
+### 2026-09-05 — JAI-025 evaluation implementation and acceptance boundary
+
+- Added an offline quality-review contract, strict JSON loader, stable Top-K evaluator, JSON command, and 60 entirely synthetic/sanitized proposed labels with explicit categories and rationales. The artifact is clearly marked as proposed pending project-owner review; it is not represented as historical human-labelled data.
+- Preserved `jai-023-v1` as a supported replay baseline and added candidate `jai-025-v2`. V2 increases direct job-direction/major weight, reduces urgency/completeness weight, and excludes requirements-only mentions from positive direction scoring while retaining requirements in the exclusion hard filter.
+- On the proposed fixed set, v1 has 15 true positives, 5 `requirements_context_false_positive` items, and 15 misses in Top 20 (Precision@20 0.75, Recall@20 0.50). V2 has 20 true positives, no Top 20 false positives, and 10 explicit misses (Precision@20 1.00, Recall@20 0.666667).
+- The first focused check exposed one malformed `__all__` insertion and three v1 expectations that needed explicit v2 values; after correction, focused Ruff and Mypy passed and all 22 matching tests passed. This was a local implementation check, not a production failure.
+- The PostgreSQL-enabled full `scripts/check.py` passed: Ruff format checked 213 files, Ruff lint passed, Mypy passed across 139 source files, all 288 tests passed with no skips, and coverage was 87.77%. `git diff --check` also passed.
+- A read-only check of the existing local development database found `raw_documents=0`, `job_posts=0`, and `job_positions=0`; it also has not yet applied the JAI-023 `match_results` migration. There are therefore no 50 actual historical positions available locally, so the Issue's historical/human-labelled acceptance cannot be claimed honestly from current data.
+- Next: preserve and normally push this review-ready feature work, then obtain an explicit project-owner decision on whether the 60 sanitized proposed labels are accepted as a scoped substitute. Without that plan change—or a supplied/populated historical set with human labels—JAI-025 remains incomplete and must not merge to `develop`.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -486,9 +509,9 @@ The user approved continued downstream development while JAI-021 waits for calen
 
 ## 5. Next actions
 
-1. Complete the JAI-024 synchronization checks, normally push the feature branch, and merge it into `develop` after the full gate passes.
-2. After the merge train completes, verify JAI-025 is the next planned incomplete Issue before creating its independent feature branch.
-3. Keep OCR deferred to JAI-B01, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
+1. Complete JAI-025's fixed review set, Top 20/miss comparison, score-version update, and paired limitation documentation.
+2. Run focused matching-quality tests followed by the complete PostgreSQL-enabled gate; then commit, normally push, and verify all three refs before safe integration.
+3. Keep JAI-026 scheduling, JAI-027 notifications, OCR/JAI-B01, JAI-049, and JAI-048 outside the active Issue.
 
 ## 6. Update template
 

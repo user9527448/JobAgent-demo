@@ -22,7 +22,9 @@ from .contracts import (
     preference_payload,
 )
 
-CURRENT_SCORE_VERSION: Final = "jai-023-v1"
+LEGACY_SCORE_VERSION: Final = "jai-023-v1"
+CURRENT_SCORE_VERSION: Final = "jai-025-v2"
+SUPPORTED_SCORE_VERSIONS: Final = frozenset({LEGACY_SCORE_VERSION, CURRENT_SCORE_VERSION})
 
 _EDUCATION_RANK: Final[dict[str, int]] = {
     "no_requirement": 0,
@@ -36,13 +38,21 @@ _EDUCATION_RANK: Final[dict[str, int]] = {
     "master_or_above": 4,
     "doctorate": 5,
 }
-_COMPONENT_MAXIMUMS: Final = {
+_V1_COMPONENT_MAXIMUMS: Final = {
     ScoreComponent.REGION: 25,
     ScoreComponent.JOB_DIRECTION: 30,
     ScoreComponent.MAJOR: 15,
     ScoreComponent.ORGANIZATION_TYPE: 10,
     ScoreComponent.DEADLINE_URGENCY: 10,
     ScoreComponent.INFORMATION_COMPLETENESS: 10,
+}
+_V2_COMPONENT_MAXIMUMS: Final = {
+    ScoreComponent.REGION: 25,
+    ScoreComponent.JOB_DIRECTION: 35,
+    ScoreComponent.MAJOR: 20,
+    ScoreComponent.ORGANIZATION_TYPE: 10,
+    ScoreComponent.DEADLINE_URGENCY: 5,
+    ScoreComponent.INFORMATION_COMPLETENESS: 5,
 }
 _WHITESPACE_RE: Final = re.compile(r"\s+")
 
@@ -60,8 +70,13 @@ class DeterministicMatchingEngine:
     ) -> MatchEvaluation:
         """Return the same output for identical input, preferences, time, and version."""
         evaluated_at = _aware_utc(evaluated_at)
-        if score_version != CURRENT_SCORE_VERSION:
+        if score_version not in SUPPORTED_SCORE_VERSIONS:
             raise ValueError(f"Unsupported score version: {score_version}")
+        maximums = (
+            _V1_COMPONENT_MAXIMUMS
+            if score_version == LEGACY_SCORE_VERSION
+            else _V2_COMPONENT_MAXIMUMS
+        )
         deadline = _deadline(match_input.deadline)
 
         hard_filters = (
@@ -71,12 +86,12 @@ class DeterministicMatchingEngine:
             _exclusion_filter(match_input, preferences.exclusions),
         )
         components = (
-            _region_component(match_input, preferences),
-            _direction_component(match_input, preferences),
-            _major_component(match_input, preferences),
-            _organization_component(match_input, preferences),
-            _urgency_component(deadline, evaluated_at),
-            _completeness_component(match_input, deadline),
+            _region_component(match_input, preferences, score_version, maximums),
+            _direction_component(match_input, preferences, score_version, maximums),
+            _major_component(match_input, preferences, score_version, maximums),
+            _organization_component(match_input, preferences, score_version, maximums),
+            _urgency_component(deadline, evaluated_at, score_version, maximums),
+            _completeness_component(match_input, deadline, score_version, maximums),
         )
         hard_filter_passed = all(item.passed for item in hard_filters)
         score = sum(item.score for item in components) if hard_filter_passed else 0
@@ -193,33 +208,47 @@ def _exclusion_filter(
 def _region_component(
     match_input: JobMatchInput,
     preferences: PreferenceValues,
+    score_version: str,
+    maximums: dict[ScoreComponent, int],
 ) -> ComponentScore:
     preferred = tuple(preferences.regions)
     unrestricted = not preferred
     matched = unrestricted or "national" in preferred or match_input.region == "national"
     matched = matched or match_input.region in preferred
-    score = _COMPONENT_MAXIMUMS[ScoreComponent.REGION] if matched else 0
+    score = maximums[ScoreComponent.REGION] if matched else 0
     return _component(
         ScoreComponent.REGION,
-        "region-any-or-exact-v1",
+        f"region-any-or-exact-{'v1' if score_version == LEGACY_SCORE_VERSION else 'v2'}",
         {"position_region": match_input.region, "preferred_regions": list(preferred)},
         score,
         "Region is unrestricted or matches a preferred region."
         if matched
         else "Region did not match.",
+        maximums,
     )
 
 
 def _direction_component(
     match_input: JobMatchInput,
     preferences: PreferenceValues,
+    score_version: str,
+    maximums: dict[ScoreComponent, int],
 ) -> ComponentScore:
     terms = tuple(preferences.job_keywords)
-    matches = _matched_terms(terms, _direction_values(match_input))
+    values = (
+        _direction_values(match_input)
+        if score_version == LEGACY_SCORE_VERSION
+        else _direct_direction_values(match_input)
+    )
+    matches = _matched_terms(terms, values)
     matched = not terms or bool(matches)
     return _component(
         ScoreComponent.JOB_DIRECTION,
-        "job-keyword-any-v1",
+        (
+            "job-keyword-any-v1"
+            if score_version == LEGACY_SCORE_VERSION
+            else "job-keyword-direct-fields-v2"
+        ),
         {
             "preferred_keywords": list(terms),
             "matched_keywords": list(matches),
@@ -228,73 +257,98 @@ def _direction_component(
             "department": match_input.department,
             "requirements": match_input.requirements,
         },
-        _COMPONENT_MAXIMUMS[ScoreComponent.JOB_DIRECTION] if matched else 0,
-        "Job direction is unrestricted or an explicit keyword matched."
+        maximums[ScoreComponent.JOB_DIRECTION] if matched else 0,
+        "Job direction is unrestricted or an explicit keyword matched a direct job field."
         if matched
-        else "No preferred job keyword matched.",
+        else "No preferred job keyword matched a direct job field.",
+        maximums,
     )
 
 
 def _major_component(
     match_input: JobMatchInput,
     preferences: PreferenceValues,
+    score_version: str,
+    maximums: dict[ScoreComponent, int],
 ) -> ComponentScore:
     terms = tuple(preferences.majors)
     matches = _matched_terms(terms, (match_input.major,))
     matched = not terms or bool(matches)
     return _component(
         ScoreComponent.MAJOR,
-        "major-any-v1",
+        f"major-any-{'v1' if score_version == LEGACY_SCORE_VERSION else 'v2'}",
         {
             "position_major": match_input.major,
             "preferred_majors": list(terms),
             "matched_majors": list(matches),
         },
-        _COMPONENT_MAXIMUMS[ScoreComponent.MAJOR] if matched else 0,
+        maximums[ScoreComponent.MAJOR] if matched else 0,
         "Major is unrestricted or an explicit major preference matched."
         if matched
         else "No preferred major matched.",
+        maximums,
     )
 
 
 def _organization_component(
     match_input: JobMatchInput,
     preferences: PreferenceValues,
+    score_version: str,
+    maximums: dict[ScoreComponent, int],
 ) -> ComponentScore:
     preferred = tuple(preferences.organization_types)
     matched = not preferred or match_input.organization_type in preferred
     return _component(
         ScoreComponent.ORGANIZATION_TYPE,
-        "organization-type-exact-v1",
+        (
+            "organization-type-exact-v1"
+            if score_version == LEGACY_SCORE_VERSION
+            else "organization-type-exact-v2"
+        ),
         {
             "position_organization_type": match_input.organization_type,
             "preferred_organization_types": list(preferred),
         },
-        _COMPONENT_MAXIMUMS[ScoreComponent.ORGANIZATION_TYPE] if matched else 0,
+        maximums[ScoreComponent.ORGANIZATION_TYPE] if matched else 0,
         "Organization type is unrestricted or matches exactly."
         if matched
         else "Organization type did not match.",
+        maximums,
     )
 
 
-def _urgency_component(deadline: datetime | None, evaluated_at: datetime) -> ComponentScore:
+def _urgency_component(
+    deadline: datetime | None,
+    evaluated_at: datetime,
+    score_version: str,
+    maximums: dict[ScoreComponent, int],
+) -> ComponentScore:
     remaining_seconds: int | None = None
     if deadline is None or deadline <= evaluated_at:
         score = 0
     else:
         remaining = deadline - evaluated_at
         remaining_seconds = int(remaining.total_seconds())
-        if remaining <= timedelta(hours=72):
-            score = 10
-        elif remaining <= timedelta(days=7):
-            score = 8
-        elif remaining <= timedelta(days=14):
+        if score_version == LEGACY_SCORE_VERSION:
+            if remaining <= timedelta(hours=72):
+                score = 10
+            elif remaining <= timedelta(days=7):
+                score = 8
+            elif remaining <= timedelta(days=14):
+                score = 5
+            else:
+                score = 2
+        elif remaining <= timedelta(hours=72):
             score = 5
-        else:
+        elif remaining <= timedelta(days=7):
+            score = 4
+        elif remaining <= timedelta(days=14):
             score = 2
+        else:
+            score = 1
     return _component(
         ScoreComponent.DEADLINE_URGENCY,
-        "deadline-buckets-v1",
+        ("deadline-buckets-v1" if score_version == LEGACY_SCORE_VERSION else "deadline-buckets-v2"),
         {
             "deadline": _iso(deadline),
             "evaluated_at": _iso(evaluated_at),
@@ -302,12 +356,15 @@ def _urgency_component(deadline: datetime | None, evaluated_at: datetime) -> Com
         },
         score,
         "Deadline urgency uses fixed 72-hour, 7-day, and 14-day boundaries.",
+        maximums,
     )
 
 
 def _completeness_component(
     match_input: JobMatchInput,
     deadline: datetime | None,
+    score_version: str,
+    maximums: dict[ScoreComponent, int],
 ) -> ComponentScore:
     fields = {
         "organization": match_input.organization,
@@ -318,16 +375,17 @@ def _completeness_component(
     }
     present = sorted(name for name, value in fields.items() if _present(value))
     missing = sorted(set(fields) - set(present))
-    score = len(present) * 2
+    score = len(present) * (2 if score_version == LEGACY_SCORE_VERSION else 1)
     return _component(
         ScoreComponent.INFORMATION_COMPLETENESS,
-        "five-core-fields-v1",
+        ("five-core-fields-v1" if score_version == LEGACY_SCORE_VERSION else "five-core-fields-v2"),
         {
             "present_fields": cast(list[JsonValue], present),
             "missing_fields": cast(list[JsonValue], missing),
         },
         score,
         f"{len(present)} of 5 core fields are present.",
+        maximums,
     )
 
 
@@ -337,13 +395,14 @@ def _component(
     inputs: dict[str, JsonValue],
     score: int,
     explanation: str,
+    maximums: dict[ScoreComponent, int],
 ) -> ComponentScore:
     return ComponentScore(
         component=component,
         rule=rule,
         inputs=inputs,
         score=score,
-        maximum=_COMPONENT_MAXIMUMS[component],
+        maximum=maximums[component],
         explanation=explanation,
     )
 
@@ -378,6 +437,14 @@ def _direction_values(match_input: JobMatchInput) -> tuple[str | None, ...]:
         match_input.title,
         match_input.department,
         match_input.requirements,
+    )
+
+
+def _direct_direction_values(match_input: JobMatchInput) -> tuple[str | None, ...]:
+    return (
+        match_input.position_name,
+        match_input.title,
+        match_input.department,
     )
 
 

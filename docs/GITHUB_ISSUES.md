@@ -630,4 +630,4 @@
 
 ## 4. 推荐执行顺序
 
-JAI-021 与 JAI-022 已按顺序完成并合入 `develop`。当前合并火车处理 JAI-023，随后处理 JAI-024：每个 feature 分支先普通合并最新 `develop`，保留双方双语日志并重跑 PostgreSQL 完整门禁，之后才允许非快进合入 `develop`；禁止 rebase、force push 或历史改写。JAI-041 已吸收到 JAI-021；JAI-049 在 MVP 发布闸门前跟踪真实完整率和来源风险。发布闭环稳定后逐站执行其余 JAI-038～JAI-045；JAI-048 保持独立文档 Issue。动态门户不满足公开访问或条款边界时记录 `blocked`，不使用登录、验证码、Playwright 或规避措施强行接入。
+JAI-021 至 JAI-024 已按顺序完成并合入 `develop`，当前从三端一致的 JAI-024 合并基线 `0aa6b233ea8216aecdbe1d1dce4031ad6884a442` 在独立分支执行 JAI-025。质量评审必须保留 `jai-023-v1` 基线并使用显式新版本做前后对比；JAI-026 调度和 JAI-027 通知不得提前实现。禁止 rebase、force push 或历史改写。JAI-041 已吸收到 JAI-021；JAI-049 在 MVP 发布闸门前跟踪真实完整率和来源风险。发布闭环稳定后逐站执行其余 JAI-038～JAI-045；JAI-048 保持独立文档 Issue。动态门户不满足公开访问或条款边界时记录 `blocked`，不使用登录、验证码、Playwright 或规避措施强行接入。
