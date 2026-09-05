@@ -273,11 +273,11 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Labels**: `type:feature` `area:crawler` `area:extraction` `priority:P0` `size:L`
 - **Dependencies**: JAI-011, JAI-020
 - **Goal**: meet MVP source coverage and quality metrics.
-- **Scope**: prefer the National College Student Employment Service Platform and Shanghai public-institution announcements; if dynamic lists violate public-access boundaries, use a stable official endpoint or record a blocker, never login/application systems.
+- **Scope**: prefer the National College Student Employment Service Platform and Shanghai public-institution announcements; when an existing source remains unreachable, mark it `blocked` and, after user confirmation, replace it with a stable login-free official announcement endpoint, never a login/application system. On 2026-08-27 the unreachable SASAC column was disabled and the minimum China Mobile public-announcement scope from JAI-041 was absorbed as the fifth active source.
 - **Acceptance**:
-  - [ ] Five sources have Adapter contract tests.
-  - [ ] Record success, duplicate, and completeness metrics for three consecutive days.
-  - [ ] Core fields reach 85%, or a corrective Issue documents the gap.
+  - [x] Five sources have Adapter contract tests.
+  - [x] Record success, duplicate, and completeness metrics for three consecutive days (the actual 4/5 result from China Mobile's 2026-09-05 `PoolTimeout` remains intact and was explicitly accepted by the user as an external-endpoint waiver).
+  - [x] Core fields reach 85%, or a corrective Issue documents the gap (the current comparable live diagnostic is 82.5%, tracked by JAI-049).
 
 ---
 
@@ -495,7 +495,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Labels**: `type:docs` `area:infra` `priority:P1` `size:L`
 - **Dependencies**: JAI-047
 - **Goal**: add independent language versions for remaining repository-authored documents and clear the legacy inventory.
-- **Scope**: root README, configuration guide, source catalog, unofficial reference sources, and fixture READMEs added after JAI-011; retain each original language and add the missing mirror; update both indexes.
+- **Scope**: root README, configuration guide, unofficial reference sources, and still-unpaired JAI-011 fixture guides; retain each original language and add the missing mirror; update both indexes. The source catalog was paired early because JAI-021 substantively updated it.
 - **Non-goals**: third-party materials, fixture bodies, historical WORKLOG archive, product functionality, or automatic machine-translation services.
 - **Acceptance**:
   - [ ] Every repository-authored Markdown document has a bilingual pair or an indexed, verifiable non-translation reason.
@@ -546,9 +546,13 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:crawler` `priority:P1` `size:L`
 - **Dependencies**: JAI-012, JAI-040
+- **Status**: reprioritized by the user and absorbed into JAI-021; do not create a separate branch or duplicate implementation.
 - **Goal**: collect group and Jiangsu/Zhejiang/Shanghai campus announcements and jobs.
 - **Boundary**: official login-free pages/APIs only; never access resumes or applications.
-- **Acceptance**: at least three fixture groups, region/campus filters, and no duplicates across two runs.
+- **Acceptance**:
+  - [x] At least three fixture groups.
+  - [x] Region/campus filters.
+  - [x] No duplicates across two persistence runs.
 
 ### JAI-042 Integrate China Telecom public recruitment
 
@@ -582,6 +586,17 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Scope**: two official Adapters; `foreign_enterprise` and Jiangsu/Zhejiang/Shanghai filtering; do not infer or assert legal ownership categories.
 - **Acceptance**: five sources appear in one section with source text and position IDs preserved; filters/report regressions pass.
 
+### JAI-049 Improve evidence-backed core-field completeness across heterogeneous official notices
+
+- **Labels**: `type:feature` `area:crawler` `area:extraction` `priority:P1` `size:M`
+- **Dependencies**: JAI-021
+- **Goal**: reach 85% completeness across the five core fields in controlled live samples without guessing critical values.
+- **Scope**: analyze missing NCSS deadlines and missing organization/deadline values in broad Jiangsu topics; prefer stable, narrower announcement endpoints owned by the same official body, add deterministic rules with direct quotes, or replace a low-value source under the W6 gate. Never treat publication time as a deadline or publisher as the hiring organization.
+- **Acceptance**:
+  - [ ] Organization, title, region, application deadline, and source-link completeness reaches 85% in controlled live samples, or a source replacement decision is documented.
+  - [ ] Every new organization/deadline value has a source quote and coordinates; fields without evidence remain empty.
+  - [ ] Offline regressions, low-frequency live verification, and PostgreSQL idempotency acceptance pass.
+
 ---
 
 ## 3. Post-MVP backlog (not part of the ten-week commitment)
@@ -612,4 +627,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-Complete JAI-047 bilingual migration baseline → JAI-012 run/retry capability → JAI-013–JAI-021 to reach five stable MVP sources → JAI-038–JAI-045 one source at a time after the release loop is stable. Execute JAI-048 as an independent documentation Issue before the next substantive change to any listed legacy document; never mix it into feature branches. Personal WIP limit is two: at most one primary feature plus one small test/docs Issue. If a dynamic portal cannot satisfy public-access and terms boundaries, record `blocked` and continue; never force coverage with login, CAPTCHA, Playwright, or evasion.
+Complete JAI-047 bilingual migration baseline → JAI-012 run/retry capability → implement JAI-013–JAI-021 in order. On 2026-08-29 the user explicitly approved one bounded WIP exception: while JAI-021 is in calendar-day acceptance observation only, JAI-022 may proceed independently from `develop`. JAI-021 must complete and merge first; then normally merge the latest `develop` into JAI-022, preserve both logs, and rerun the full gate, never using rebase or history rewriting to avoid conflicts. The minimum China Mobile public-announcement scope from JAI-041 was pulled into JAI-021 early because SASAC was blocked and must not be implemented twice → remediate the JAI-021 live completeness gap under JAI-049 before the MVP release gate → execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable. Execute JAI-048 as an independent documentation Issue before the next substantive change to any listed legacy document; never mix it into feature branches. Except for the explicitly approved JAI-021 observation lane, the personal WIP limit remains one primary feature plus one small test/docs Issue. If a dynamic portal cannot satisfy public-access and terms boundaries, record `blocked` and continue; never force coverage with login, CAPTCHA, Playwright, or evasion.

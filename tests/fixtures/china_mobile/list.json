@@ -1,0 +1,39 @@
+{
+  "cLocation": {"channelId": "synthetic"},
+  "cData": {
+    "list": [
+      {
+        "text1": "合成移动甲公司",
+        "text2": "101",
+        "text3": "合成移动甲公司2027届校园招聘公告",
+        "text4": "2026-08-27 09:00:00",
+        "detail_href": "/personal/notice/index_detail_70001.html",
+        "jump_link": null
+      },
+      {
+        "text1": "合成移动乙公司",
+        "text2": "102",
+        "text3": "合成移动乙公司2026年社会招聘公告",
+        "text4": "2026-08-26 10:00:00",
+        "detail_href": "/personal/notice/index_detail_70002.html",
+        "jump_link": null
+      },
+      {
+        "text1": "合成移动丙研究院",
+        "text2": "103",
+        "text3": "合成移动丙研究院应届毕业生招聘公告",
+        "text4": "2026-08-25 11:00:00",
+        "detail_href": "/personal/notice/index_detail_70003.html",
+        "jump_link": null
+      },
+      {
+        "text1": "集团总部",
+        "text2": "1",
+        "text3": "中国移动招聘网站系统升级公告",
+        "text4": "2026-08-24 12:00:00",
+        "detail_href": "/personal/notice/index_detail_79999.html",
+        "jump_link": null
+      }
+    ]
+  }
+}

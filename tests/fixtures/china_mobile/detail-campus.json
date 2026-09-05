@@ -1,0 +1,16 @@
+{
+  "cOrder": {"downTime": "2026-09-10 23:59:00"},
+  "cData": {
+    "articleId": 70001,
+    "content": {
+      "text1": "合成移动甲公司",
+      "text2": "101",
+      "text3": "合成移动甲公司2027届校园招聘公告",
+      "text4": "2026-08-27 09:00:00",
+      "text5": "2026-09-10 23:59:59",
+      "text6": "<p>招聘岗位：软件工程师。</p><p>工作地点：上海。</p><p>报名截止时间：2026年9月10日。</p>",
+      "_attachment1OriginalFileName": "合成岗位清单.xlsx",
+      "attachment1": "/uploadBaseDir/content/xlsx/20260827/synthetic-campus.xlsx"
+    }
+  }
+}
