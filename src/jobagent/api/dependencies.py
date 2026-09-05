@@ -7,6 +7,7 @@ from fastapi import HTTPException, Request, status
 from jobagent.db import DatabaseHealth
 from jobagent.extraction.reparse import ReparseOperations
 from jobagent.preferences import PreferenceOperations
+from jobagent.reports import DailyReportOperations
 
 
 def get_database(request: Request) -> DatabaseHealth:
@@ -37,6 +38,20 @@ def get_preference_service(request: Request) -> PreferenceOperations:
             detail={
                 "code": "preferences.service_unavailable",
                 "message": "Preference service is unavailable for this application instance.",
+            },
+        )
+    return service
+
+
+def get_report_service(request: Request) -> DailyReportOperations:
+    """Return daily-report operations or an explicit unavailable response."""
+    service = cast(DailyReportOperations | None, request.app.state.report_service)
+    if service is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "reports.service_unavailable",
+                "message": "Daily report service is unavailable for this application instance.",
             },
         )
     return service

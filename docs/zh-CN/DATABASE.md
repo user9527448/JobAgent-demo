@@ -2,7 +2,7 @@
 
 > 英文原文：[JOBAGENT core database model](../DATABASE.md)。修改原文时必须在同一提交中同步更新本镜像。
 
-本文描述 JAI-006 建立的 PostgreSQL Schema，以及 JAI-009 的[原始公告版本策略](RAW_DOCUMENTS.md)、JAI-010 的[附件存储策略](ATTACHMENTS.md)、JAI-019 的[版本化抽取/证据策略](MERGING_AND_EVIDENCE.md)、JAI-020 的[校验/重解析策略](VALIDATION_AND_REPARSING.md)、JAI-022 的[单用户偏好策略](PREFERENCES.md)和 JAI-023 的[版本化匹配策略](MATCHING.md)带来的扩展。JAI-007 增加的采集运行仓库和编排见[采集编排文档](COLLECTION.md)。
+本文描述 JAI-006 建立的 PostgreSQL Schema，以及 JAI-009 的[原始公告版本策略](RAW_DOCUMENTS.md)、JAI-010 的[附件存储策略](ATTACHMENTS.md)、JAI-019 的[版本化抽取/证据策略](MERGING_AND_EVIDENCE.md)、JAI-020 的[校验/重解析策略](VALIDATION_AND_REPARSING.md)、JAI-022 的[单用户偏好策略](PREFERENCES.md)、JAI-023 的[版本化匹配策略](MATCHING.md)和 JAI-024 的[日报快照](REPORTS.md)带来的扩展。JAI-007 增加的采集运行仓库和编排见[采集编排文档](COLLECTION.md)。
 
 ## 数据表
 
@@ -18,6 +18,7 @@
 | `validation_issues` | 逐版本质量问题 | 每个公告下 issue key 稳定唯一；原因、严重度、实体/字段身份；仅允许错误和警告 |
 | `user_preferences` | 本地单用户档案 | 固定 `id=1`；结构化筛选项；无限制默认值；审计时间与粘性重算信号 |
 | `match_results` | 版本化岗位匹配决定 | 得分/规则版本；输入/偏好/结果哈希；硬过滤决定；JSONB 分项/规则；一个当前结果和追加式历史 |
+| `daily_report_snapshots` | 不可变结构化/渲染日报 | 日期/时区/版本/输入身份；JSONB payload；内容哈希；Markdown 与已转义 HTML；相同输入复用一份快照 |
 
 ## 关系与删除策略
 
@@ -33,6 +34,8 @@ sources
     │   │   └── match_results → user_preferences
     │   └── validation_issues
     └── field_evidence（文档来源）
+
+daily_report_snapshots（不可变日报 payload 与渲染）
 ```
 
 所有历史外键使用 `ON DELETE RESTRICT`，ORM 关系不使用删除级联。有历史记录引用的来源不能被意外删除。正常停用来源只把 `sources.enabled` 改为 false，从而保留运行、文档、附件和抽取数据。
@@ -66,6 +69,7 @@ sources
 - 当前/推荐资格索引供后续推荐查询使用，避免把旧数据或阻塞记录当作可推荐。旧数据回填为 `review_required` 和 `legacy-unvalidated`，不会被静默批准。
 - `user_preferences` 只允许 `id=1`；JSON 偏好字段必须保持数组，`education` 必须是受支持的确定性枚举或空值。空值表示无限制，绝不表示“一个也不匹配”。
 - `match_results` 把得分限制为 0～100，任一硬过滤失败时必须为零，校验全部 SHA-256 身份，并要求分项/规则解释为 JSON 数组；部分唯一索引保证每个岗位只有一个当前结果。
+- `daily_report_snapshots` 要求 payload 为 JSON 对象，输入/内容 SHA-256 合法。日期/时区/报告版本/输入哈希身份避免重复快照，同时把同日发生变化的输入保留为独立不可变记录。
 
 ## 迁移
 

@@ -24,6 +24,7 @@
 | 数据校验、待复核与重解析 | [中文](VALIDATION_AND_REPARSING.md) | [English](../VALIDATION_AND_REPARSING.md) |
 | 单用户偏好 | [中文](PREFERENCES.md) | [English](../PREFERENCES.md) |
 | 确定性匹配与版本化评分 | [中文](MATCHING.md) | [English](../MATCHING.md) |
+| 日报查询、渲染与快照 | [中文](REPORTS.md) | [English](../REPORTS.md) |
 | 来源 4、5 与稳定性验证 | [中文](SOURCE_STABILITY.md) | [English](../SOURCE_STABILITY.md) |
 | 招聘信息目标网站库 | [中文](../SOURCE_CATALOG.md) | [English](../en-US/SOURCE_CATALOG.md) |
 | JAI-005 济宁来源技术验证 | [中文](spikes/JAI-005-JINING-SOURCE.md) | [English](../spikes/JAI-005-JINING-SOURCE.md) |

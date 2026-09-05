@@ -8,7 +8,7 @@
 >
 > Last updated: 2026-09-05
 >
-> Active branch: `feature/jai-023-hard-filter-versioned-scoring`
+> Active branch: `feature/jai-024-daily-report-rendering`
 
 ## 1. Current status
 
@@ -31,7 +31,8 @@
 | JAI-020 | Complete, merged and pushed to `develop` | `develop` / `f56365f` | Validation severity, review eligibility, and idempotent document reparsing verified |
 | JAI-021 | Complete, merged and pushed to `develop` | `develop` / `8cc0b2e` | Day 3 accepted under the recorded external-endpoint waiver; actual 4/5 result retained; post-merge PostgreSQL gate passed |
 | JAI-022 | Complete, merged and pushed to `develop` | `develop` / `e7948c9` | JAI-021/JAI-022 histories preserved; post-merge PostgreSQL gate passed with 254 tests |
-| JAI-023 | Complete; synchronized full gate passed, pending push/merge | `feature/jai-023-hard-filter-versioned-scoring` / `9592a16` | JAI-021–JAI-023 histories preserved; PostgreSQL-enabled combined gate passed |
+| JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
+| JAI-024 | Complete; synchronized full gate passed, pending push/merge | `feature/jai-024-daily-report-rendering` / `742b14a` | JAI-021–JAI-024 histories preserved; PostgreSQL-enabled combined gate passed |
 
 ## 2. Current decisions
 
@@ -102,6 +103,10 @@ An explicit insufficient education, reached deadline, exclusion hit, or JAI-020 
 ### D-031 Evaluation time and preference acknowledgement are transactional inputs
 
 The matching engine receives timezone-aware `evaluated_at`; it never reads the process clock, so urgency and hashes remain reproducible. Full recomputation locks the JAI-022 singleton and acknowledges its sticky signal only in the same transaction as all current-position results. A failure rolls back both writes and acknowledgement, while successful acknowledgement preserves the preference-value `updated_at` identity.
+
+### D-032 JAI-024 extends the isolated merge train without changing its ancestors
+
+The user approved continued downstream development while JAI-021 waits for calendar-day observations. JAI-024 starts from published JAI-023 tip `9592a16d7dee12fbe6c555407a3607a492b2cd03` in its own worktree. Integration order is JAI-021 → JAI-022 → JAI-023 → JAI-024; each downstream branch receives the newly updated `develop` through a normal merge, preserves both bilingual logs, resolves conflicts explicitly, and reruns the complete PostgreSQL gate. Rebase, force push, and published-history rewriting remain prohibited.
 
 ## 3. Active work history
 
@@ -318,6 +323,26 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 - Created feature commit `8a334e5` with repository-local author `user9527448 <2537759248@qq.com>`. The first normal HTTPS push failed after about 21 seconds because GitHub port 443 was unreachable; a read-only `ls-remote` failed the same way and a TCP probe resolved `github.com` to `20.205.243.166` but reported port 443 closed. No remote branch, protocol, history, or author was changed; retry the same non-force push when connectivity recovers.
 - The later unchanged normal push succeeded. Local HEAD, the tracking reference, and GitHub `ls-remote` all matched blocker-record tip `18cdc97c16cc02fbb2cdd6383258c811bd062cea`; `develop`, JAI-021, and JAI-022 remained unchanged and isolated.
 
+### 2026-09-03 — JAI-024 daily report query and rendering started in parallel
+
+- Verified JAI-024 is the next incomplete planned Issue after JAI-023 and depends only on JAI-023. Created `feature/jai-024-daily-report-rendering` in isolated worktree `data/worktrees/jai024` from published JAI-023 tip `9592a16d7dee12fbe6c555407a3607a492b2cd03`; its merge base with JAI-023 is identical.
+- Scope is limited to four action-oriented groups—priority applications, closing soon, added today, and needs confirmation—stable same-input/day ordering, Markdown/HTML rendering, report snapshots, and original-source links. JAI-025 quality review, JAI-026 scheduling, JAI-027 notification delivery, and all credential/channel behavior remain out of scope.
+- Integration boundary is explicit: JAI-021 merges first, then JAI-022, JAI-023, and finally JAI-024. Each branch will normally merge the latest `develop`, preserve both WORKLOG histories, resolve paired-document conflicts, and rerun the full PostgreSQL-enabled gate before integration.
+- Added pure report version `jai-024-v1`. The explicit report date and timezone define local-day windows without reading the process clock. Current hard-filter-passing matches enter stable, independently sorted priority (score at least 70), closing-within-seven-days, and added-today sections; review-required or evidence-incomplete records enter needs-confirmation. A position may appear in multiple action sections, and missing fields are displayed as missing rather than guessed.
+- Added deterministic Chinese Markdown and escaped standalone HTML renderers. Every item carries organization, title, region, deadline, rule reason, evidence-derived risks, score, and its original-source link; all four sections remain present and explicitly state when empty.
+- Added migration `0008_daily_report_snapshots`, the matching ORM model, canonical input/content SHA-256 identities, and an idempotent SQLAlchemy service. Identical date/timezone/version/input reuses the immutable snapshot and differing output under the same identity fails explicitly. Added generation, structured lookup, Markdown, and HTML API endpoints without scheduler or delivery behavior.
+- Added builder/render/API/model/migration/PostgreSQL service tests and paired report/database/index documentation. Initial static work exposed Ruff ambiguity/import/performance findings and a Pydantic recursion error from using the recursive JSON alias as a response field; the code was corrected without suppressions, and the API now exposes the same structured object through a nonrecursive response annotation.
+- The database-free gate passed Ruff format for 187 files, Ruff lint, and Mypy for 126 source files. The first complete-gate attempt executed 238 tests successfully and skipped the 13 PostgreSQL tests because `JOBAGENT_TEST_DATABASE_URL` was unavailable; expectedly, coverage was 81.58%, below the 85% threshold, so `scripts/check.py` remains failed rather than being reported as acceptance. A later explicit Asia/Shanghai local-midnight and seven-day right-boundary test brought the passing non-database set to 239.
+- Docker Desktop 4.85.0 was present but its backend crashed before starting any engine. Logs first identified inaccessible Windows Unix-socket reparse points. The volatile `C:\Users\benbenhu\AppData\Local\Docker\run` and `C:\Users\benbenhu\AppData\Local\docker-secrets-engine` directories were renamed to timestamped `.stale-20260903-*` backups and Docker was restarted; no image, volume, project data, or configuration was deleted. A newly recreated `dockerInference` socket failed identically, proving the remaining blocker is the Docker Desktop/Windows runtime rather than stale project state. Port 5432 remains closed and no standalone local PostgreSQL service exists.
+- JAI-024 is not marked complete, its acceptance boxes remain open, and the implementation is not committed or pushed. JAI-025 scoring review, JAI-026 scheduling/locks, and JAI-027 notification/channel logic remain out of scope.
+- After Windows restarted, Docker Desktop 4.85.0 and the existing PostgreSQL container recovered without a factory reset; the database became healthy on port 5432. The first focused PostgreSQL run passed the migration/model checks but failed one report-service assertion because the test assumed the persisted human-confirmation reason was always the first risk, while the documented deterministic order places review status first. The assertion was corrected to require that reason anywhere in the retained risk set; production ordering and acceptance were not weakened.
+- The corrected focused PostgreSQL migration/model/report-service set passed 7/7. The first complete-gate invocation then stopped at Ruff format because that corrected generator assertion required canonical one-line formatting; `ruff format` made only that mechanical change.
+- Final PostgreSQL-enabled `scripts/check.py` passed: Ruff format checked 187 files, Ruff lint passed, Mypy passed across 126 source files, all 252 tests passed with no skips, and coverage was 88.53%. Paired JAI-024 acceptance is complete without implementing JAI-025, JAI-026, or JAI-027 behavior.
+- Created scoped feature commit `ffa065f2877c833b5b98e48640a61aa891a0bb4f` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed the new branch. Local HEAD, its tracking reference, and GitHub `ls-remote` all matched that commit before this status-only record; no force push, rebase, remote change, or published-history rewrite occurred.
+- Created paired acceptance/push status commit `1e60ee9`. Its first normal push and one unchanged retry failed because GitHub port 443 was unreachable; the direct TCP probe returned false and `ls-remote` failed identically. The published feature tip remains safely at `ffa065f`, the local branch is ahead only by status documentation, and no remote state or history was rewritten.
+- Read-only diagnosis then found that Windows had an active local proxy at `127.0.0.1:7892`, while Git had no repository/global proxy and was attempting the failed direct route. A one-command `http.proxy` override used that already-running user proxy without persisting configuration or changing the HTTPS origin. The normal push succeeded, and local HEAD, the tracking reference, and GitHub `ls-remote` all matched `b1724881668540e6ec18b684079387c33d977b66` before this final status-only record.
+- Next: keep JAI-024 isolated and unchanged until JAI-021, JAI-022, and JAI-023 integrate in order; then normally merge the latest `develop` into JAI-024, preserve both logs, resolve paired-document conflicts explicitly, and rerun the complete PostgreSQL gate before integration.
+
 ### 2026-08-26 — JAI-021 sources 4–5 and three-day stability started
 
 - Reverified the clean JAI-020 feature branch at `9c86cad8eb621b20fa70e1e6a07a377f929608a3`; its local HEAD, tracking reference, and GitHub reference matched, and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
@@ -442,6 +467,13 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 - Bilingual heading parity, backlog Issue-ID order, Markdown relative links, and `git diff --check` passed. The PostgreSQL-enabled combined `scripts/check.py` passed: Ruff format checked 193 files, Ruff lint passed, Mypy passed across 126 source files, all 271 tests passed with no skips, and coverage was 87.86%.
 - Next: commit and normally push before merging JAI-023 into `develop`.
 
+### 2026-09-05 — JAI-024 synchronized after JAI-023 merge
+
+- JAI-023 was merged into `develop` with non-fast-forward commit `5935b5206a933e8a14cb80b0421ed90f1a0e336c`; its post-merge PostgreSQL-enabled full gate passed with 271 tests, no skips, and 87.86% coverage. Local `develop`, `origin/develop`, and GitHub `ls-remote` matched before this synchronization.
+- Normally merged the latest `develop` into JAI-024. Code, migrations, and the backlog merged without conflict; expected conflicts were limited to paired plans, indexes, and WORKLOG files. Resolution preserves all JAI-021 through JAI-024 histories and the Day 3 waiver's actual metrics.
+- Bilingual heading parity, backlog Issue-ID order, Markdown relative links, and `git diff --check` passed. The PostgreSQL-enabled combined `scripts/check.py` passed: Ruff format checked 206 files, Ruff lint passed, Mypy passed across 136 source files, all 282 tests passed with no skips, and coverage was 87.96%.
+- Next: commit and normally push before merging JAI-024 into `develop`.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -454,8 +486,8 @@ The matching engine receives timezone-aware `evaluated_at`; it never reads the p
 
 ## 5. Next actions
 
-1. Complete the JAI-023 synchronization checks, normally push the feature branch, and merge it into `develop` after the full gate passes.
-2. Continue the authorized merge train through JAI-024 with the same ordinary-merge, bilingual-history, full-gate, and three-way-verification rules.
+1. Complete the JAI-024 synchronization checks, normally push the feature branch, and merge it into `develop` after the full gate passes.
+2. After the merge train completes, verify JAI-025 is the next planned incomplete Issue before creating its independent feature branch.
 3. Keep OCR deferred to JAI-B01, JAI-049 before the MVP release gate, and JAI-048 as a separate documentation Issue.
 
 ## 6. Update template

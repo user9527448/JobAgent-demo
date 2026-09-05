@@ -2,7 +2,7 @@
 
 > 简体中文：[JOBAGENT 核心数据库模型](zh-CN/DATABASE.md)
 
-This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md), JAI-022 [single-user preference policy](PREFERENCES.md), and JAI-023 [versioned matching policy](MATCHING.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
+This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md), JAI-022 [single-user preference policy](PREFERENCES.md), JAI-023 [versioned matching policy](MATCHING.md), and JAI-024 [daily report snapshots](REPORTS.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
 
 ## Tables
 
@@ -18,6 +18,7 @@ This document describes the PostgreSQL schema established in JAI-006 and extende
 | `validation_issues` | Version-specific quality findings | Stable issue key per post; reason, severity, entity/field identity; errors and warnings only |
 | `user_preferences` | Singleton local-user profile | Fixed `id=1`; structured filters; unrestricted defaults; audit timestamps and sticky recomputation signal |
 | `match_results` | Versioned position matching decision | Score/rule version; input/preference/result hashes; hard-filter decision; JSONB components/rules; one current result plus append-only history |
+| `daily_report_snapshots` | Immutable structured/rendered daily report | Date/timezone/version/input identity; JSONB payload; content hash; Markdown and escaped HTML; identical inputs reuse one snapshot |
 
 ## Relationships and deletion policy
 
@@ -33,6 +34,8 @@ sources
     │   │   └── match_results → user_preferences
     │   └── validation_issues
     └── field_evidence (document source)
+
+daily_report_snapshots (immutable report payload and renderings)
 ```
 
 All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do not use delete cascades. A source with history cannot be accidentally removed. Normal source retirement changes `sources.enabled` to false, preserving runs, documents, attachments and extracted data.
@@ -66,6 +69,7 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 - The current/eligibility index supports later recommendation queries without treating legacy or blocked rows as eligible. Legacy rows are backfilled as `review_required` and `legacy-unvalidated`, never silently approved.
 - `user_preferences` permits only `id=1`; JSON preference fields must remain arrays and `education` must be a supported deterministic enum or null. Empty values are unrestricted, never “match nothing.”
 - `match_results` constrains scores to 0–100, requires zero after any failed hard filter, validates all SHA-256 identities, and requires JSON arrays for component/rule explanations. One partial unique index permits one current result per position.
+- `daily_report_snapshots` requires a JSON object payload and valid input/content SHA-256 values. Its date/timezone/report-version/input-hash identity prevents duplicate snapshots while retaining changed same-day inputs as separate immutable rows.
 
 ## Migrations
 

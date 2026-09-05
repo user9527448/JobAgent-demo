@@ -9,6 +9,7 @@ from jobagent import __version__
 from jobagent.api.routes.extraction import router as extraction_router
 from jobagent.api.routes.health import router as health_router
 from jobagent.api.routes.preferences import router as preferences_router
+from jobagent.api.routes.reports import router as reports_router
 from jobagent.core import Settings, configure_logging, get_logger, get_settings
 from jobagent.db import Database, DatabaseHealth, create_database
 from jobagent.extraction import (
@@ -22,6 +23,7 @@ from jobagent.extraction import (
 )
 from jobagent.parsers import build_parser_registry
 from jobagent.preferences import PreferenceOperations, SqlAlchemyPreferenceRepository
+from jobagent.reports import DailyReportOperations, SqlAlchemyDailyReportService
 
 
 def create_app(
@@ -29,6 +31,7 @@ def create_app(
     database: DatabaseHealth | None = None,
     reparse_service: ReparseOperations | None = None,
     preference_service: PreferenceOperations | None = None,
+    report_service: DailyReportOperations | None = None,
 ) -> FastAPI:
     """Create an application with explicitly injectable infrastructure."""
     resolved_settings = settings or get_settings()
@@ -40,6 +43,10 @@ def create_app(
     )
     resolved_preference_service = preference_service or _default_preference_service(
         resolved_database
+    )
+    resolved_report_service = report_service or _default_report_service(
+        resolved_database,
+        resolved_settings.timezone,
     )
     logger = get_logger(__name__)
 
@@ -64,9 +71,11 @@ def create_app(
     app.state.database = resolved_database
     app.state.reparse_service = resolved_reparse_service
     app.state.preference_service = resolved_preference_service
+    app.state.report_service = resolved_report_service
     app.include_router(health_router, prefix="/health", tags=["health"])
     app.include_router(extraction_router, prefix="/extraction", tags=["extraction"])
     app.include_router(preferences_router, prefix="/preferences", tags=["preferences"])
+    app.include_router(reports_router, prefix="/reports", tags=["reports"])
     return app
 
 
@@ -95,3 +104,12 @@ def _default_preference_service(
     if not isinstance(database, Database):
         return None
     return SqlAlchemyPreferenceRepository(database.session_factory)
+
+
+def _default_report_service(
+    database: DatabaseHealth,
+    timezone: str,
+) -> DailyReportOperations | None:
+    if not isinstance(database, Database):
+        return None
+    return SqlAlchemyDailyReportService(database.session_factory, timezone)
