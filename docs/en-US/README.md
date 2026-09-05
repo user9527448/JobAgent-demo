@@ -25,10 +25,15 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | Single-user preferences | [English](../PREFERENCES.md) | [中文](../zh-CN/PREFERENCES.md) |
 | Deterministic matching and versioned scoring | [English](../MATCHING.md) | [中文](../zh-CN/MATCHING.md) |
 | Daily report queries, rendering, and snapshots | [English](../REPORTS.md) | [中文](../zh-CN/REPORTS.md) |
+| Sources 4-5 and stability verification | [English](../SOURCE_STABILITY.md) | [中文](../zh-CN/SOURCE_STABILITY.md) |
+| Recruitment source catalog | [English](SOURCE_CATALOG.md) | [中文](../SOURCE_CATALOG.md) |
 | JAI-005 Jining source Spike | [English](../spikes/JAI-005-JINING-SOURCE.md) | [中文](../zh-CN/spikes/JAI-005-JINING-SOURCE.md) |
 | Database migration guide | [English](../../migrations/README.md) | [中文](../zh-CN/MIGRATIONS.md) |
 | JAI-005 fixture guide | [English](../../tests/fixtures/jining/README.md) | [中文](../zh-CN/fixtures/JINING.md) |
 | JAI-016 attachment golden fixtures | [English](../../tests/fixtures/attachments/README.md) | [中文](../zh-CN/fixtures/ATTACHMENTS.md) |
+| JAI-021 NCSS fixtures | [English](../../tests/fixtures/ncss/README.md) | [中文](../zh-CN/fixtures/NCSS.md) |
+| JAI-021 Shanghai RSJ fixtures | [English](../../tests/fixtures/shanghai_rsj/README.md) | [中文](../zh-CN/fixtures/SHANGHAI_RSJ.md) |
+| JAI-021 China Mobile replacement fixtures | [English](../../tests/fixtures/china_mobile/README.md) | [中文](../zh-CN/fixtures/CHINA_MOBILE.md) |
 
 ## Historical archive
 
@@ -43,7 +48,6 @@ The following repository-authored documents still lack an independent counterpar
 |---|---|---|
 | [Project README](../../README.md) | Simplified Chinese | English |
 | [Configuration, logging, and error conventions](../CONFIGURATION.md) | Simplified Chinese | English |
-| [Recruitment source catalog](../SOURCE_CATALOG.md) | Simplified Chinese | English |
 | [Unofficial recruitment reference sources](../REFERENCE_SOURCES.md) | Simplified Chinese | English |
 | [Firstjob fixture guide](../../tests/fixtures/firstjob/README.md) | English | Simplified Chinese |
 | [Jiangsu personnel-exam fixture guide](../../tests/fixtures/jiangsu/README.md) | Simplified Chinese | English |

@@ -21,7 +21,13 @@ CATALOG_PATH = Path(__file__).parents[2] / "config" / "source_catalog.toml"
 
 @pytest.mark.parametrize(
     "source_key",
-    ["sasac-recruitment", "jiangsu-personnel-exam", "shanghai-firstjob"],
+    [
+        "ncss-jobs",
+        "jiangsu-personnel-exam",
+        "shanghai-firstjob",
+        "shanghai-public-institution",
+        "china-mobile-recruitment",
+    ],
 )
 def test_runnable_catalog_sources_have_explicit_manual_wiring(source_key: str) -> None:
     catalog = load_source_catalog(CATALOG_PATH)
@@ -50,7 +56,7 @@ def test_runnable_catalog_sources_have_explicit_manual_wiring(source_key: str) -
 
 def test_manual_runtime_rejects_database_catalog_mismatch() -> None:
     catalog = load_source_catalog(CATALOG_PATH)
-    entry = catalog.get("sasac-recruitment")
+    entry = catalog.get("china-mobile-recruitment")
     source = SourceDefinition(
         id=7,
         name=f"{entry.name} changed",

@@ -12,6 +12,7 @@ from jobagent.crawlers.attachments import (
     discover_attachment_links,
 )
 from jobagent.crawlers.catalog import SourceCatalog, SourceCatalogEntry, load_source_catalog
+from jobagent.crawlers.china_mobile import ChinaMobileRecruitmentAdapter
 from jobagent.crawlers.contracts import (
     AdapterFactory,
     CrawlBatchResult,
@@ -42,11 +43,13 @@ from jobagent.crawlers.http import (
     SourceHttpClient,
 )
 from jobagent.crawlers.jiangsu import JiangsuPersonnelExamAdapter
+from jobagent.crawlers.ncss import NcssJobsAdapter
 from jobagent.crawlers.orchestrator import CollectionOrchestrator
 from jobagent.crawlers.registry import AdapterRegistry
 from jobagent.crawlers.repository import CrawlRunRepository, SqlAlchemyCrawlRunRepository
 from jobagent.crawlers.runtime import build_adapter_registry, match_catalog_entry
 from jobagent.crawlers.sasac import SasacRecruitmentAdapter
+from jobagent.crawlers.shanghai_rsj import ShanghaiPublicInstitutionAdapter
 
 __all__ = [
     "AdapterFactory",
@@ -58,6 +61,7 @@ __all__ = [
     "AttachmentStorageService",
     "AttachmentStoreResult",
     "AttachmentStoreStatus",
+    "ChinaMobileRecruitmentAdapter",
     "CollectionOrchestrator",
     "CrawlBatchResult",
     "CrawlCursor",
@@ -69,6 +73,7 @@ __all__ = [
     "HttpFetchResult",
     "HttpSourcePolicy",
     "JiangsuPersonnelExamAdapter",
+    "NcssJobsAdapter",
     "PreparedRawDocument",
     "RawDocumentInput",
     "RawDocumentRepository",
@@ -76,6 +81,7 @@ __all__ = [
     "RawDocumentWriteStatus",
     "SasacRecruitmentAdapter",
     "ShanghaiFirstjobAdapter",
+    "ShanghaiPublicInstitutionAdapter",
     "SourceAdapter",
     "SourceCatalog",
     "SourceCatalogEntry",

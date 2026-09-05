@@ -443,12 +443,6 @@ Issue 开始前必须具备：目标、范围、验收标准、依赖、测试�
 
 ## 13. 当前下一步
 
-JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-020 已依次合并并普通推送到 `develop`，当前基线为 JAI-020 非快进合并 `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`。JAI-021 的来源 4、5 实现已完成，仍在独立分支执行连续自然日稳定性验收。
+JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-023 已依次合并并普通推送到 `develop`，当前基线为 JAI-023 非快进合并 `5935b5206a933e8a14cb80b0421ed90f1a0e336c`。JAI-021 Day 3 的中国移动 `PoolTimeout` 实际 4/5 指标和用户豁免记录完整保留；JAI-049 继续在 MVP 发布闸门前跟踪有证据完整率和来源风险。
 
-用户明确批准在 JAI-021 只剩自然日观测期间并行启动 JAI-022；`feature/jai-022-single-user-preferences` 已直接从三端核验一致的 `develop` 创建，不包含未合并的 JAI-021 提交。JAI-022 的单用户模型、读取/全量替换 API、Schema/枚举校验、重算信号、无限制默认值、迁移、测试与双语文档已于 2026-08-30 完成，并通过启用 PostgreSQL 的完整门禁。JAI-021 必须先完成并合并，随后把最新 `develop` 普通合并到 JAI-022，保留两边 WORKLOG、显式处理双语文档冲突并重跑完整门禁；禁止 rebase 或改写已发布历史。OCR 仍延期至 JAI-B01。JAI-048 作为独立文档 Issue 迁移其余存量单语文档，不得混入功能分支。其余官方站和外企专区按 JAI-038～JAI-045 逐站实施，不以绕过登录、验证码、反爬或平台条款换取覆盖数量。
-
-用户随后批准 JAI-021 验收观测与后续开发继续并行，并要求完整记录合并边界。`feature/jai-023-hard-filter-versioned-scoring` 已从三端核验并推送的 JAI-022 末端 `44ed50292aa6609c7c4eaa1fb16e0793082d4e0a` 创建。集成顺序固定为：先把 JAI-021 合并到 `develop`；再把该 `develop` 普通合并到 JAI-022 并完成 JAI-022 合并；最后把更新后的 `develop` 普通合并到 JAI-023，保留所有双语 WORKLOG 历史、显式解决冲突并重跑完整 PostgreSQL 门禁。禁止 rebase 或改写已发布历史。JAI-023 只实现硬过滤、版本化规则评分、逐分项解释持久化和偏好触发的全量重算；JAI-024 日报与通知保持在范围外。
-
-JAI-023 的上述实现、迁移、边界测试和双语文档已于 2026-08-30 完成；PostgreSQL 启用的完整门禁为 241 项测试全部通过、无跳过、覆盖率 88.47%。该 feature 分支仍须遵守既定合并列车，在 JAI-021 与 JAI-022 依次进入 `develop` 后普通合并最新 `develop`、保留日志并再次通过完整门禁，之后才能集成。JAI-024 不得在此分支提前启动。
-
-用户已批准在保持版本边界和记录完整的前提下继续下游开发。`feature/jai-024-daily-report-rendering` 已从已推送的 JAI-023 末端 `9592a16d7dee12fbe6c555407a3607a492b2cd03` 创建为独立 worktree；合并列车扩展为 JAI-021 → JAI-022 → JAI-023 → JAI-024。JAI-024 的确定性四组日报、Markdown/HTML 渲染、不可变快照、原文链接及 API 已实现。Windows 重启恢复 Docker/PostgreSQL 后，7 项定向数据库测试通过；最终完整门禁通过 252 项测试、无跳过，覆盖率 88.53%。功能提交 `ffa065f` 已普通推送并完成三端核验。JAI-025 调权、JAI-026 调度与 JAI-027 通知仍不得提前实现，JAI-024 将保持独立，直至按已记录顺序进入合并列车。
+JAI-024 的确定性四组日报、Markdown/HTML 渲染、不可变快照、原文链接、API、迁移、测试与双语文档已完成。最新 `develop` 正普通同步进 `feature/jai-024-daily-report-rendering`；必须保留 JAI-021 至 JAI-024 的双语 WORKLOG 历史并重新通过 PostgreSQL 完整门禁，之后才可合入 `develop`。JAI-025 调权、JAI-026 调度和 JAI-027 通知仍保持范围外；禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。
