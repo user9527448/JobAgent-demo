@@ -365,6 +365,7 @@ The same document/extraction version may be repeated only when its merged result
 - All 6 attempted details succeeded, duplicate rate was 0%, and evidence-backed completeness was 86.67% (26/30). The command retained the approved limit of three details per source, concurrency 1, public GET-only access, and no database, file, or source-body persistence.
 - This failed daily result interrupts the qualified 2026-09-03/04 pair. No second same-day run will be used to select a better outcome; the next qualified calendar-day observation restarts the sequence at day 1.
 - All repository Markdown relative links passed. Paired WORKLOG, stability-guide, and plan heading counts matched at 41/41, 7/7, and 45/45; both backlogs retained identical Issue-ID order, and `git diff --check` passed.
+- Created observation-record commit `8e5fbecac1a95d32d5ba79af84e88aaeb79fd7ba` with repository-local author `user9527448 <2537759248@qq.com>`. Its first normal HTTPS push failed because direct access to GitHub port 443 timed out after about 21 seconds; the unchanged push then succeeded through the previously verified command-local proxy `127.0.0.1:7892`, without changing `origin` or persistent Git configuration. Local HEAD, the tracking reference, and GitHub `ls-remote` matched that commit before this network-status update.
 
 ## 4. Verification and blockers
 
