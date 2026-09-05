@@ -42,15 +42,21 @@ class CollectionOrchestrator:
         source_id: int,
         *,
         cursor: CrawlCursor | None = None,
+        detail_limit: int | None = None,
         retry_of_run_id: int | None = None,
         retry_urls: Sequence[str] | None = None,
     ) -> CrawlBatchResult:
-        """Run one source, optionally limiting detail work to prior failed URLs."""
+        """Run one source with an optional deterministic cap or prior failed URLs."""
+        if detail_limit is not None and detail_limit <= 0:
+            raise ValueError("Collection detail limits must be positive.")
         source = await self._require_enabled_source(source_id)
         adapter = self._registry.create(source)
         requested_retry_urls = _unique_nonempty_urls(retry_urls or ())
+        if detail_limit is not None and requested_retry_urls:
+            raise ValueError("Collection detail limits cannot truncate failed-item retries.")
         stats = _initial_stats(
             persistence_enabled=self._document_repository is not None,
+            detail_limit=detail_limit,
             retry_of_run_id=retry_of_run_id,
             retry_requested=len(requested_retry_urls),
         )
@@ -96,6 +102,8 @@ class CollectionOrchestrator:
                     discovered_items,
                     requested_retry_urls,
                 )
+            elif detail_limit is not None:
+                items = discovered_items[:detail_limit]
             _record_discovery(
                 stats,
                 len(items),
@@ -292,6 +300,7 @@ class CollectionOrchestrator:
 def _initial_stats(
     *,
     persistence_enabled: bool,
+    detail_limit: int | None,
     retry_of_run_id: int | None,
     retry_requested: int,
 ) -> dict[str, JsonValue]:
@@ -313,6 +322,8 @@ def _initial_stats(
     if retry_of_run_id is not None:
         stats["retry_of_run_id"] = retry_of_run_id
         stats["retry_requested"] = retry_requested
+    if detail_limit is not None:
+        stats["detail_limit"] = detail_limit
     return stats
 
 
@@ -323,7 +334,7 @@ def _record_discovery(
     total_discovered: int,
 ) -> None:
     stats["discovered"] = discovered
-    if "retry_of_run_id" in stats:
+    if "retry_of_run_id" in stats or "detail_limit" in stats:
         stats["discovered_total"] = total_discovered
     persist_step = _persist_step(stats)
     stats["steps"] = {

@@ -50,6 +50,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
     run_parser = commands.add_parser("run", help="run one enabled source")
     run_parser.add_argument("--source-id", type=_positive_id, required=True)
+    run_parser.add_argument(
+        "--limit",
+        type=_positive_id,
+        help="fetch at most this many discovered details in stable source order",
+    )
 
     show_parser = commands.add_parser("show", help="show one persisted run summary")
     show_parser.add_argument("--run-id", type=_positive_id, required=True)
@@ -93,7 +98,7 @@ async def _execute(args: argparse.Namespace) -> int:
                 result = (
                     await orchestrator.retry_failed(retry_run_id)
                     if retry_run_id is not None
-                    else await orchestrator.run(source_id)
+                    else await orchestrator.run(source_id, detail_limit=args.limit)
                 )
             summary = await _require_run(run_repository, result.run_id)
         print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))

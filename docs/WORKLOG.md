@@ -33,7 +33,7 @@
 | JAI-022 | Complete, merged and pushed to `develop` | `develop` / `e7948c9` | JAI-021/JAI-022 histories preserved; post-merge PostgreSQL gate passed with 254 tests |
 | JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
-| JAI-025 | In progress; implementation gate passed, owner decision pending | `feature/jai-025-top-20-quality-review` / `4fe0274` | No historical rows exist locally; synthetic proposed labels are not represented as human-labelled history |
+| JAI-025 | In progress; G1 passed, G2 owner approval pending | `feature/jai-025-top-20-quality-review` | Bounded crawl tooling and the controlled evidence store are ready; no live detail has been persisted |
 
 ## 2. Current decisions
 
@@ -113,9 +113,9 @@ The user approved continued downstream development while JAI-021 waits for calen
 
 The quality review must replay `jai-023-v1` unchanged and compare it with a new score version over the same fixed, sanitized, manually reviewable sample set. Labels, reasons, Top 20 false positives, and misses remain explicit artifacts; tuning may change only the new version. Scheduling, delivery, LLM reranking, embeddings, and live-source collection remain outside JAI-025.
 
-### D-034 Proposed recovery path for the missing historical review set — approval required
+### D-034 Approved recovery path for the missing historical review set
 
-This proposal is not yet an approved implementation decision. The recommended path keeps JAI-025's original historical/manual-review intent instead of declaring the synthetic dry-run set sufficient. After project-owner approval, use the empty local `jobagent` database as the controlled evidence store: upgrade it from Alembic `0003_attachment_storage` to repository head, transactionally bootstrap only the five catalog entries already marked `active` and `enabled`, and add a backward-compatible optional detail limit to the existing manual crawl path before any persistent live run. Collect public data only, with concurrency 1, at least one second pacing, no login/CAPTCHA/access-control bypass, a maximum of 60 detail attempts, at least three contributing sources, and no source contributing more than 30 accepted review candidates.
+The project owner approved this recovery path and G1 on 2026-09-05. It keeps JAI-025's original historical/manual-review intent instead of declaring the synthetic dry-run set sufficient. Use the local `jobagent` database as the controlled evidence store: upgrade it from Alembic `0003_attachment_storage` to repository head, transactionally bootstrap only the five catalog entries already marked `active` and `enabled`, and add a backward-compatible optional detail limit to the existing manual crawl path before any persistent live run. Collect public data only, with concurrency 1, at least one second pacing, no login/CAPTCHA/access-control bypass, a maximum of 60 detail attempts, at least three contributing sources, and no source contributing more than 30 accepted review candidates.
 
 Persist immutable raw documents and deterministic extraction/evidence through existing services. Keep the source-facing review sheet and source URL mapping under ignored `data/`; commit only a sanitized benchmark after the project owner labels at least 50 distinct positions and confirms each relevance category/rationale. Do not delete rejected source records; exclude them through the review manifest. The published feature history is not rewritten: if real labels require changing the provisional `jai-025-v2` rules, the final candidate receives a new score version rather than silently changing v2. JAI-026 scheduling, JAI-027 delivery, JAI-030 source-maintenance APIs, LLM calls, and new source adapters remain out of scope.
 
@@ -515,6 +515,21 @@ Approval gates are mandatory: G1 approves the database upgrade, active-source bo
 - No migration, database insert, persistent crawl, additional code change, score retuning, completion checkbox, merge, or destructive action was performed while awaiting approval.
 - Next: project owner reviews and approves/rejects G1 and the overall D-034 path. Only after explicit approval may implementation begin; later gates still require separate evidence and approval.
 
+### 2026-09-05 — D-034 and G1 approved
+
+- The project owner explicitly instructed the team to execute the recorded design. This approves D-034 and G1 only: add the backward-compatible bounded manual-crawl option with tests/docs, upgrade the empty local business database from `0003_attachment_storage` to repository head, and transactionally initialize only the five catalog sources already marked `active` and `enabled`.
+- G1 does not authorize a persistent live crawl, label confirmation, score retuning, completion status, or merge. No source detail request may be persisted until G1 evidence is recorded and the owner separately approves G2 discovery counts and allocations.
+- Execution order: implement and verify the optional limit first; capture the pre-migration version/counts; run the existing tested Alembic upgrade without destructive downgrade; verify head/schema drift; insert the exact approved catalog/source identity rows in one transaction with post-insert equality checks; then rerun proportional/full gates and record final state.
+
+### 2026-09-05 — JAI-025 G1 completed; G2 evidence prepared
+
+- Added optional `run --limit N` support. It selects the first `N` discovered items in stable source order, records both selected and total discovery counts, rejects non-positive limits, and cannot be combined with failed-URL retry selection. Existing uncapped runs and retries retain their previous behavior. Paired collection documentation and regression tests were updated.
+- The pre-upgrade business database was at `0003_attachment_storage` with zero source, raw-document, post, and position rows. The first post-upgrade verification attempt could not access the Docker named pipe inside the sandbox, so it supplied no password and Alembic failed authentication without writing the database. The check was rerun in the authorized host context with a process-only URL derived from the running container; no credential was printed, stored, or committed.
+- Alembic now reports `0008_daily_report_snapshots (head)` and `alembic check` reports no pending upgrade operation. A guarded single transaction required `sources` to be empty, inserted exactly the five existing active/enabled catalog identities, verified the adapter set/count, and committed. Source IDs 1–5 are NCSS, Firstjob, Jiangsu personnel exam, Shanghai public institutions, and China Mobile respectively; all are enabled with their catalog intervals. `crawl_runs`, `raw_documents`, `job_posts`, and `job_positions` remain at zero.
+- The final PostgreSQL-enabled full gate passed Ruff format/lint, Mypy across 139 source files, all 294 tests with no skips, and 87.80% coverage, including the direct invariant that a detail limit cannot truncate failed-item retries.
+- Read-only list discovery was run only to prepare the next approval input. The sandbox attempt failed at its network boundary; the host-context retry found NCSS 3, Firstjob 0, Jiangsu 2, and Shanghai public institutions 5 items, while China Mobile exhausted its connection retries. It requested no detail and wrote neither the database nor files. Proposed G2 allocation is therefore 3/0/2/5/0 (10 details across three sources). Attachments may expand those announcements into at least 50 positions, but this is not guaranteed; if fewer than 50 distinct positions result, the workflow stops for a new owner decision instead of expanding sources automatically.
+- G1 is complete. Persistent detail requests, extraction, label confirmation, score retuning, completion, and merge remain unauthorized until the project owner reviews and explicitly approves or revises G2.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -524,12 +539,14 @@ Approval gates are mandatory: G1 approves the database upgrade, active-source bo
 - Pre-push formatting correction: four staged trailing-space findings in `docs/en-US/DEVELOPMENT_PLAN.md` were removed; final staged and worktree diff checks must pass before push.
 - JAI-012 final gate: Ruff format/lint passed; Mypy passed across 62 source files; 105 tests passed with PostgreSQL; coverage 88.38%. The offline JAI-012 acceptance performed no live-source request and left no repository runtime data.
 - JAI-012 handoff recheck on 2026-08-15: the first Mypy invocation named the non-existent planned `app` directory and was corrected to the repository-configured targets; the first test run omitted `JOBAGENT_TEST_DATABASE_URL`, so 98 tests passed, 7 PostgreSQL tests skipped, and coverage was 83.18%. After starting the existing Docker Desktop installation and using the existing `jobagent_test` database, Ruff format/lint, Mypy, all 105 tests, and 88.38% coverage passed.
+- JAI-025 G1: Alembic current/check passed at `0008_daily_report_snapshots`; exact five-source bootstrap postconditions passed; all business-data tables remain empty. The PostgreSQL full gate passed 294 tests with no skips and 87.80% coverage. The only current operational limitation is China Mobile list discovery connectivity; it is recorded as a zero allocation rather than bypassed.
 
 ## 5. Next actions
 
-1. Await explicit project-owner approval of D-034/G1 before changing the local database, source runtime rows, or bounded-crawl code.
-2. If approved, execute G1–G5 in order and record each input, bounded action, result, deviation, and approval in both WORKLOG files before advancing.
-3. Keep JAI-026 scheduling, JAI-027 notifications, JAI-030 maintenance APIs, OCR/JAI-B01, JAI-049, and JAI-048 outside the active Issue.
+1. Await explicit project-owner approval or revision of G2 allocation `3/0/2/5/0` for source IDs 1–5. Until then, do not issue or persist any detail request.
+2. If G2 is approved, execute only the bounded 10-detail crawl, then run the existing deterministic parse/extraction/evidence path and report the distinct-position count. If it is below 50, stop for a new decision; do not add sources or exceed the approved allocation automatically.
+3. Continue G3–G5 only after their separate evidence and approvals; record each input, bounded action, result, deviation, and approval in both work logs.
+4. Keep JAI-026 scheduling, JAI-027 notifications, JAI-030 maintenance APIs, OCR/JAI-B01, JAI-049, and JAI-048 outside the active Issue.
 
 ## 6. Update template
 
