@@ -443,6 +443,6 @@ Issue 开始前必须具备：目标、范围、验收标准、依赖、测试�
 
 ## 13. 当前下一步
 
-JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-020 已依次合并并普通推送到 `develop`，当前基线为 JAI-020 非快进合并 `f56365f9fabe1d6ee49e67fb5fc1f56350cb8ac5`。JAI-021 的来源 4、5 实现已完成，仍在独立分支执行连续自然日稳定性验收。
+JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-021 已依次合并并普通推送到 `develop`，当前基线为 JAI-021 非快进合并 `8cc0b2eb37b5ec7e2c560ce35b687a687da47b43`。JAI-021 的三日记录覆盖 2026-09-03 至 2026-09-05；最后一日实际为中国移动 `PoolTimeout` 导致来源成功 4/5，用户在保留真实指标和入口风险的前提下明确豁免并计为 Day 3。JAI-049 继续在 MVP 发布闸门前跟踪有证据完整率差距及来源风险。
 
-用户明确批准在 JAI-021 只剩自然日观测期间并行启动 JAI-022；`feature/jai-022-single-user-preferences` 已直接从三端核验一致的 `develop` 创建，不包含未合并的 JAI-021 提交。JAI-022 的单用户模型、读取/全量替换 API、Schema/枚举校验、重算信号、无限制默认值、迁移、测试与双语文档已于 2026-08-30 完成，并通过启用 PostgreSQL 的完整门禁。JAI-021 必须先完成并合并，随后把最新 `develop` 普通合并到 JAI-022，保留两边 WORKLOG、显式处理双语文档冲突并重跑完整门禁；禁止 rebase 或改写已发布历史。OCR 仍延期至 JAI-B01。JAI-048 作为独立文档 Issue 迁移其余存量单语文档，不得混入功能分支。其余官方站和外企专区按 JAI-038～JAI-045 逐站实施，不以绕过登录、验证码、反爬或平台条款换取覆盖数量。
+JAI-022 的单用户模型、读取/全量替换 API、Schema/枚举校验、重算信号、无限制默认值、迁移、测试与双语文档已完成。最新 `develop` 正按授权的合并火车普通同步进 `feature/jai-022-single-user-preferences`；必须保留 JAI-021/JAI-022 双语 WORKLOG 历史并重新通过 PostgreSQL 完整门禁，之后才可合入 `develop`。随后按相同规则依次处理 JAI-023 和 JAI-024；禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。

@@ -9,11 +9,13 @@ import sys
 from pathlib import Path
 
 from jobagent.crawlers.catalog import SourceCatalogEntry, load_source_catalog
+from jobagent.crawlers.china_mobile import ChinaMobileRecruitmentAdapter
 from jobagent.crawlers.contracts import SourceAdapter, SourceDefinition
 from jobagent.crawlers.firstjob import ShanghaiFirstjobAdapter
 from jobagent.crawlers.http import HttpSourcePolicy, SourceHttpClient
 from jobagent.crawlers.jiangsu import JiangsuPersonnelExamAdapter
-from jobagent.crawlers.sasac import SasacRecruitmentAdapter
+from jobagent.crawlers.ncss import NcssJobsAdapter
+from jobagent.crawlers.shanghai_rsj import ShanghaiPublicInstitutionAdapter
 
 DEFAULT_CATALOG = Path("config/source_catalog.toml")
 USER_AGENT = "JOBAGENT/0.1 (+personal recruitment intelligence; low-frequency preview)"
@@ -84,12 +86,16 @@ async def _preview(
     )
     async with SourceHttpClient(policy) as client:
         adapter: SourceAdapter
-        if entry.adapter == "sasac_recruitment":
-            adapter = SasacRecruitmentAdapter(source, entry, client)
-        elif entry.adapter == "jiangsu_personnel_exam":
+        if entry.adapter == "jiangsu_personnel_exam":
             adapter = JiangsuPersonnelExamAdapter(source, entry, client)
         elif entry.adapter == "shanghai_firstjob":
             adapter = ShanghaiFirstjobAdapter(source, entry, client)
+        elif entry.adapter == "ncss_jobs":
+            adapter = NcssJobsAdapter(source, entry, client)
+        elif entry.adapter == "shanghai_public_institution":
+            adapter = ShanghaiPublicInstitutionAdapter(source, entry, client)
+        elif entry.adapter == "china_mobile_recruitment":
+            adapter = ChinaMobileRecruitmentAdapter(source, entry, client)
         else:
             raise RuntimeError(f"No preview runner is registered for '{entry.adapter}'.")
         items = tuple(await adapter.discover(None))[:limit]
