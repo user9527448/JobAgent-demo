@@ -604,6 +604,7 @@ The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06.
 - The authoritative PostgreSQL-enabled `scripts/check.py` gate passed: Ruff format checked 232 files, Ruff lint passed, Mypy passed across 155 source files, all 313 tests passed with no skips, and coverage was 86.20%. `git diff --check` also passed before this documentation update.
 - Paired heading counts matched for plans 45/45, backlogs 71/71, work logs 69/69, database guides 6/6, and scheduling guides 5/5; both backlogs retained the same 178 Issue references in order. The first ad-hoc relative-link command failed because its checker did not substitute `.` for root-level files with an empty parent path; the corrected read-only command found no broken relative links across 67 tracked/new Markdown files. Final Ruff format/lint, Mypy, and `git diff --check` remained clean after the documentation update.
 - G4 remains intentionally unexecuted. Migration `0009` was not applied to the populated local `jobagent` business database, no long-running scheduler or live-source request was started, and no merge was attempted. The next action is a final documentation/diff review, a scoped feature commit and normal push with three-way verification, followed by owner review of G4 runtime activation and safe merge as separate decisions.
+- Created scoped implementation commit `e1074e80dd1eccf219d45dd97395e938303db197` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed it through the command-local proxy. The HTTPS `origin` and persistent Git proxy configuration were unchanged. Local feature HEAD, `origin/feature/jai-026-daily-scheduling-recovery`, and GitHub `ls-remote` all matched that commit after the push.
 
 ## 4. Verification and blockers
 
@@ -622,10 +623,10 @@ The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06.
 
 ## 5. Next actions
 
-1. Complete final bilingual-document and diff checks, commit the scoped G1–G3 implementation, and normally push the feature branch.
-2. Verify local feature HEAD, its tracking reference, and GitHub `ls-remote`; record the final identity without rewriting published history.
-3. Present G4 business-database migration/live scheduler activation and the JAI-026 safe merge as explicit owner-review decisions; do not perform either beforehand.
-4. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change published versions or start JAI-027.
+1. Present G4 business-database migration/live scheduler activation and the JAI-026 safe merge as explicit owner-review decisions; do not perform either beforehand.
+2. If G4 is approved, inspect the populated business database before applying migration `0009`, start exactly one scheduler only after post-migration checks, and retain rollback/observation evidence.
+3. If safe merge is approved, reverify feature/develop ancestry and three-way refs, non-fast-forward merge to `develop`, rerun the complete PostgreSQL gate, normally push, and verify all three refs before starting JAI-027.
+4. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change published versions.
 
 ## 6. Update template
 
