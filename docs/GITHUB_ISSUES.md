@@ -341,7 +341,7 @@
 
 - **Labels**：`type:feature` `area:infra` `priority:P0` `size:L`
 - **依赖**：JAI-012、JAI-024
-- **状态**：已从三端核验的 `develop` 提交 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451` 创建 `feature/jai-026-daily-scheduling-recovery`；只读审计和拟议 D-036/G1～G4 已登记，等待项目负责人审核后实施。
+- **状态**：已从三端核验的 `develop` 提交 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451` 创建 `feature/jai-026-daily-scheduling-recovery`；D-036 与 G1～G3 已获批准并开始实施，业务库迁移和真实调度启动仍等待 G4。
 - **目标**：系统每天无人值守执行完整流水线。
 - **范围**：APScheduler、Asia/Shanghai 调度、单实例锁、misfire、阶段重试和手动补跑。
 - **验收标准**：

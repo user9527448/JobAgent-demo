@@ -6,7 +6,7 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-09-05
+> 最后更新：2026-09-06
 >
 > 当前分支：`feature/jai-026-daily-scheduling-recovery`
 
@@ -34,7 +34,7 @@
 | JAI-023 | 已完成、合并并推送到 `develop` | `develop` / `5935b52` | 已保留 JAI-021 至 JAI-023 全部历史；合并后 PostgreSQL 门禁以 271 项测试通过 |
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
 | JAI-025 | 按获批流程优先例外完成、合并并推送到 `develop` | `develop` / `a070030` | 合并后 PostgreSQL 门禁以 295 项测试和 87.82% 覆盖率通过；真实人工评审样本量仍延期到 JAI-049 |
-| JAI-026 | 已启动；设计等待负责人审核 | `feature/jai-026-daily-scheduling-recovery` | 仅限每日调度、单实例锁、misfire、阶段重试、恢复和手工补跑；JAI-027 仍在范围外 |
+| JAI-026 | 进行中；D-036 与 G1～G3 已批准 | `feature/jai-026-daily-scheduling-recovery` | 已授权 feature/测试实施；已有数据业务库迁移和真实调度启动仍受 G4 约束 |
 
 ## 2. 当前决策
 
@@ -128,7 +128,7 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 
 如果本次有界运行得到的线上不同岗位少于 50 条，必须把差额明确记录为质量债务，不得隐藏或猜测补齐。现有 60 条合成集可继续验证确定性评估机制，但必须保持“合成”标识，不得表述为历史人工评审。来源样本量扩充、Firstjob 空发现、中国移动连接、未来至少 50 条线上人工标注基准均延期为优化项；本步骤不因此授权新 Adapter、更大配额或修改已发布评分版本。
 
-### D-036 拟议独立调度进程与持久流水线台账（等待审批）
+### D-036 已批准的独立调度进程与持久流水线台账
 
 JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`），不采用仍为预发布状态的 4 系列。运行一个与 FastAPI worker 分离的专用 `AsyncIOScheduler` 进程，使用 PostgreSQL `SQLAlchemyJobStore`、固定且可导入的任务目标/ID、`Asia/Shanghai`、`replace_existing=True`、`coalesce=True`、`max_instances=1`；本地执行时间可配置，默认 08:00，`misfire_grace_time` 默认六小时。Compose 只运行一个 scheduler 服务；APScheduler 3 的 job store 不协调多个 scheduler，因此不支持扩容该服务。
 
@@ -138,7 +138,7 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 
 只有 `TransientJobAgentError` 才最多执行三次阶段尝试，注入式指数退避为 30 秒、60 秒；永久错误立即停止。采集部分成功时继续下游阶段，并把最终流水线标记为 `partial`，保留可用日报及全部失败证据。重启后在取得 advisory lock 后，把持久化的 `running` 阶段标记为 `interrupted`，以原 `scheduled_for` 从第一个未成功阶段恢复；现有不可变/幂等写入保证安全重放。手工 `makeup --date YYYY-MM-DD` 映射到同一配置时区的计划时刻，因此恢复/复用相同逻辑运行，不创建重复运行。
 
-批准本方案只授权在 feature 分支实施，并只允许对受 `_test` 名称保护的数据库执行破坏性 Schema 测试。执行顺序为：G1 完成依赖、设置、迁移/模型、台账/锁契约和单元测试；G2 完成可注入四阶段协调器、重试/恢复、强制重算支持及 PostgreSQL 并发/恢复测试；G3 完成调度命令、单一 Compose 服务、双语调度/数据库/配置文档、集成测试和完整门禁。把迁移 `0009` 应用于已有数据的本地业务数据库或启动真实调度器，必须在代码与证据审阅后另行取得 G4 运行批准。本方案不授权 rebase、force push、持久化凭据、线上来源运行或 JAI-027 工作。
+项目负责人已于 2026-09-06 批准 D-036 及实施闸门 G1～G3。批准范围只包括在 feature 分支实施，并只允许对受 `_test` 名称保护的数据库执行破坏性 Schema 测试。执行顺序为：G1 完成依赖、设置、迁移/模型、台账/锁契约和单元测试；G2 完成可注入四阶段协调器、重试/恢复、强制重算支持及 PostgreSQL 并发/恢复测试；G3 完成调度命令、单一 Compose 服务、双语调度/数据库/配置文档、集成测试和完整门禁。把迁移 `0009` 应用于已有数据的本地业务数据库或启动真实调度器，必须在代码与证据审阅后另行取得 G4 运行批准。本方案不授权 rebase、force push、持久化凭据、线上来源运行或 JAI-027 工作。
 
 ## 3. 当前工作记录
 
@@ -588,6 +588,12 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 - 本次审计时 PyPI 的稳定版本为 APScheduler 3.11.3，4.0 仍为 alpha 系列。官方 3.x 指南推荐以 PostgreSQL `SQLAlchemyJobStore` 支持重启持久化，明确 `misfire_grace_time`、coalescing 和单任务 `max_instances`，并警告一个 job store 不得被多个 scheduler 共用。因此 D-036 拟采用专用单调度进程，再叠加 PostgreSQL advisory lock 与领域台账，不把调度器嵌入 API worker。
 - 上述 D-036 及 G1～G4 已登记但尚未批准。本次审计未修改依赖、迁移、代码、Compose、数据库或线上来源。
 
+### 2026-09-06 — JAI-026 D-036 与 G1～G3 已批准
+
+- 项目负责人已明确批准 D-036 和实施闸门 G1～G3。现在可以按已登记顺序在现有 feature 分支推进；破坏性迁移/并发/恢复测试只允许操作名称以 `_test` 结尾的数据库。
+- G4 仍未批准：不得把迁移 `0009` 应用于已有数据的本地 `jobagent` 业务数据库，不得启动长驻调度器或发起线上来源请求。JAI-027 与 JAI-049 继续保持在本次实施范围外。
+- 实施前该分支、本地跟踪引用与 GitHub 已核验为 `ee76f01d22c72f5576801c1ef5b571f1a58a6804`；工作区干净，仓库本地作者仍为 `user9527448 <2537759248@qq.com>`。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -604,9 +610,9 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 
 ## 5. 下一步
 
-1. 提交并普通推送双语 D-036 审批材料，再核验 JAI-026 feature 分支的本地、跟踪和 GitHub 指针。
-2. 取得项目负责人对 D-036 及实施闸门 G1～G3 的明确批准或修改意见；等待审批期间不实施。
-3. 获批后按顺序执行 G1～G3，只对受 `_test` 保护的 PostgreSQL 数据库执行破坏性测试，并在已有数据业务库迁移或真实调度器启动前停止。
+1. 提交并普通推送本次双语批准记录。
+2. 按 G1、G2、G3 顺序实施，每个边界运行定向检查，最后运行启用 PostgreSQL 的完整门禁。
+3. 在两份 WORKLOG 登记实现决策、失败、迁移/测试证据和最终 Git 状态，并在 G4 运行启用前停止。
 4. 至少 50 条真实人工评审、附件衔接和来源诊断继续留在 JAI-049；不得静默修改已发布版本或提前启动 JAI-027。
 
 ## 6. 更新模板

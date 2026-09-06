@@ -341,7 +341,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:infra` `priority:P0` `size:L`
 - **Dependencies**: JAI-012, JAI-024
-- **Status**: `feature/jai-026-daily-scheduling-recovery` was created from three-way-verified `develop` commit `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`; the read-only audit and proposed D-036/G1–G4 are recorded and await project-owner review before implementation.
+- **Status**: `feature/jai-026-daily-scheduling-recovery` was created from three-way-verified `develop` commit `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`; D-036 and G1–G3 are approved and implementation has started, while business-database migration and live scheduler activation still await G4.
 - **Goal**: run the full pipeline unattended every day.
 - **Scope**: APScheduler, `Asia/Shanghai`, single-instance locks, misfires, stage retries, manual makeup runs.
 - **Acceptance**:

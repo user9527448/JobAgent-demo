@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-05
+> Last updated: 2026-09-06
 >
 > Active branch: `feature/jai-026-daily-scheduling-recovery`
 
@@ -34,7 +34,7 @@
 | JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
-| JAI-026 | Started; design pending owner review | `feature/jai-026-daily-scheduling-recovery` | Daily scheduling, single-instance locks, misfires, stage retries, recovery, and manual makeup only; JAI-027 remains out of scope |
+| JAI-026 | In progress; D-036 and G1–G3 approved | `feature/jai-026-daily-scheduling-recovery` | Feature/test implementation is authorized; populated business-database migration and live scheduler activation remain behind G4 |
 
 ## 2. Current decisions
 
@@ -128,7 +128,7 @@ On 2026-09-05 the project owner changed the immediate priority from blocking on 
 
 If this bounded run yields fewer than 50 distinct live positions, the shortfall is recorded as explicit quality debt rather than concealed or guessed. The current synthetic 60-case set may continue to verify deterministic evaluation mechanics, but it must remain labelled synthetic and cannot be represented as historical human review. Source-volume expansion, Firstjob's empty discovery, China Mobile connectivity, and a future >=50 live human-labelled benchmark are deferred optimization items; they do not authorize new adapters, larger quotas, or changes to published score versions in this step.
 
-### D-036 Proposed standalone scheduler and durable pipeline ledger (approval pending)
+### D-036 Approved standalone scheduler and durable pipeline ledger
 
 JAI-026 should use the current stable APScheduler 3 line (`APScheduler>=3.11.3,<4`) rather than the still pre-release 4 line. Run one dedicated `AsyncIOScheduler` process, separate from FastAPI workers, with PostgreSQL `SQLAlchemyJobStore`, a fixed importable job target/ID, `Asia/Shanghai`, `replace_existing=True`, `coalesce=True`, `max_instances=1`, a configurable local schedule defaulting to 08:00, and a six-hour default `misfire_grace_time`. Compose runs exactly one scheduler service; scaling that service is unsupported because APScheduler 3 job stores do not coordinate multiple schedulers.
 
@@ -138,7 +138,7 @@ The fixed stage order is collection → deterministic extraction/validation → 
 
 Only `TransientJobAgentError` outcomes receive at most three stage attempts with injected exponential delays of 30 and 60 seconds; permanent failures stop immediately. A partially successful collection continues downstream and makes the final pipeline status `partial`, preserving a usable report and all failure evidence. On restart, after acquiring the advisory lock, a persisted `running` stage is marked `interrupted` and the coordinator resumes from the first non-successful stage using the original `scheduled_for`. Existing immutable/idempotent writes make replay safe. Manual `makeup --date YYYY-MM-DD` resolves to the same configured local schedule slot and therefore resumes/reuses the same logical run instead of creating a duplicate.
 
-Approval authorizes feature-branch implementation and destructive-schema tests only against the guarded `_test` database. Execution order is G1: dependency, settings, migration/models, ledger/lock contracts and unit tests; G2: injected four-stage coordinator, retry/recovery, force-recompute support and PostgreSQL concurrency/recovery tests; G3: scheduler command, single Compose service, bilingual scheduling/database/configuration documentation, integration test, and full gate. Applying migration `0009` to the populated local business database or starting a live scheduler remains a separate G4 runtime approval after the code and evidence are reviewed. No rebase, force push, credential persistence, live-source run, or JAI-027 work is authorized by this proposal.
+The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06. Approval authorizes feature-branch implementation and destructive-schema tests only against the guarded `_test` database. Execution order is G1: dependency, settings, migration/models, ledger/lock contracts and unit tests; G2: injected four-stage coordinator, retry/recovery, force-recompute support and PostgreSQL concurrency/recovery tests; G3: scheduler command, single Compose service, bilingual scheduling/database/configuration documentation, integration test, and full gate. Applying migration `0009` to the populated local business database or starting a live scheduler remains a separate G4 runtime approval after the code and evidence are reviewed. No rebase, force push, credential persistence, live-source run, or JAI-027 work is authorized.
 
 ## 3. Active work history
 
@@ -588,6 +588,12 @@ Approval authorizes feature-branch implementation and destructive-schema tests o
 - As of this audit, PyPI lists APScheduler 3.11.3 as the stable release while 4.0 remains an alpha series. The official 3.x guide recommends PostgreSQL `SQLAlchemyJobStore` for restart persistence, documents `misfire_grace_time`, coalescing, and per-job `max_instances`, and warns that one job store must not be shared by multiple schedulers. D-036 therefore proposes a dedicated single scheduler process plus a PostgreSQL advisory lock and domain ledger rather than embedding a scheduler in API workers.
 - D-036 and gates G1–G4 are recorded above but remain unapproved. No dependency, migration, code, Compose, database, or live-source change was made during this audit.
 
+### 2026-09-06 — JAI-026 D-036 and G1–G3 approved
+
+- The project owner explicitly approved D-036 and implementation gates G1–G3. Work may now proceed on the existing feature branch in the recorded order, including destructive migration/concurrency/recovery tests only against a database whose name ends in `_test`.
+- G4 remains unapproved: do not apply migration `0009` to the populated local `jobagent` business database, start the long-running scheduler, or issue live-source requests. JAI-027 and JAI-049 remain outside this implementation.
+- Before implementation, the branch, local tracking reference, and GitHub were already verified at `ee76f01d22c72f5576801c1ef5b571f1a58a6804`; the worktree was clean and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -604,9 +610,9 @@ Approval authorizes feature-branch implementation and destructive-schema tests o
 
 ## 5. Next actions
 
-1. Commit and normally push the bilingual D-036 approval packet, then verify the JAI-026 feature branch locally, through its tracking reference, and through GitHub.
-2. Obtain explicit project-owner approval or requested changes for D-036 and implementation gates G1–G3. Do not implement while approval is pending.
-3. After approval, execute G1–G3 in order with PostgreSQL `_test` safeguards and stop before any populated business-database migration or live scheduler start.
+1. Commit and normally push this bilingual approval record.
+2. Execute G1, then G2, then G3 with focused checks at each boundary and the complete PostgreSQL gate at the end.
+3. Record implementation decisions, failures, migration/test evidence, and final Git state in both work logs; stop before G4 runtime activation.
 4. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change published versions or start JAI-027.
 
 ## 6. Update template
