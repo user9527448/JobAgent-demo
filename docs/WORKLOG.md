@@ -34,7 +34,7 @@
 | JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
-| JAI-026 | G1–G3 implemented and verified; G4 pending | `feature/jai-026-daily-scheduling-recovery` | Code, `_test` database acceptance, and documentation are complete; populated business-database migration, live scheduler activation, and merge remain under review |
+| JAI-026 | G1–G4 verified; safe merge approved | `feature/jai-026-daily-scheduling-recovery` | Business migration, one live scheduler, controlled makeup, and idempotent reuse passed; non-fast-forward merge is next |
 
 ## 2. Current decisions
 
@@ -606,6 +606,15 @@ The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06.
 - G4 remains intentionally unexecuted. Migration `0009` was not applied to the populated local `jobagent` business database, no long-running scheduler or live-source request was started, and no merge was attempted. The next action is a final documentation/diff review, a scoped feature commit and normal push with three-way verification, followed by owner review of G4 runtime activation and safe merge as separate decisions.
 - Created scoped implementation commit `e1074e80dd1eccf219d45dd97395e938303db197` with repository-local author `user9527448 <2537759248@qq.com>` and normally pushed it through the command-local proxy. The HTTPS `origin` and persistent Git proxy configuration were unchanged. Local feature HEAD, `origin/feature/jai-026-daily-scheduling-recovery`, and GitHub `ls-remote` all matched that commit after the push.
 
+### 2026-09-06 — JAI-026 G4 business runtime acceptance passed
+
+- The project owner approved the recorded G4 runtime activation and the subsequent safe merge if validation passed. Before migration, the populated local business database was at `0008_daily_report_snapshots`: 5/5 sources enabled, 3 crawl runs, 9 raw documents, 9 posts, 2 positions, 2 match results, and 1 report snapshot. None of the three `0009` tables existed.
+- Applied the additive `0009_pipeline_scheduling` migration. `alembic current` reported head and `alembic check` found no drift. All seven pre-existing business counts remained unchanged; `apscheduler_jobs`, `pipeline_runs`, and `pipeline_stage_runs` existed and were empty immediately after migration. No downgrade or destructive rollback was needed.
+- Built the current feature image and started exactly one Compose scheduler. Its logs confirmed the fixed job was added and the scheduler started. PostgreSQL contained exactly one `jobagent.daily-pipeline.v1` job with next execution at 2026-09-07 08:00 `Asia/Shanghai`; no pipeline row existed before the controlled makeup.
+- The 2026-09-06 makeup completed `succeeded` with all four stages succeeding on their first attempt. All five approved public sources completed: NCSS discovered 3 (2 created/1 skipped), Firstjob 0, Jiangsu 2 skipped, Shanghai public institutions 5 skipped, and China Mobile—previously intermittent—was reachable and created all 15 discovered documents. There were no detail failures or bypass attempts.
+- Trace output retained crawl runs 4–8; extraction version `jai-026-v1` processed document IDs 1–26 into post IDs 10–35 and position IDs 3–6 with no extraction failure; matching version `jai-025-v2` created result IDs 3–6 at the fixed schedule instant; report version `jai-024-v1` created snapshot 2. Business totals became 8 crawl runs, 26 raw documents, 35 versioned posts, 6 positions, 6 match results, and 2 report snapshots.
+- Repeating the same local-date makeup returned `reused` and retained exactly one logical run and four stage attempts, proving no repeat collection or downstream write. The scheduler remained up with one persistent job. G4 therefore passed and the approved condition for a safe non-fast-forward merge was met; JAI-027 remains unstarted.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -620,13 +629,14 @@ The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06.
 - JAI-025 final preparation gate: Ruff format/lint and repository-configured Mypy passed; all 295 PostgreSQL-enabled tests passed with no skips at 87.82% coverage; bilingual structure, Issue-ID order, Markdown links, evaluator replay, and diff checks passed.
 - JAI-025 post-merge gate repeated the same authoritative result: Ruff format/lint passed, Mypy passed across 140 source files, all 295 PostgreSQL-enabled tests passed with no skips, and coverage was 87.82%. The pushed `develop` triple matched `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`.
 - JAI-026 G1–G3 final gate: Ruff format checked 232 files, Ruff lint passed, Mypy passed across 155 source files, all 313 PostgreSQL-enabled tests passed with no skips, and coverage was 86.20%. The business database and live scheduler remain untouched behind G4.
+- JAI-026 G4: business migration reached `0009_pipeline_scheduling` with no drift or pre-existing count change; one scheduler/job remained active; the controlled live makeup and same-date reuse checks passed with one succeeded run and four succeeded stage attempts.
 
 ## 5. Next actions
 
-1. Present G4 business-database migration/live scheduler activation and the JAI-026 safe merge as explicit owner-review decisions; do not perform either beforehand.
-2. If G4 is approved, inspect the populated business database before applying migration `0009`, start exactly one scheduler only after post-migration checks, and retain rollback/observation evidence.
-3. If safe merge is approved, reverify feature/develop ancestry and three-way refs, non-fast-forward merge to `develop`, rerun the complete PostgreSQL gate, normally push, and verify all three refs before starting JAI-027.
-4. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change published versions.
+1. Commit and normally push this paired G4 evidence, then reverify feature/develop ancestry and all remote refs.
+2. Non-fast-forward merge JAI-026 to `develop`, rerun the complete PostgreSQL gate, normally push, and verify local/tracking/GitHub equality.
+3. Keep the single scheduler running for the next configured 08:00 execution; its multi-run observation belongs to JAI-028 rather than blocking this implemented JAI-026 acceptance.
+4. Do not start JAI-027 implementation before its independent branch and design review; keep deferred live-review volume, attachment handoff, and source diagnostics in JAI-049.
 
 ## 6. Update template
 

@@ -341,7 +341,7 @@
 
 - **Labels**：`type:feature` `area:infra` `priority:P0` `size:L`
 - **依赖**：JAI-012、JAI-024
-- **状态**：`feature/jai-026-daily-scheduling-recovery` 上的 D-036、G1～G3 实施和 PostgreSQL 完整门禁已完成；业务库迁移、真实调度启动和安全合并仍等待负责人审核，G4 尚未执行。
+- **状态**：`feature/jai-026-daily-scheduling-recovery` 上的 D-036、G1～G4 均已通过；业务库已无漂移迁移，唯一 scheduler 与受控补跑/复用验证成功，负责人已批准安全合并。
 - **目标**：系统每天无人值守执行完整流水线。
 - **范围**：APScheduler、Asia/Shanghai 调度、单实例锁、misfire、阶段重试和手动补跑。
 - **验收标准**：

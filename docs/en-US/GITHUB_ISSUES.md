@@ -341,7 +341,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:infra` `priority:P0` `size:L`
 - **Dependencies**: JAI-012, JAI-024
-- **Status**: D-036 and G1–G3 implementation plus the full PostgreSQL gate are complete on `feature/jai-026-daily-scheduling-recovery`; business-database migration, live scheduler activation, and safe merge still await owner review, and G4 has not run.
+- **Status**: D-036 and G1–G4 have passed on `feature/jai-026-daily-scheduling-recovery`; the business database migrated without drift, the single scheduler plus controlled makeup/reuse checks succeeded, and the owner approved safe merge.
 - **Goal**: run the full pipeline unattended every day.
 - **Scope**: APScheduler, `Asia/Shanghai`, single-instance locks, misfires, stage retries, manual makeup runs.
 - **Acceptance**:
