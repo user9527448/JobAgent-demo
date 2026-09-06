@@ -26,6 +26,7 @@
 | 确定性匹配与版本化评分 | [中文](MATCHING.md) | [English](../MATCHING.md) |
 | Top 20 匹配质量评审 | [中文](MATCHING_QUALITY.md) | [English](../MATCHING_QUALITY.md) |
 | 日报查询、渲染与快照 | [中文](REPORTS.md) | [English](../REPORTS.md) |
+| 每日调度、恢复与补跑 | [中文](SCHEDULING.md) | [English](../SCHEDULING.md) |
 | 来源 4、5 与稳定性验证 | [中文](SOURCE_STABILITY.md) | [English](../SOURCE_STABILITY.md) |
 | 招聘信息目标网站库 | [中文](../SOURCE_CATALOG.md) | [English](../en-US/SOURCE_CATALOG.md) |
 | JAI-005 济宁来源技术验证 | [中文](spikes/JAI-005-JINING-SOURCE.md) | [English](../spikes/JAI-005-JINING-SOURCE.md) |

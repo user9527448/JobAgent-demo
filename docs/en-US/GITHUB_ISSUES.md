@@ -341,13 +341,13 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:infra` `priority:P0` `size:L`
 - **Dependencies**: JAI-012, JAI-024
-- **Status**: `feature/jai-026-daily-scheduling-recovery` was created from three-way-verified `develop` commit `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`; D-036 and G1–G3 are approved and implementation has started, while business-database migration and live scheduler activation still await G4.
+- **Status**: D-036 and G1–G3 implementation plus the full PostgreSQL gate are complete on `feature/jai-026-daily-scheduling-recovery`; business-database migration, live scheduler activation, and safe merge still await owner review, and G4 has not run.
 - **Goal**: run the full pipeline unattended every day.
 - **Scope**: APScheduler, `Asia/Shanghai`, single-instance locks, misfires, stage retries, manual makeup runs.
 - **Acceptance**:
-  - [ ] One schedule time cannot run duplicate jobs concurrently.
-  - [ ] Restart safely recovers or terminates incomplete work.
-  - [ ] Every scheduled run traces collection, parsing, scoring, and report records.
+  - [x] One schedule time cannot run duplicate jobs concurrently.
+  - [x] Restart safely recovers or terminates incomplete work.
+  - [x] Every scheduled run traces collection, parsing, scoring, and report records.
 
 ### JAI-027 Integrate WeChat delivery with idempotency and retries
 
@@ -635,4 +635,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-021 through JAI-025 have completed and merged into `develop` in order. From the triple-verified JAI-025 merge baseline `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`, JAI-026 is now running on its independent branch. Record and approve the scheduling, durable run-ledger/state-machine, concurrency-lock, retry/recovery, and manual-makeup design before implementation; JAI-027 notifications must not be implemented early. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
+JAI-021 through JAI-025 have completed and merged into `develop` in order. JAI-026 has completed D-036 and G1–G3 implementation, the 313-test no-skip PostgreSQL gate, and bilingual documentation on its independent feature branch; it now awaits post-push G4 runtime activation and safe-merge review. JAI-027 notifications must not be implemented early. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.

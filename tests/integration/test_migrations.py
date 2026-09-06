@@ -20,6 +20,7 @@ pytestmark = pytest.mark.integration
 
 PROJECT_ROOT = Path(__file__).parents[2]
 CORE_TABLES = {
+    "apscheduler_jobs",
     "attachments",
     "crawl_runs",
     "daily_report_snapshots",
@@ -27,6 +28,8 @@ CORE_TABLES = {
     "job_positions",
     "job_posts",
     "match_results",
+    "pipeline_runs",
+    "pipeline_stage_runs",
     "raw_documents",
     "sources",
     "user_preferences",

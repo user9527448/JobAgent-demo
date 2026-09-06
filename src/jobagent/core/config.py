@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     attachment_storage_path: Path = Path("data/attachments")
     attachment_max_bytes: int = Field(default=25 * 1024 * 1024, gt=0)
     attachment_chunk_bytes: int = Field(default=64 * 1024, gt=0)
+    source_catalog_path: Path = Path("config/source_catalog.toml")
+    scheduler_hour: int = Field(default=8, ge=0, le=23)
+    scheduler_minute: int = Field(default=0, ge=0, le=59)
+    scheduler_misfire_grace_seconds: int = Field(default=6 * 60 * 60, gt=0)
+    scheduler_stage_max_attempts: int = Field(default=3, ge=1, le=10)
+    scheduler_retry_delay_seconds: int = Field(default=30, ge=0, le=3600)
 
     @field_validator("timezone")
     @classmethod

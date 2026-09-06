@@ -12,6 +12,7 @@ license = { text = "Proprietary" }
 authors = [{ name = "JOBAGENT contributors" }]
 dependencies = [
   "alembic>=1.14,<2",
+  "APScheduler>=3.11.3,<4",
   "beautifulsoup4>=4.13,<5",
   "fastapi>=0.116,<1",
   "httpx>=0.28,<1",
@@ -35,6 +36,7 @@ dev = [
 
 [project.scripts]
 jobagent = "jobagent.cli:main"
+jobagent-scheduler = "jobagent.jobs.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/jobagent"]

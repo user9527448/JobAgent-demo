@@ -10,13 +10,16 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Date,
+    Float,
     ForeignKey,
     Identity,
     Index,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
+    Unicode,
     UniqueConstraint,
     func,
     text,
@@ -26,6 +29,17 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from jobagent.core.exceptions import JsonValue
 from jobagent.db.models.base import Base, TimestampMixin, UTCDateTime
+
+
+class APSchedulerJob(Base):
+    """Opaque APScheduler 3 job-store row managed by SQLAlchemyJobStore."""
+
+    __tablename__ = "apscheduler_jobs"
+    __table_args__ = (Index("ix_apscheduler_jobs_next_run_time", "next_run_time"),)
+
+    id: Mapped[str] = mapped_column(Unicode(191), primary_key=True)
+    next_run_time: Mapped[float | None] = mapped_column(Float(25))
+    job_state: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
 
 
 class Source(TimestampMixin, Base):
@@ -724,3 +738,117 @@ class DailyReportSnapshot(Base):
         nullable=False,
         server_default=func.now(),
     )
+
+
+class PipelineRun(TimestampMixin, Base):
+    """One durable logical execution of the daily application pipeline."""
+
+    __tablename__ = "pipeline_runs"
+    __table_args__ = (
+        UniqueConstraint(
+            "job_name",
+            "scheduled_for",
+            name="uq_pipeline_runs_job_scheduled",
+        ),
+        CheckConstraint(
+            "trigger IN ('scheduled', 'makeup')",
+            name="trigger_valid",
+        ),
+        CheckConstraint(
+            "status IN ('pending', 'running', 'succeeded', 'partial', 'failed', 'cancelled')",
+            name="status_valid",
+        ),
+        CheckConstraint(
+            "current_stage IS NULL OR current_stage IN "
+            "('collection', 'extraction', 'matching', 'report')",
+            name="current_stage_valid",
+        ),
+        CheckConstraint(
+            "finished_at IS NULL OR started_at IS NULL OR finished_at >= started_at",
+            name="finish_after_start",
+        ),
+        Index("ix_pipeline_runs_status_scheduled", "status", "scheduled_for"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    job_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    scheduled_for: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    report_date: Mapped[date] = mapped_column(Date, nullable=False)
+    timezone: Mapped[str] = mapped_column(String(100), nullable=False)
+    trigger: Mapped[str] = mapped_column(String(16), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="pending",
+        server_default=text("'pending'"),
+    )
+    current_stage: Mapped[str | None] = mapped_column(String(32))
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    error_message: Mapped[str | None] = mapped_column(Text)
+
+    stage_runs: Mapped[list[PipelineStageRun]] = relationship(
+        back_populates="pipeline_run",
+        passive_deletes=True,
+    )
+
+
+class PipelineStageRun(Base):
+    """One immutable-numbered attempt of a pipeline stage."""
+
+    __tablename__ = "pipeline_stage_runs"
+    __table_args__ = (
+        UniqueConstraint(
+            "pipeline_run_id",
+            "stage",
+            "attempt",
+            name="uq_pipeline_stage_runs_attempt",
+        ),
+        CheckConstraint(
+            "stage IN ('collection', 'extraction', 'matching', 'report')",
+            name="stage_valid",
+        ),
+        CheckConstraint("attempt > 0", name="attempt_positive"),
+        CheckConstraint(
+            "status IN ('running', 'succeeded', 'partial', 'failed', 'interrupted')",
+            name="status_valid",
+        ),
+        CheckConstraint(
+            "finished_at IS NULL OR finished_at >= started_at",
+            name="finish_after_start",
+        ),
+        CheckConstraint("jsonb_typeof(output) = 'object'", name="output_object"),
+        Index("ix_pipeline_stage_runs_run_stage", "pipeline_run_id", "stage"),
+        Index("ix_pipeline_stage_runs_status", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    pipeline_run_id: Mapped[int] = mapped_column(
+        ForeignKey("pipeline_runs.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    stage: Mapped[str] = mapped_column(String(32), nullable=False)
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="running",
+        server_default=text("'running'"),
+    )
+    started_at: Mapped[datetime] = mapped_column(
+        UTCDateTime(),
+        nullable=False,
+        server_default=func.now(),
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    output: Mapped[dict[str, JsonValue]] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    error_message: Mapped[str | None] = mapped_column(Text)
+
+    pipeline_run: Mapped[PipelineRun] = relationship(back_populates="stage_runs")

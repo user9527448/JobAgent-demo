@@ -50,6 +50,32 @@ services:
     init: true
     restart: unless-stopped
 
+  scheduler:
+    build:
+      context: .
+    command: ["jobagent-scheduler", "start"]
+    environment:
+      JOBAGENT_ENVIRONMENT: development
+      JOBAGENT_LOG_LEVEL: ${JOBAGENT_LOG_LEVEL:-INFO}
+      JOBAGENT_TIMEZONE: ${JOBAGENT_TIMEZONE:-Asia/Shanghai}
+      JOBAGENT_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-jobagent}:${POSTGRES_PASSWORD:-jobagent-dev-only}@db:5432/${POSTGRES_DB:-jobagent}
+      JOBAGENT_ATTACHMENT_STORAGE_PATH: /app/data/attachments
+      JOBAGENT_ATTACHMENT_MAX_BYTES: ${JOBAGENT_ATTACHMENT_MAX_BYTES:-26214400}
+      JOBAGENT_ATTACHMENT_CHUNK_BYTES: ${JOBAGENT_ATTACHMENT_CHUNK_BYTES:-65536}
+      JOBAGENT_SOURCE_CATALOG_PATH: /app/config/source_catalog.toml
+      JOBAGENT_SCHEDULER_HOUR: ${JOBAGENT_SCHEDULER_HOUR:-8}
+      JOBAGENT_SCHEDULER_MINUTE: ${JOBAGENT_SCHEDULER_MINUTE:-0}
+      JOBAGENT_SCHEDULER_MISFIRE_GRACE_SECONDS: ${JOBAGENT_SCHEDULER_MISFIRE_GRACE_SECONDS:-21600}
+      JOBAGENT_SCHEDULER_STAGE_MAX_ATTEMPTS: ${JOBAGENT_SCHEDULER_STAGE_MAX_ATTEMPTS:-3}
+      JOBAGENT_SCHEDULER_RETRY_DELAY_SECONDS: ${JOBAGENT_SCHEDULER_RETRY_DELAY_SECONDS:-30}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - attachment-data:/app/data/attachments
+    init: true
+    restart: unless-stopped
+
 volumes:
   postgres-data:
   attachment-data:

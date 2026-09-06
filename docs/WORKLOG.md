@@ -34,7 +34,7 @@
 | JAI-023 | Complete, merged and pushed to `develop` | `develop` / `5935b52` | JAI-021–JAI-023 histories preserved; post-merge PostgreSQL gate passed with 271 tests |
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
-| JAI-026 | In progress; D-036 and G1–G3 approved | `feature/jai-026-daily-scheduling-recovery` | Feature/test implementation is authorized; populated business-database migration and live scheduler activation remain behind G4 |
+| JAI-026 | G1–G3 implemented and verified; G4 pending | `feature/jai-026-daily-scheduling-recovery` | Code, `_test` database acceptance, and documentation are complete; populated business-database migration, live scheduler activation, and merge remain under review |
 
 ## 2. Current decisions
 
@@ -594,6 +594,17 @@ The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06.
 - G4 remains unapproved: do not apply migration `0009` to the populated local `jobagent` business database, start the long-running scheduler, or issue live-source requests. JAI-027 and JAI-049 remain outside this implementation.
 - Before implementation, the branch, local tracking reference, and GitHub were already verified at `ee76f01d22c72f5576801c1ef5b571f1a58a6804`; the worktree was clean and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
 
+### 2026-09-06 — JAI-026 G1–G3 implementation and test acceptance completed
+
+- G1 added the stable APScheduler 3 dependency and typed schedule/retry settings; migration `0009_pipeline_scheduling` and matching ORM models now own `apscheduler_jobs`, uniquely identified `pipeline_runs`, and append-only numbered `pipeline_stage_runs`. The PostgreSQL repository exposes logical-run upsert/read/recovery and stage-attempt transitions, while a session advisory lock covers the complete pipeline.
+- The first focused G1 PostgreSQL run had two migration-drift failures because the manually managed APScheduler table was not represented in ORM metadata; ledger and advisory-lock behavior already passed. Adding the minimal `APSchedulerJob` mapping aligned Alembic autogeneration without changing the scheduler-owned schema. The rerun passed all four migration/repository/lock checks.
+- G2 implemented an injected coordinator with fixed collection → extraction/validation → matching → report order, bounded transient retries, partial-source continuation, permanent/unexpected/cancellation termination, restart interruption/resume, and terminal-run reuse. Forced matching uses the existing `CURRENT_SCORE_VERSION` and fixed schedule instant without changing preference values. Production stages retain crawl-run, input document, post/position, match-result, report-snapshot IDs and exact versions in their attempt output.
+- G3 added the importable fixed scheduler target, persistent PostgreSQL job store, local-date makeup and run-inspection CLI, Windows selector-loop handling, and exactly one Compose scheduler service. `.env.example`, image configuration, paired scheduling/database guides, and both documentation indexes were synchronized. No delivery, attachment handoff, new source/Adapter, LLM, or JAI-027 behavior was added.
+- The guarded PostgreSQL acceptance used only `jobagent_test` and synthetic public-collection input. Six focused migration, lock, matching, full-pipeline, idempotent-reuse, and stale-stage-recovery checks passed. The end-to-end case executed real deterministic extraction, matching, report generation, and persistence: two logical dates produced two pipeline runs, nine stage attempts including one interrupted attempt, two crawl runs, one idempotent post, two versioned match results, and two report snapshots.
+- The authoritative PostgreSQL-enabled `scripts/check.py` gate passed: Ruff format checked 232 files, Ruff lint passed, Mypy passed across 155 source files, all 313 tests passed with no skips, and coverage was 86.20%. `git diff --check` also passed before this documentation update.
+- Paired heading counts matched for plans 45/45, backlogs 71/71, work logs 69/69, database guides 6/6, and scheduling guides 5/5; both backlogs retained the same 178 Issue references in order. The first ad-hoc relative-link command failed because its checker did not substitute `.` for root-level files with an empty parent path; the corrected read-only command found no broken relative links across 67 tracked/new Markdown files. Final Ruff format/lint, Mypy, and `git diff --check` remained clean after the documentation update.
+- G4 remains intentionally unexecuted. Migration `0009` was not applied to the populated local `jobagent` business database, no long-running scheduler or live-source request was started, and no merge was attempted. The next action is a final documentation/diff review, a scoped feature commit and normal push with three-way verification, followed by owner review of G4 runtime activation and safe merge as separate decisions.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -607,12 +618,13 @@ The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06.
 - JAI-025 live flow: 9/9 approved details persisted across three successful runs; all nine reparses completed; 2 baseline matches and one immutable report snapshot were created; the repeat matching/report path was idempotent. The committed end-to-end regression passed against PostgreSQL.
 - JAI-025 final preparation gate: Ruff format/lint and repository-configured Mypy passed; all 295 PostgreSQL-enabled tests passed with no skips at 87.82% coverage; bilingual structure, Issue-ID order, Markdown links, evaluator replay, and diff checks passed.
 - JAI-025 post-merge gate repeated the same authoritative result: Ruff format/lint passed, Mypy passed across 140 source files, all 295 PostgreSQL-enabled tests passed with no skips, and coverage was 87.82%. The pushed `develop` triple matched `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`.
+- JAI-026 G1–G3 final gate: Ruff format checked 232 files, Ruff lint passed, Mypy passed across 155 source files, all 313 PostgreSQL-enabled tests passed with no skips, and coverage was 86.20%. The business database and live scheduler remain untouched behind G4.
 
 ## 5. Next actions
 
-1. Commit and normally push this bilingual approval record.
-2. Execute G1, then G2, then G3 with focused checks at each boundary and the complete PostgreSQL gate at the end.
-3. Record implementation decisions, failures, migration/test evidence, and final Git state in both work logs; stop before G4 runtime activation.
+1. Complete final bilingual-document and diff checks, commit the scoped G1–G3 implementation, and normally push the feature branch.
+2. Verify local feature HEAD, its tracking reference, and GitHub `ls-remote`; record the final identity without rewriting published history.
+3. Present G4 business-database migration/live scheduler activation and the JAI-026 safe merge as explicit owner-review decisions; do not perform either beforehand.
 4. Keep the deferred >=50 live human review, attachment handoff, and source diagnostics in JAI-049; do not silently change published versions or start JAI-027.
 
 ## 6. Update template

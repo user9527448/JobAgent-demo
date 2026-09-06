@@ -26,6 +26,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | Deterministic matching and versioned scoring | [English](../MATCHING.md) | [中文](../zh-CN/MATCHING.md) |
 | Top 20 matching-quality review | [English](../MATCHING_QUALITY.md) | [中文](../zh-CN/MATCHING_QUALITY.md) |
 | Daily report queries, rendering, and snapshots | [English](../REPORTS.md) | [中文](../zh-CN/REPORTS.md) |
+| Daily scheduling, recovery, and makeup operations | [English](../SCHEDULING.md) | [中文](../zh-CN/SCHEDULING.md) |
 | Sources 4-5 and stability verification | [English](../SOURCE_STABILITY.md) | [中文](../zh-CN/SOURCE_STABILITY.md) |
 | Recruitment source catalog | [English](SOURCE_CATALOG.md) | [中文](../SOURCE_CATALOG.md) |
 | JAI-005 Jining source Spike | [English](../spikes/JAI-005-JINING-SOURCE.md) | [中文](../zh-CN/spikes/JAI-005-JINING-SOURCE.md) |
