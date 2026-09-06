@@ -57,6 +57,7 @@ class MatchingRecomputeResult:
     filtered_count: int
     created_count: int
     unchanged_count: int
+    result_ids: tuple[int, ...]
 
 
 class SqlAlchemyMatchingService:
@@ -75,8 +76,9 @@ class SqlAlchemyMatchingService:
         *,
         evaluated_at: datetime,
         score_version: str = CURRENT_SCORE_VERSION,
+        force: bool = False,
     ) -> MatchingRecomputeResult:
-        """Consume one pending signal in the same transaction as every match result."""
+        """Consume a pending signal or explicitly force one atomic full evaluation."""
         evaluated_at = _aware_utc(evaluated_at)
         try:
             async with self._session_factory() as session, session.begin():
@@ -90,7 +92,7 @@ class SqlAlchemyMatchingService:
                     )
                 preferences = _preference_values(profile)
                 preference_updated_at = profile.updated_at
-                if not profile.recompute_required:
+                if not profile.recompute_required and not force:
                     return MatchingRecomputeResult(
                         status=RecomputeStatus.NOT_REQUIRED,
                         score_version=score_version,
@@ -102,6 +104,7 @@ class SqlAlchemyMatchingService:
                         filtered_count=0,
                         created_count=0,
                         unchanged_count=0,
+                        result_ids=(),
                     )
 
                 rows = (
@@ -114,6 +117,7 @@ class SqlAlchemyMatchingService:
                     )
                 ).all()
                 passed = filtered = created = unchanged = 0
+                result_ids: list[int] = []
                 for position, post, document in rows:
                     evaluation = self._engine.evaluate(
                         _match_input(position, post, document),
@@ -125,12 +129,14 @@ class SqlAlchemyMatchingService:
                         passed += 1
                     else:
                         filtered += 1
-                    if await _persist_evaluation(
+                    result_id, was_created = await _persist_evaluation(
                         session,
                         evaluation,
                         evaluated_at=evaluated_at,
                         preference_updated_at=preference_updated_at,
-                    ):
+                    )
+                    result_ids.append(result_id)
+                    if was_created:
                         created += 1
                     else:
                         unchanged += 1
@@ -154,6 +160,7 @@ class SqlAlchemyMatchingService:
                     filtered_count=filtered,
                     created_count=created,
                     unchanged_count=unchanged,
+                    result_ids=tuple(result_ids),
                 )
         except SQLAlchemyError as error:
             raise TransientJobAgentError(
@@ -168,7 +175,7 @@ async def _persist_evaluation(
     *,
     evaluated_at: datetime,
     preference_updated_at: datetime,
-) -> bool:
+) -> tuple[int, bool]:
     existing = await session.scalar(
         select(MatchResult).where(
             MatchResult.position_id == evaluation.position_id,
@@ -188,7 +195,7 @@ async def _persist_evaluation(
                     "score_version": evaluation.score_version,
                 },
             )
-        return False
+        return existing.id, False
 
     current = await session.scalar(
         select(MatchResult)
@@ -218,7 +225,7 @@ async def _persist_evaluation(
     )
     session.add(row)
     await session.flush()
-    return True
+    return row.id, True
 
 
 def _preference_values(profile: UserPreference) -> PreferenceValues:

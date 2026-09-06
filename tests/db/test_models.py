@@ -8,6 +8,7 @@ from sqlalchemy.engine.default import DefaultDialect
 from jobagent.db.models import Base, UTCDateTime
 
 EXPECTED_TABLES = {
+    "apscheduler_jobs",
     "attachments",
     "crawl_runs",
     "daily_report_snapshots",
@@ -15,6 +16,8 @@ EXPECTED_TABLES = {
     "job_positions",
     "job_posts",
     "match_results",
+    "pipeline_runs",
+    "pipeline_stage_runs",
     "raw_documents",
     "sources",
     "user_preferences",

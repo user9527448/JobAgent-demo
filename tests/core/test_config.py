@@ -25,6 +25,12 @@ def test_settings_load_from_prefixed_environment(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setenv("JOBAGENT_ATTACHMENT_STORAGE_PATH", "data/test-attachments")
     monkeypatch.setenv("JOBAGENT_ATTACHMENT_MAX_BYTES", "4096")
     monkeypatch.setenv("JOBAGENT_ATTACHMENT_CHUNK_BYTES", "512")
+    monkeypatch.setenv("JOBAGENT_SOURCE_CATALOG_PATH", "config/test-sources.toml")
+    monkeypatch.setenv("JOBAGENT_SCHEDULER_HOUR", "7")
+    monkeypatch.setenv("JOBAGENT_SCHEDULER_MINUTE", "30")
+    monkeypatch.setenv("JOBAGENT_SCHEDULER_MISFIRE_GRACE_SECONDS", "7200")
+    monkeypatch.setenv("JOBAGENT_SCHEDULER_STAGE_MAX_ATTEMPTS", "4")
+    monkeypatch.setenv("JOBAGENT_SCHEDULER_RETRY_DELAY_SECONDS", "15")
 
     settings = get_settings()
 
@@ -34,6 +40,12 @@ def test_settings_load_from_prefixed_environment(monkeypatch: pytest.MonkeyPatch
     assert settings.attachment_storage_path == Path("data/test-attachments")
     assert settings.attachment_max_bytes == 4096
     assert settings.attachment_chunk_bytes == 512
+    assert settings.source_catalog_path == Path("config/test-sources.toml")
+    assert settings.scheduler_hour == 7
+    assert settings.scheduler_minute == 30
+    assert settings.scheduler_misfire_grace_seconds == 7200
+    assert settings.scheduler_stage_max_attempts == 4
+    assert settings.scheduler_retry_delay_seconds == 15
 
 
 def test_missing_required_environment_fails_clearly(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -50,6 +62,16 @@ def test_missing_required_environment_fails_clearly(monkeypatch: pytest.MonkeyPa
 def test_invalid_timezone_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("JOBAGENT_ENVIRONMENT", "development")
     monkeypatch.setenv("JOBAGENT_TIMEZONE", "Mars/Olympus_Mons")
+
+    with pytest.raises(ConfigurationError) as captured:
+        get_settings()
+
+    assert captured.value.details["errors"]
+
+
+def test_invalid_scheduler_time_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("JOBAGENT_ENVIRONMENT", "development")
+    monkeypatch.setenv("JOBAGENT_SCHEDULER_HOUR", "24")
 
     with pytest.raises(ConfigurationError) as captured:
         get_settings()

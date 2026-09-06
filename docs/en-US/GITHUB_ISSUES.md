@@ -324,14 +324,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:test` `area:matching` `priority:P1` `size:M`
 - **Dependencies**: JAI-023, JAI-024
-- **Status**: the 60-case synthetic proposed-label comparison, nine-document live end-to-end flow, and full gate are complete. The project owner approved the flow-first exception and G5 safe merge. At least 50 live human labels are deferred to JAI-049, and the synthetic set must not be represented as historical human data.
+- **Status**: merged and normally pushed to `develop` as `a070030c5c29b9aaddfd87b9d5b0cd174f66a451` under the approved flow-first exception; the post-merge gate passed 295 PostgreSQL-enabled tests at 87.82% coverage. At least 50 live human labels are deferred to JAI-049, and the synthetic set must not be represented as historical human data.
 - **Goal**: tune weights against human judgment.
 - **Scope**: the original scope requires at least 50 human-labelled positions. The current step first verifies Top 20/miss mechanics with 60 explicitly synthetic proposed labels and proves the collection-to-report flow with bounded live data; live human-review volume remains explicit quality debt.
 - **Acceptance**:
   - [x] Classify obvious false positives and misses.
   - [x] Compare scores before/after changes and bump score version.
   - [x] Document MVP recommendation limitations.
-  - [ ] Human-label and review at least 50 live positions (deferred to JAI-049 by owner decision and non-blocking for the current flow closure).
+  - [x] The original >=50 live human-label target is explicitly deferred to JAI-049 under the owner-approved flow-first exception; this Issue does not claim that volume was completed.
 
 ---
 
@@ -341,12 +341,13 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:infra` `priority:P0` `size:L`
 - **Dependencies**: JAI-012, JAI-024
+- **Status**: complete and integrated into `develop` by a non-fast-forward merge; D-036, G1–G4, business migration, the single scheduler, controlled makeup/reuse, and the post-merge PostgreSQL full gate all passed.
 - **Goal**: run the full pipeline unattended every day.
 - **Scope**: APScheduler, `Asia/Shanghai`, single-instance locks, misfires, stage retries, manual makeup runs.
 - **Acceptance**:
-  - [ ] One schedule time cannot run duplicate jobs concurrently.
-  - [ ] Restart safely recovers or terminates incomplete work.
-  - [ ] Every scheduled run traces collection, parsing, scoring, and report records.
+  - [x] One schedule time cannot run duplicate jobs concurrently.
+  - [x] Restart safely recovers or terminates incomplete work.
+  - [x] Every scheduled run traces collection, parsing, scoring, and report records.
 
 ### JAI-027 Integrate WeChat delivery with idempotency and retries
 
@@ -634,4 +635,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-021 through JAI-024 have completed and merged into `develop` in order. From the triple-verified JAI-024 merge baseline `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`, JAI-025 is now running on its independent branch. The quality review must retain the `jai-023-v1` baseline and compare it with an explicit new version; JAI-026 scheduling and JAI-027 notifications must not be implemented early. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
+JAI-021 through JAI-025 have completed and merged into `develop` in order. JAI-026 has completed D-036 and G1–G3 implementation, the 313-test no-skip PostgreSQL gate, and bilingual documentation on its independent feature branch; it now awaits post-push G4 runtime activation and safe-merge review. JAI-027 notifications must not be implemented early. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.

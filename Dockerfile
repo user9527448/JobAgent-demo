@@ -11,6 +11,7 @@ RUN addgroup --system jobagent && adduser --system --ingroup jobagent jobagent
 COPY pyproject.toml README.md alembic.ini ./
 COPY src ./src
 COPY migrations ./migrations
+COPY config ./config
 
 RUN python -m pip install --no-cache-dir .
 

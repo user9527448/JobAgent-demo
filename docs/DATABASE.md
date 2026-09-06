@@ -2,7 +2,7 @@
 
 > 简体中文：[JOBAGENT 核心数据库模型](zh-CN/DATABASE.md)
 
-This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md), JAI-022 [single-user preference policy](PREFERENCES.md), JAI-023 [versioned matching policy](MATCHING.md), and JAI-024 [daily report snapshots](REPORTS.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
+This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md), JAI-022 [single-user preference policy](PREFERENCES.md), JAI-023 [versioned matching policy](MATCHING.md), JAI-024 [daily report snapshots](REPORTS.md), and JAI-026 [durable scheduling](SCHEDULING.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
 
 ## Tables
 
@@ -19,6 +19,9 @@ This document describes the PostgreSQL schema established in JAI-006 and extende
 | `user_preferences` | Singleton local-user profile | Fixed `id=1`; structured filters; unrestricted defaults; audit timestamps and sticky recomputation signal |
 | `match_results` | Versioned position matching decision | Score/rule version; input/preference/result hashes; hard-filter decision; JSONB components/rules; one current result plus append-only history |
 | `daily_report_snapshots` | Immutable structured/rendered daily report | Date/timezone/version/input identity; JSONB payload; content hash; Markdown and escaped HTML; identical inputs reuse one snapshot |
+| `apscheduler_jobs` | APScheduler 3 persistent job store | Fixed string job ID; next-run timestamp index; serialized scheduler state; managed only by the single scheduler process |
+| `pipeline_runs` | One durable logical daily execution | Unique `(job_name, scheduled_for)`; trigger, local report date/timezone, current stage, terminal status, timestamps, and safe error metadata |
+| `pipeline_stage_runs` | Numbered attempts for each pipeline stage | Unique run/stage/attempt; constrained stage/status; JSONB artifact IDs, versions, counts, and safe failure output |
 
 ## Relationships and deletion policy
 
@@ -36,6 +39,11 @@ sources
     └── field_evidence (document source)
 
 daily_report_snapshots (immutable report payload and renderings)
+
+pipeline_runs
+└── pipeline_stage_runs (restricted, append-only numbered attempts)
+
+apscheduler_jobs (single APScheduler process job store)
 ```
 
 All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do not use delete cascades. A source with history cannot be accidentally removed. Normal source retirement changes `sources.enabled` to false, preserving runs, documents, attachments and extracted data.
@@ -70,6 +78,9 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 - `user_preferences` permits only `id=1`; JSON preference fields must remain arrays and `education` must be a supported deterministic enum or null. Empty values are unrestricted, never “match nothing.”
 - `match_results` constrains scores to 0–100, requires zero after any failed hard filter, validates all SHA-256 identities, and requires JSON arrays for component/rule explanations. One partial unique index permits one current result per position.
 - `daily_report_snapshots` requires a JSON object payload and valid input/content SHA-256 values. Its date/timezone/report-version/input-hash identity prevents duplicate snapshots while retaining changed same-day inputs as separate immutable rows.
+- `pipeline_runs` uses the UTC schedule instant as part of its logical identity while retaining the resolved local report date and timezone. Scheduled and makeup triggers for the same slot therefore cannot create duplicate runs.
+- `pipeline_stage_runs` permits only collection, extraction, matching, and report stages. Running attempts become `interrupted` on recovery; completed attempts and their JSON artifact references are retained.
+- `apscheduler_jobs` is shared by no more than one scheduler process. The domain advisory lock remains the cross-process authority and prevents a competing process from writing a duplicate run.
 
 ## Migrations
 
@@ -88,3 +99,4 @@ docker compose exec api alembic upgrade head
 ```
 
 Migration integration tests are destructive and therefore refuse any database whose name does not end in `_test`.
+Migration `0009_pipeline_scheduling` is covered by that guard. Applying it to a populated business database and starting the Compose scheduler are separate runtime operations requiring explicit approval.

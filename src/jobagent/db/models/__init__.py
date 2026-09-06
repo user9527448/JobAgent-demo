@@ -2,6 +2,7 @@
 
 from jobagent.db.models.base import Base, UTCDateTime
 from jobagent.db.models.entities import (
+    APSchedulerJob,
     Attachment,
     CrawlRun,
     DailyReportSnapshot,
@@ -9,6 +10,8 @@ from jobagent.db.models.entities import (
     JobPosition,
     JobPost,
     MatchResult,
+    PipelineRun,
+    PipelineStageRun,
     RawDocument,
     Source,
     UserPreference,
@@ -16,6 +19,7 @@ from jobagent.db.models.entities import (
 )
 
 __all__ = [
+    "APSchedulerJob",
     "Attachment",
     "Base",
     "CrawlRun",
@@ -24,6 +28,8 @@ __all__ = [
     "JobPosition",
     "JobPost",
     "MatchResult",
+    "PipelineRun",
+    "PipelineStageRun",
     "RawDocument",
     "Source",
     "UTCDateTime",

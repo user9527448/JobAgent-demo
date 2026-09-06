@@ -62,6 +62,7 @@ def test_preference_signal_recomputes_every_current_position_atomically() -> Non
             assert first.filtered_count == 1
             assert first.created_count == 2
             assert first.unchanged_count == 0
+            assert len(first.result_ids) == 2
 
             async with database.session_factory() as session:
                 rows = list(await session.scalars(select(MatchResult).order_by(MatchResult.id)))
@@ -79,6 +80,15 @@ def test_preference_signal_recomputes_every_current_position_atomically() -> Non
             second = await matching.recompute_if_requested(evaluated_at=EVALUATED_AT)
             assert second.status is RecomputeStatus.NOT_REQUIRED
             assert second.processed_count == 0
+            assert second.result_ids == ()
+
+            forced = await matching.recompute_if_requested(
+                evaluated_at=EVALUATED_AT + timedelta(days=1),
+                force=True,
+            )
+            assert forced.status is RecomputeStatus.COMPLETED
+            assert forced.created_count == 2
+            assert len(forced.result_ids) == 2
 
             await preferences.replace(
                 PreferenceValues(
@@ -110,7 +120,7 @@ def test_preference_signal_recomputes_every_current_position_atomically() -> Non
                         .order_by(MatchResult.position_id)
                     )
                 )
-                assert total == 4
+                assert total == 6
                 assert current == 2
                 assert [row.score for row in current_rows] == [100, 100]
                 assert all(row.supersedes_id is not None for row in current_rows)

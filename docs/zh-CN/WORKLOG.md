@@ -6,9 +6,9 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-09-05
+> 最后更新：2026-09-06
 >
-> 当前分支：`feature/jai-025-top-20-quality-review`
+> 当前分支：`feature/jai-026-daily-scheduling-recovery`
 
 ## 1. 当前状态
 
@@ -33,7 +33,8 @@
 | JAI-022 | 已完成、合并并推送到 `develop` | `develop` / `e7948c9` | 已保留 JAI-021/JAI-022 双方历史；合并后 PostgreSQL 门禁以 254 项测试通过 |
 | JAI-023 | 已完成、合并并推送到 `develop` | `develop` / `5935b52` | 已保留 JAI-021 至 JAI-023 全部历史；合并后 PostgreSQL 门禁以 271 项测试通过 |
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
-| JAI-025 | 按获批流程优先例外完成；已授权合并 | `feature/jai-025-top-20-quality-review` | G5 已批准；真实人工评审样本量仍延期到 JAI-049 |
+| JAI-025 | 按获批流程优先例外完成、合并并推送到 `develop` | `develop` / `a070030` | 合并后 PostgreSQL 门禁以 295 项测试和 87.82% 覆盖率通过；真实人工评审样本量仍延期到 JAI-049 |
+| JAI-026 | 已完成；G1～G4 后合入 `develop` | `develop` / 当前非快进合并 | 业务迁移、唯一真实 scheduler、受控补跑/复用及合并后完整门禁均通过 |
 
 ## 2. 当前决策
 
@@ -126,6 +127,18 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 项目负责人于 2026-09-05 把当前优先级从“等待 50 条线上评审岗位才能推进”调整为“先完成并验证现有端到端流程”。来源 ID 1～5 的 G2 配额 `3/0/2/5/0` 已获批准。运行仍严格限制为 3 个可达来源、最多 10 条公开详情；既有并发、限速、证据和访问控制边界不变。
 
 如果本次有界运行得到的线上不同岗位少于 50 条，必须把差额明确记录为质量债务，不得隐藏或猜测补齐。现有 60 条合成集可继续验证确定性评估机制，但必须保持“合成”标识，不得表述为历史人工评审。来源样本量扩充、Firstjob 空发现、中国移动连接、未来至少 50 条线上人工标注基准均延期为优化项；本步骤不因此授权新 Adapter、更大配额或修改已发布评分版本。
+
+### D-036 已批准的独立调度进程与持久流水线台账
+
+JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`），不采用仍为预发布状态的 4 系列。运行一个与 FastAPI worker 分离的专用 `AsyncIOScheduler` 进程，使用 PostgreSQL `SQLAlchemyJobStore`、固定且可导入的任务目标/ID、`Asia/Shanghai`、`replace_existing=True`、`coalesce=True`、`max_instances=1`；本地执行时间可配置，默认 08:00，`misfire_grace_time` 默认六小时。Compose 只运行一个 scheduler 服务；APScheduler 3 的 job store 不协调多个 scheduler，因此不支持扩容该服务。
+
+迁移 `0009` 拟统一管理 APScheduler job-store 表以及 `pipeline_runs`、`pipeline_stage_runs`。唯一逻辑身份 `(job_name, scheduled_for)` 防止同一计划时刻的计划运行或补跑重复。运行台账保存触发类型、本地报告日期、时区、状态、当前阶段、时间戳和安全错误元数据；每次阶段尝试保存状态、尝试次数、输入/输出计数，以及追溯采集运行、原始公告/结构化公告、匹配结果和日报快照所需的准确既有记录 ID 或版本。完整流水线期间由 session 级 PostgreSQL advisory lock 提供跨进程权威，并在 `finally` 显式释放；APScheduler 的 `max_instances` 仅作为进程内第一道保护。
+
+固定阶段顺序为采集 → 确定性抽取/校验 → 匹配 → 日报。采集通过现有 Adapter 和限速策略按来源 ID 稳定遍历已启用来源；抽取只选择尚无显式 `jai-026-v1` 抽取版本的当前原始公告；匹配使用 `CURRENT_SCORE_VERSION` 和从 `scheduled_for` 派生的固定评估时刻，并增加显式 force 路径，使新增岗位和随时间变化的截止评分可以重算而不修改未变化的用户偏好；日报使用计划时刻对应的本地日期和现有不可变日报服务。附件衔接仍属于 JAI-049，投递仍属于 JAI-027，不增加来源、API 或 LLM 范围。
+
+只有 `TransientJobAgentError` 才最多执行三次阶段尝试，注入式指数退避为 30 秒、60 秒；永久错误立即停止。采集部分成功时继续下游阶段，并把最终流水线标记为 `partial`，保留可用日报及全部失败证据。重启后在取得 advisory lock 后，把持久化的 `running` 阶段标记为 `interrupted`，以原 `scheduled_for` 从第一个未成功阶段恢复；现有不可变/幂等写入保证安全重放。手工 `makeup --date YYYY-MM-DD` 映射到同一配置时区的计划时刻，因此恢复/复用相同逻辑运行，不创建重复运行。
+
+项目负责人已于 2026-09-06 批准 D-036 及实施闸门 G1～G3。批准范围只包括在 feature 分支实施，并只允许对受 `_test` 名称保护的数据库执行破坏性 Schema 测试。执行顺序为：G1 完成依赖、设置、迁移/模型、台账/锁契约和单元测试；G2 完成可注入四阶段协调器、重试/恢复、强制重算支持及 PostgreSQL 并发/恢复测试；G3 完成调度命令、单一 Compose 服务、双语调度/数据库/配置文档、集成测试和完整门禁。把迁移 `0009` 应用于已有数据的本地业务数据库或启动真实调度器，必须在代码与证据审阅后另行取得 G4 运行批准。本方案不授权 rebase、force push、持久化凭据、线上来源运行或 JAI-027 工作。
 
 ## 3. 当前工作记录
 
@@ -560,6 +573,49 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - JAI-025 现在可以非快进合入三端核验一致的 `develop`。获批完成声明仅限确定性评估机制与可执行流程闭环，不声称延期的至少 50 条真实人工标注基准已经完成。
 - 合并后必须重跑完整 PostgreSQL 门禁、普通推送 `develop`、核验本地/跟踪/GitHub 一致，然后才能创建独立 JAI-026 分支。继续禁止 rebase、force push、在 `develop` 上直接提交功能改动或提前开展 JAI-027。
 
+### 2026-09-05 — JAI-025 已合并并启动 JAI-026
+
+- G5 批准记录末端为 `d9a5764921ad32beb55e062c371ba30221939e5e`，已普通推送。合并前 feature 分支与其跟踪引用、GitHub 一致；本地 `develop`、`origin/develop` 和 GitHub 均为 JAI-024 基线 `0aa6b233ea8216aecdbe1d1dce4031ad6884a442`，feature 的合并基点也是该提交。
+- JAI-025 通过非快进提交 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451` 合入 `develop`，仓库本地作者为 `user9527448 <2537759248@qq.com>`。合并后启用 PostgreSQL 的 `scripts/check.py` 通过 Ruff format/lint、140 个源文件的 Mypy、295 项无跳过测试和 87.82% 覆盖率。
+- `develop` 已普通推送，未改变 HTTPS 远程地址或持久代理配置。本地 `HEAD`、`origin/develop` 与 GitHub `ls-remote` 均为 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`，工作区干净。
+- 两份 Backlog 都把 JAI-026 列为下一项计划内未完成 Issue。已从核验后的合并提交创建独立分支 `feature/jai-026-daily-scheduling-recovery`。范围仅限 APScheduler、`Asia/Shanghai`、单实例锁、misfire、阶段重试、安全重启恢复/终止、手工补跑，以及采集、解析、评分与日报全链路可追踪。
+- 当前尚未决定或实施 JAI-026 架构。下一步先只读审计既有命令、服务和持久化边界，形成双语留档的设计方案并交负责人审批；JAI-027 通知行为继续保持范围外。
+
+### 2026-09-05 — JAI-026 设计审计与审批材料
+
+- 只读检查确认已有可复用的幂等边界：单来源采集、单文档确定性重解析、原子全量匹配和不可变日报生成。原始公告/抽取身份、包含评估时间的匹配输入哈希、偏好行锁和日报输入哈希支持安全重放。
+- JAI-026 尚缺少的边界已明确：未安装 APScheduler；没有持久流水线/阶段台账或跨进程流水线锁；采集没有启用来源批量查询；抽取没有待处理文档批量查询；匹配只响应偏好信号，因此需要针对新增/时间敏感数据的显式 force 路径；Compose 没有 scheduler 进程。
+- 本次审计时 PyPI 的稳定版本为 APScheduler 3.11.3，4.0 仍为 alpha 系列。官方 3.x 指南推荐以 PostgreSQL `SQLAlchemyJobStore` 支持重启持久化，明确 `misfire_grace_time`、coalescing 和单任务 `max_instances`，并警告一个 job store 不得被多个 scheduler 共用。因此 D-036 拟采用专用单调度进程，再叠加 PostgreSQL advisory lock 与领域台账，不把调度器嵌入 API worker。
+- 上述 D-036 及 G1～G4 已登记但尚未批准。本次审计未修改依赖、迁移、代码、Compose、数据库或线上来源。
+
+### 2026-09-06 — JAI-026 D-036 与 G1～G3 已批准
+
+- 项目负责人已明确批准 D-036 和实施闸门 G1～G3。现在可以按已登记顺序在现有 feature 分支推进；破坏性迁移/并发/恢复测试只允许操作名称以 `_test` 结尾的数据库。
+- G4 仍未批准：不得把迁移 `0009` 应用于已有数据的本地 `jobagent` 业务数据库，不得启动长驻调度器或发起线上来源请求。JAI-027 与 JAI-049 继续保持在本次实施范围外。
+- 实施前该分支、本地跟踪引用与 GitHub 已核验为 `ee76f01d22c72f5576801c1ef5b571f1a58a6804`；工作区干净，仓库本地作者仍为 `user9527448 <2537759248@qq.com>`。
+
+### 2026-09-06 — JAI-026 G1～G3 实施与测试验收完成
+
+- G1 增加稳定 APScheduler 3 依赖及有类型的计划/重试配置；迁移 `0009_pipeline_scheduling` 与对应 ORM 模型统一管理 `apscheduler_jobs`、唯一身份的 `pipeline_runs` 和追加式编号 `pipeline_stage_runs`。PostgreSQL 仓储提供逻辑运行 upsert/查询/恢复与阶段尝试状态转换，session advisory lock 覆盖完整流水线。
+- 首轮 G1 PostgreSQL 定向运行有两项迁移漂移失败，原因是由调度器管理的 APScheduler 表未登记到 ORM metadata；当时台账和 advisory lock 行为已经通过。增加最小 `APSchedulerJob` 映射后，在不改变调度器表结构的前提下对齐 Alembic 自动生成检查；重跑的四项迁移/仓储/锁检查全部通过。
+- G2 实现可注入协调器，固定按采集 → 抽取/校验 → 匹配 → 日报执行，包含有界临时重试、部分来源成功后继续、永久/意外/取消终止、重启中断与恢复、终态复用。强制匹配使用既有 `CURRENT_SCORE_VERSION` 和固定计划时刻，不改变偏好值。生产阶段输出保留采集运行、输入文档、公告/岗位、匹配结果、日报快照 ID 及准确版本。
+- G3 增加可导入的固定调度目标、PostgreSQL 持久 job store、本地日期补跑与运行查询 CLI、Windows selector loop 处理，以及唯一一个 Compose scheduler 服务；同步更新 `.env.example`、镜像配置、中英文调度/数据库指南及两份文档索引。没有增加投递、附件衔接、新来源/Adapter、LLM 或 JAI-027 行为。
+- 受保护的 PostgreSQL 验收只使用 `jobagent_test` 与合成公网采集输入。六项定向迁移、锁、匹配、完整流水线、幂等复用和遗留阶段恢复检查通过。端到端用例真实执行确定性抽取、匹配、日报和持久化：两个逻辑日期产生 2 条流水线运行、含 1 次中断尝试的 9 条阶段记录、2 条采集运行、1 条幂等公告、2 条版本化匹配和 2 份日报快照。
+- 启用 PostgreSQL 的权威 `scripts/check.py` 门禁通过：Ruff format 检查 232 个文件，Ruff lint 通过，Mypy 检查 155 个源文件通过，313 项测试全部通过且无跳过，覆盖率 86.20%。本次文档更新前 `git diff --check` 也已通过。
+- 双语标题数在计划 45/45、Backlog 71/71、WORKLOG 69/69、数据库指南 6/6、调度指南 5/5 上一致；两份 Backlog 保持相同的 178 个 Issue 引用顺序。首次临时相对链接命令没有为仓库根文件的空父路径补 `.`，因此检查器自身失败；修正后的只读命令检查 67 份已跟踪/新增 Markdown，未发现失效相对链接。文档更新后的最终 Ruff format/lint、Mypy 与 `git diff --check` 仍保持通过。
+- G4 按设计保持未执行：没有将迁移 `0009` 应用于已有数据的本地 `jobagent` 业务库，没有启动长驻 scheduler 或线上来源请求，也没有尝试合并。下一步是最终文档/差异检查、范围内 feature 提交和普通推送并完成三端核验，然后把 G4 运行启用与安全合并作为两个独立决定交负责人审核。
+- 已使用仓库本地作者 `user9527448 <2537759248@qq.com>` 创建范围内实施提交 `e1074e80dd1eccf219d45dd97395e938303db197`，并通过命令级临时代理普通推送；HTTPS `origin` 与持久 Git 代理配置均未改变。推送后本地 feature HEAD、`origin/feature/jai-026-daily-scheduling-recovery` 与 GitHub `ls-remote` 均为该提交。
+
+### 2026-09-06 — JAI-026 G4 业务运行验收通过
+
+- 项目负责人已批准登记的 G4 运行启用，并批准在验证通过后安全合并。迁移前，已有数据的本地业务库位于 `0008_daily_report_snapshots`：5/5 个来源启用，3 条采集运行、9 份原始文档、9 条公告、2 个岗位、2 条匹配和 1 份日报快照；`0009` 的三个表均不存在。
+- 已应用只新增结构的 `0009_pipeline_scheduling` 迁移。`alembic current` 为 head，`alembic check` 无漂移；七组既有业务计数全部未变，`apscheduler_jobs`、`pipeline_runs`、`pipeline_stage_runs` 在迁移后存在且均为空。无需降级或破坏性回退。
+- 已构建当前 feature 镜像并只启动一个 Compose scheduler；日志确认固定任务已加入且调度器启动。PostgreSQL 恰有一个 `jobagent.daily-pipeline.v1` 作业，下次执行为 `Asia/Shanghai` 2026-09-07 08:00；受控补跑前没有流水线记录。
+- 2026-09-06 补跑以 `succeeded` 完成，四个阶段均一次成功。五个获批公开来源全部完成：NCSS 发现 3 条（新建 2/复用 1），Firstjob 为 0，江苏 2 条复用，上海事业单位 5 条复用，之前间歇异常的中国移动本次可达并新建全部 15 条发现文档；没有详情失败或绕过行为。
+- 追溯输出保留采集运行 4～8；抽取版本 `jai-026-v1` 把文档 ID 1～26 处理为公告 ID 10～35 和岗位 ID 3～6，且无抽取失败；匹配版本 `jai-025-v2` 在固定计划时刻创建结果 ID 3～6；日报版本 `jai-024-v1` 创建快照 2。业务总量变为 8 条采集运行、26 份原文、35 条版本化公告、6 个岗位、6 条匹配和 2 份日报。
+- 重复同一本地日期补跑返回 `reused`，仍只有 1 条逻辑运行和 4 条阶段尝试，证明没有重复采集或下游写入；scheduler 保持运行且持久作业仍为 1 条。G4 因此通过，已满足获批的安全非快进合并条件；JAI-027 尚未启动。
+- G4 证据提交普通推送后，feature 本地/跟踪/GitHub 均为 `4bc60fd1900ce5ae2cfc5ae5a8229f2595694d97`；develop 本地/跟踪/GitHub 及合并基点均为 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`。本次合并提交随后以非快进方式集成 JAI-026 并保留双父历史。合并后的 PostgreSQL `scripts/check.py` 重复得到权威结果：232 个文件格式检查、Ruff lint、155 个源文件 Mypy、313 项无跳过测试和 86.20% 覆盖率。交接前仍必须普通推送 develop 并完成三端核验。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -572,13 +628,16 @@ JAI-020 使用 `approved`、`review_required` 和 `blocked` 作为确定性结�
 - JAI-025 G1：Alembic current/check 在 `0008_daily_report_snapshots` 通过；精确五来源初始化后置条件通过；全部业务数据表仍为空。PostgreSQL 完整门禁以 294 项测试、无跳过和 87.80% 覆盖率通过。当前唯一运行限制是中国移动列表发现连接异常；按 0 配额记录，没有尝试绕过。
 - JAI-025 真实流程：获批的 9/9 条详情在三次成功运行中入库；9 次重解析全部完成；创建 2 条基线匹配与 1 份不可变日报快照；重复匹配/日报路径保持幂等。已提交的端到端回归在 PostgreSQL 上通过。
 - JAI-025 最终准备门禁：Ruff format/lint 与仓库配置的 Mypy 通过；295 项 PostgreSQL 启用测试全部通过且无跳过，覆盖率 87.82%；双语结构、Issue ID 顺序、Markdown 链接、评估器重放和差异检查均通过。
+- JAI-025 合并后再次得到同一权威门禁结果：Ruff format/lint 通过，140 个源文件的 Mypy 通过，295 项 PostgreSQL 启用测试全部通过且无跳过，覆盖率为 87.82%。推送后的 `develop` 三端均为 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`。
+- JAI-026 G1～G3 最终门禁：Ruff format 检查 232 个文件，Ruff lint 通过，Mypy 检查 155 个源文件通过，313 项 PostgreSQL 启用测试全部通过且无跳过，覆盖率 86.20%；业务库和真实 scheduler 仍受 G4 保护且未触碰。
+- JAI-026 G4：业务迁移到 `0009_pipeline_scheduling` 且无漂移/既有计数变化；一个 scheduler/作业保持运行；受控真实补跑和同日复用检查通过，恰有 1 条成功运行与 4 条成功阶段尝试。
 
 ## 5. 下一步
 
-1. 提交并普通推送 G5 批准记录，再分别核验当前 feature 末端与 `develop` 基线。
-2. 把 JAI-025 非快进合入 `develop`，重跑 PostgreSQL 完整门禁、普通推送并核验本地/跟踪/GitHub 一致。
-3. 从该已核验合并提交创建独立 JAI-026 分支，并在设计工作前登记启动。
-4. 至少 50 条真实人工评审、附件衔接和来源诊断继续留在 JAI-049；不得静默修改 `jai-025-v2` 或提前启动 JAI-027。
+1. 普通推送已验证的 `develop` 非快进合并，并确认本地 HEAD、跟踪引用与 GitHub `ls-remote` 一致。
+2. 保持唯一 scheduler 运行并等待下一个 08:00 计划执行；多次运行观测属于 JAI-028，不阻塞已完成的 JAI-026 验收。
+3. 将 JAI-027 作为下一项计划内未完成 Issue，但必须先创建独立分支并登记经负责人审核的投递设计，才能实施。
+4. 延期真实评审量、附件衔接和来源诊断继续留在 JAI-049；不得静默修改已发布版本。
 
 ## 6. 更新模板
 

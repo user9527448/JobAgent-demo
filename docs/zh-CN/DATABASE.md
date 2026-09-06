@@ -2,7 +2,7 @@
 
 > 英文原文：[JOBAGENT core database model](../DATABASE.md)。修改原文时必须在同一提交中同步更新本镜像。
 
-本文描述 JAI-006 建立的 PostgreSQL Schema，以及 JAI-009 的[原始公告版本策略](RAW_DOCUMENTS.md)、JAI-010 的[附件存储策略](ATTACHMENTS.md)、JAI-019 的[版本化抽取/证据策略](MERGING_AND_EVIDENCE.md)、JAI-020 的[校验/重解析策略](VALIDATION_AND_REPARSING.md)、JAI-022 的[单用户偏好策略](PREFERENCES.md)、JAI-023 的[版本化匹配策略](MATCHING.md)和 JAI-024 的[日报快照](REPORTS.md)带来的扩展。JAI-007 增加的采集运行仓库和编排见[采集编排文档](COLLECTION.md)。
+本文描述 JAI-006 建立的 PostgreSQL Schema，以及 JAI-009 的[原始公告版本策略](RAW_DOCUMENTS.md)、JAI-010 的[附件存储策略](ATTACHMENTS.md)、JAI-019 的[版本化抽取/证据策略](MERGING_AND_EVIDENCE.md)、JAI-020 的[校验/重解析策略](VALIDATION_AND_REPARSING.md)、JAI-022 的[单用户偏好策略](PREFERENCES.md)、JAI-023 的[版本化匹配策略](MATCHING.md)、JAI-024 的[日报快照](REPORTS.md)和 JAI-026 的[持久化调度](SCHEDULING.md)带来的扩展。JAI-007 增加的采集运行仓库和编排见[采集编排文档](COLLECTION.md)。
 
 ## 数据表
 
@@ -19,6 +19,9 @@
 | `user_preferences` | 本地单用户档案 | 固定 `id=1`；结构化筛选项；无限制默认值；审计时间与粘性重算信号 |
 | `match_results` | 版本化岗位匹配决定 | 得分/规则版本；输入/偏好/结果哈希；硬过滤决定；JSONB 分项/规则；一个当前结果和追加式历史 |
 | `daily_report_snapshots` | 不可变结构化/渲染日报 | 日期/时区/版本/输入身份；JSONB payload；内容哈希；Markdown 与已转义 HTML；相同输入复用一份快照 |
+| `apscheduler_jobs` | APScheduler 3 持久 job store | 固定字符串任务 ID；下次运行时间索引；序列化调度状态；仅由单 scheduler 进程管理 |
+| `pipeline_runs` | 一次持久化每日逻辑运行 | `(job_name, scheduled_for)` 唯一；触发类型、本地报告日期/时区、当前阶段、终态、时间戳与安全错误元数据 |
+| `pipeline_stage_runs` | 各流水线阶段的编号尝试 | 运行/阶段/尝试唯一；阶段和状态受限；JSONB 产物 ID、版本、计数与安全失败输出 |
 
 ## 关系与删除策略
 
@@ -36,6 +39,11 @@ sources
     └── field_evidence（文档来源）
 
 daily_report_snapshots（不可变日报 payload 与渲染）
+
+pipeline_runs
+└── pipeline_stage_runs（受限外键、追加式编号尝试）
+
+apscheduler_jobs（单 APScheduler 进程 job store）
 ```
 
 所有历史外键使用 `ON DELETE RESTRICT`，ORM 关系不使用删除级联。有历史记录引用的来源不能被意外删除。正常停用来源只把 `sources.enabled` 改为 false，从而保留运行、文档、附件和抽取数据。
@@ -70,6 +78,9 @@ daily_report_snapshots（不可变日报 payload 与渲染）
 - `user_preferences` 只允许 `id=1`；JSON 偏好字段必须保持数组，`education` 必须是受支持的确定性枚举或空值。空值表示无限制，绝不表示“一个也不匹配”。
 - `match_results` 把得分限制为 0～100，任一硬过滤失败时必须为零，校验全部 SHA-256 身份，并要求分项/规则解释为 JSON 数组；部分唯一索引保证每个岗位只有一个当前结果。
 - `daily_report_snapshots` 要求 payload 为 JSON 对象，输入/内容 SHA-256 合法。日期/时区/报告版本/输入哈希身份避免重复快照，同时把同日发生变化的输入保留为独立不可变记录。
+- `pipeline_runs` 把 UTC 计划时刻作为逻辑身份的一部分，同时保留解析后的本地报告日期和时区；同一时刻的计划触发与补跑因此不能创建重复运行。
+- `pipeline_stage_runs` 只允许采集、抽取、匹配和日报阶段。恢复时仍在运行的尝试会变为 `interrupted`；已完成尝试及其 JSON 产物引用继续保留。
+- `apscheduler_jobs` 最多供一个 scheduler 进程使用。领域 advisory lock 仍是跨进程权威，可阻止竞争进程写入重复运行。
 
 ## 迁移
 
@@ -88,3 +99,4 @@ docker compose exec api alembic upgrade head
 ```
 
 迁移集成测试具有破坏性，因此拒绝操作名称不以 `_test` 结尾的数据库。
+迁移 `0009_pipeline_scheduling` 同样受此保护。将它应用到已有数据的业务库并启动 Compose scheduler 是需要明确批准的独立运行操作。
