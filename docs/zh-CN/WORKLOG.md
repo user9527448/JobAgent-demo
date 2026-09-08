@@ -6,9 +6,9 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-09-06
+> 最后更新：2026-09-08
 >
-> 当前分支：`feature/jai-026-daily-scheduling-recovery`
+> 当前分支：`feature/jai-027-wechat-delivery-idempotency`
 
 ## 1. 当前状态
 
@@ -35,6 +35,7 @@
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
 | JAI-025 | 按获批流程优先例外完成、合并并推送到 `develop` | `develop` / `a070030` | 合并后 PostgreSQL 门禁以 295 项测试和 87.82% 覆盖率通过；真实人工评审样本量仍延期到 JAI-049 |
 | JAI-026 | 已完成；G1～G4 后合入 `develop` | `develop` / 当前非快进合并 | 业务迁移、唯一真实 scheduler、受控补跑/复用及合并后完整门禁均通过 |
+| JAI-027 | 已启动；D-037 待审批 | `feature/jai-027-wechat-delivery-idempotency` | 只读审计与双语设计提案已完成；尚未授权实施或真实发送 |
 
 ## 2. 当前决策
 
@@ -139,6 +140,24 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 只有 `TransientJobAgentError` 才最多执行三次阶段尝试，注入式指数退避为 30 秒、60 秒；永久错误立即停止。采集部分成功时继续下游阶段，并把最终流水线标记为 `partial`，保留可用日报及全部失败证据。重启后在取得 advisory lock 后，把持久化的 `running` 阶段标记为 `interrupted`，以原 `scheduled_for` 从第一个未成功阶段恢复；现有不可变/幂等写入保证安全重放。手工 `makeup --date YYYY-MM-DD` 映射到同一配置时区的计划时刻，因此恢复/复用相同逻辑运行，不创建重复运行。
 
 项目负责人已于 2026-09-06 批准 D-036 及实施闸门 G1～G3。批准范围只包括在 feature 分支实施，并只允许对受 `_test` 名称保护的数据库执行破坏性 Schema 测试。执行顺序为：G1 完成依赖、设置、迁移/模型、台账/锁契约和单元测试；G2 完成可注入四阶段协调器、重试/恢复、强制重算支持及 PostgreSQL 并发/恢复测试；G3 完成调度命令、单一 Compose 服务、双语调度/数据库/配置文档、集成测试和完整门禁。把迁移 `0009` 应用于已有数据的本地业务数据库或启动真实调度器，必须在代码与证据审阅后另行取得 G4 运行批准。本方案不授权 rebase、force push、持久化凭据、线上来源运行或 JAI-027 工作。
+
+### D-037 PushPlus 投递台账与第五流水线阶段提案——待审批
+
+单用户 MVP 建议选择 PushPlus，而非企业微信群机器人；只有项目负责人已经拥有并明确偏好受管理的企业微信群时才改选后者。PushPlus 更贴合个人微信接收目标，并可直接复用现有 `httpx` 依赖，无需 provider SDK。当前官方限制文档规定标题不超过 100 个字符、正文不超过 20,000 个字符，普通已实名用户每日不超过 200 次、每分钟不超过 5 次、相同内容每小时不超过 3 次。发送 API 是异步的：响应 `code=200` 仅表示已受理，不代表最终送达；必须用返回的 `shortCode` 通过最终结果 API 或回调核对。因此本提案要求同时使用 `JOBAGENT_PUSHPLUS_TOKEN` 与 `JOBAGENT_PUSHPLUS_SECRET_KEY`，生成的短期 access key 只存在于内存。参考：[PushPlus 限制](https://pushplus.plus/doc/help/limit.html)、[发送 API](https://www.pushplus.plus/doc/guide/api.html) 和 [OpenAPI 最终结果查询](https://pushplus.plus/doc/guide/openApi.html)。
+
+投递内容以不可变日报快照为唯一来源。新增 `notification_deliveries`：外键关联 `daily_report_snapshots`，保存固定通道标识、投递版本、确定性消息哈希、分段数、状态、时间戳及安全错误代码/信息，并以 `UNIQUE(report_snapshot_id, channel)` 保证一条逻辑投递。新增只追加的 `notification_delivery_attempts`：保存投递 ID、分段序号、尝试序号、分段哈希、尝试状态、可选 provider `shortCode`、时间戳及安全错误元数据，并以 `UNIQUE(delivery_id, part_number, attempt_number)` 防重。Token、secret key、access key、请求头/正文、provider 响应正文和原始 provider 错误文本一律不得持久化。
+
+投递作为 `report` 之后显式的第五个流水线阶段，不隐藏在日报生成内部。它必须从同一流水线运行已持久化的成功日报阶段输出中解析准确的 `report_snapshot_id`，不得按日期选择“最新快照”。迁移 `0010` 将扩展流水线阶段约束并创建投递表。已经终结的 JAI-026 历史运行不做追溯投递。永久失败或耗尽重试的投递使流水线状态成为 `failed`，但不可变日报仍保留供检查；原本部分成功的采集仅在投递成功后使最终流水线保持 `partial`。这些语义属于本次审批内容。
+
+渲染与分段必须确定。使用不可变 Markdown 快照及带版本的投递渲染器；PushPlus 每段正文上限设为 18,000 个 Unicode 字符、标题上限设为 90 个字符，为官方限制保留余量。优先按完整报告章节/条目分段，其次按换行，只有单个超长条目才在 Unicode 边界截断。标题包含日报日期与 `[i/n]`；各段按稳定顺序逐段提交并确认，provider 提交之间至少间隔 13 秒。空日报也只投递一次。
+
+父记录状态机为 `pending -> sending -> succeeded|failed|unknown`；一次尝试为 `submitting -> accepted -> succeeded`，或终结为 `failed`、`unknown`、`interrupted`。只有全部分段得到 provider 最终成功确认后，父记录才成为 `succeeded`。已保存 `shortCode` 的分段只在有界确认窗口内查询状态，不重新发送。明确发生在提交前的网络错误及 provider 明确返回的临时限流/服务异常属于瞬时错误，最多提交三次，退避 30/60 秒；凭据缺失/无效、不支持的内容、稳定客户端错误、畸形响应和已记录的账户限制属于永久错误。请求已可能提交、但在 `shortCode` 持久化前发生读写超时或崩溃时，结果具有歧义，必须转为 `unknown` 且禁止自动重发；本地数据库无法跨越该外部崩溃窗口保证端到端 exactly-once。
+
+投递服务先创建或锁定唯一逻辑记录。相同日报/通道已经成功时返回 `reused`；确定性哈希阻止渲染器变更后静默改写既有逻辑投递。JAI-027 的人工操作仅提供面向明确快照或投递 ID 的 CLI：`show` 展示安全状态，`send --snapshot-id` 创建或恢复合资格的投递，已成功记录返回 `reused`，失败记录可在策略内重试，`unknown` 或已成功记录拒绝自动补发。不新增维护 API，因为它属于 JAI-030。
+
+密钥采用仅从环境变量读取的 `SecretStr` 设置，不得出现在命令参数、URL 查询参数、日志上下文、异常文本、数据库值、看似真实的测试固定样本或 Git 内容中。Provider 代码必须把响应映射为白名单安全错误代码/信息，禁止把可能带凭据的原始 URL、正文、请求头或异常字符串传入现有日志/错误链路。单元测试使用注入式合成 provider/`httpx.MockTransport`；负向测试必须断言测试密钥不会出现在日志、异常或持久化记录中。
+
+审批闸门不可跳过。G1 审批 PushPlus、双表身份/状态模型、第五阶段及流水线最终状态语义、密钥名称和外部歧义规则。G2 随后仅允许实现契约、确定性渲染/分段、注入式 provider Adapter 和离线单元测试。G3 允许迁移 `0010`、仓储、CLI、第五阶段接入，以及只对名称以 `_test` 结尾的数据库执行破坏性集成测试；所有 provider 流量仍为合成。G4 允许同步配置/数据库/投递双语文档并运行仓库完整门禁，但不允许把 `0010` 应用于已有业务数据库。G5 在凭据注入和影响复核后，另行批准业务库迁移与一个明确指定日报快照的一次真实测试。D-037 不授权真实消息、Docker 重启、scheduler 重启、补跑或线上来源请求。JAI-028 的五次无人值守运行只能在 JAI-027 完成并另行启用后开始，不属于 JAI-027 验收。
 
 ## 3. 当前工作记录
 
@@ -616,6 +635,16 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 - 重复同一本地日期补跑返回 `reused`，仍只有 1 条逻辑运行和 4 条阶段尝试，证明没有重复采集或下游写入；scheduler 保持运行且持久作业仍为 1 条。G4 因此通过，已满足获批的安全非快进合并条件；JAI-027 尚未启动。
 - G4 证据提交普通推送后，feature 本地/跟踪/GitHub 均为 `4bc60fd1900ce5ae2cfc5ae5a8229f2595694d97`；develop 本地/跟踪/GitHub 及合并基点均为 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`。本次合并提交随后以非快进方式集成 JAI-026 并保留双父历史。合并后的 PostgreSQL `scripts/check.py` 重复得到权威结果：232 个文件格式检查、Ruff lint、155 个源文件 Mypy、313 项无跳过测试和 86.20% 覆盖率。交接前仍必须普通推送 develop 并完成三端核验。
 
+### 2026-09-08 — 已核验 JAI-026 交接并启动 JAI-027
+
+- 已核验干净的 `develop` 位于 `a9e9b643b629e5632015778549917f44bd658586`；本地 HEAD、`origin/develop` 与实时 GitHub `ls-remote` 完全一致，`main` 仍为 `e72f50ee8e2d07aae82ef7e85631f7003bfd3b5e`。
+- 已核验 JAI-026 feature 末端 `4bc60fd1900ce5ae2cfc5ae5a8229f2595694d97` 是 `develop` 的祖先，且非快进合并 `a9e9b643b629e5632015778549917f44bd658586` 的第二父提交正是该 feature 末端。仓库本地作者仍为 `user9527448 <2537759248@qq.com>`。
+- 已核验 `origin` 的拉取和推送地址仍为 `https://github.com/user9527448/JobAgent-demo.git`，不存在持久化 Git HTTP/HTTPS 代理配置；启动前本地与远程均无 JAI-027 分支。
+- Docker Desktop 与 Linux engine 未运行：引擎命名管道不存在、Docker daemon 不可达、本机 5432 端口关闭，也未发现独立 PostgreSQL 服务或 JOBAGENT scheduler Python 进程。Compose 声明了 `db`、`api` 和 `scheduler`，但引擎停止时无法查询其运行状态。
+- 因此当前没有数据库证据核验 Alembic 版本、`apscheduler_jobs`、`pipeline_runs`、`pipeline_stage_runs` 或 2026-09-07/2026-09-08 调度时刻；不得据此推断成功、失败、misfire 或缺失运行。Docker、scheduler、补跑与线上来源访问保持不变，等待项目负责人另行批准。
+- 已从核验后的 `develop` 提交创建 `feature/jai-027-wechat-delivery-idempotency`。JAI-027 初始范围仅为只读架构审计与双语投递设计审批包；当前尚未授权 provider 依赖、迁移、实现、Token、测试数据库写入或真实通知发送。
+- 已完成只读架构审计。当前流水线及数据库约束恰好只包含四个阶段；日报阶段会持久化准确的不可变 `report_snapshot_id`；仓库不存在通知模块或投递表；设置已采用 `SecretStr`；既有日志脱敏本身无法保证原始 provider 异常文本安全。上方 D-037 已登记必要的第五阶段衔接、持久化分段/尝试台账、外部提交歧义所需的显式 `unknown` 状态、确定性分段、安全错误映射、运维 CLI 及相互隔离的审批闸门。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -631,13 +660,14 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 - JAI-025 合并后再次得到同一权威门禁结果：Ruff format/lint 通过，140 个源文件的 Mypy 通过，295 项 PostgreSQL 启用测试全部通过且无跳过，覆盖率为 87.82%。推送后的 `develop` 三端均为 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`。
 - JAI-026 G1～G3 最终门禁：Ruff format 检查 232 个文件，Ruff lint 通过，Mypy 检查 155 个源文件通过，313 项 PostgreSQL 启用测试全部通过且无跳过，覆盖率 86.20%；业务库和真实 scheduler 仍受 G4 保护且未触碰。
 - JAI-026 G4：业务迁移到 `0009_pipeline_scheduling` 且无漂移/既有计数变化；一个 scheduler/作业保持运行；受控真实补跑和同日复用检查通过，恰有 1 条成功运行与 4 条成功阶段尝试。
+- JAI-027 启动/设计文档检查：`git diff --check` 通过；两份 WORKLOG 各有 72 个 Markdown 标题，决策 ID 与当前状态 Issue ID 一致。没有执行代码、迁移、依赖、数据库、Docker、scheduler、provider 或线上来源操作。
 
 ## 5. 下一步
 
-1. 普通推送已验证的 `develop` 非快进合并，并确认本地 HEAD、跟踪引用与 GitHub `ls-remote` 一致。
-2. 保持唯一 scheduler 运行并等待下一个 08:00 计划执行；多次运行观测属于 JAI-028，不阻塞已完成的 JAI-026 验收。
-3. 将 JAI-027 作为下一项计划内未完成 Issue，但必须先创建独立分支并登记经负责人审核的投递设计，才能实施。
-4. 延期真实评审量、附件衔接和来源诊断继续留在 JAI-049；不得静默修改已发布版本。
+1. 取得项目负责人对 D-037 的批准或修改意见：通道选择、双表身份/状态模型、第五阶段及流水线最终状态语义、仅环境变量密钥、歧义处理和 G1～G5。
+2. 如 G1 获批，只在 `feature/jai-027-wechat-delivery-idempotency` 实施 G2；该闸门不得新增迁移、操作数据库、启动 Docker/scheduler 或访问 PushPlus。
+3. Docker 另行获批恢复后，必须先只读查询 Alembic/作业/流水线台账并报告 2026-09-07、2026-09-08 的证据，再提出任何补跑建议；不得推断结果或未经批准直接补跑。
+4. JAI-028 无人值守验收、JAI-029 发布工作及 JAI-049 延期来源/附件工作继续排除在 JAI-027 之外。
 
 ## 6. 更新模板
 

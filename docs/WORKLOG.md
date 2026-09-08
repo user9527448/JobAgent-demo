@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-06
+> Last updated: 2026-09-08
 >
-> Active branch: `feature/jai-026-daily-scheduling-recovery`
+> Active branch: `feature/jai-027-wechat-delivery-idempotency`
 
 ## 1. Current status
 
@@ -35,6 +35,7 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
+| JAI-027 | Started; D-037 approval pending | `feature/jai-027-wechat-delivery-idempotency` | Read-only audit and paired design proposal are complete; no implementation or live send is authorized |
 
 ## 2. Current decisions
 
@@ -139,6 +140,24 @@ The fixed stage order is collection → deterministic extraction/validation → 
 Only `TransientJobAgentError` outcomes receive at most three stage attempts with injected exponential delays of 30 and 60 seconds; permanent failures stop immediately. A partially successful collection continues downstream and makes the final pipeline status `partial`, preserving a usable report and all failure evidence. On restart, after acquiring the advisory lock, a persisted `running` stage is marked `interrupted` and the coordinator resumes from the first non-successful stage using the original `scheduled_for`. Existing immutable/idempotent writes make replay safe. Manual `makeup --date YYYY-MM-DD` resolves to the same configured local schedule slot and therefore resumes/reuses the same logical run instead of creating a duplicate.
 
 The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06. Approval authorizes feature-branch implementation and destructive-schema tests only against the guarded `_test` database. Execution order is G1: dependency, settings, migration/models, ledger/lock contracts and unit tests; G2: injected four-stage coordinator, retry/recovery, force-recompute support and PostgreSQL concurrency/recovery tests; G3: scheduler command, single Compose service, bilingual scheduling/database/configuration documentation, integration test, and full gate. Applying migration `0009` to the populated local business database or starting a live scheduler remains a separate G4 runtime approval after the code and evidence are reviewed. No rebase, force push, credential persistence, live-source run, or JAI-027 work is authorized.
+
+### D-037 Proposed PushPlus delivery ledger and fifth pipeline stage — approval pending
+
+For the single-user MVP, use PushPlus rather than a WeCom group robot unless the project owner already has and explicitly prefers a managed WeCom group. PushPlus matches the personal-WeChat target and works through the existing `httpx` dependency without a provider SDK. The current official limits document allows a 100-character title and 20,000-character body, while also limiting normal verified accounts to 200 requests per day, five per minute, and three repeats of identical content per hour. The send API is asynchronous: a `code=200` response means accepted rather than delivered, and the returned `shortCode` must be reconciled through the final-result API or callback. This proposal therefore requires both `JOBAGENT_PUSHPLUS_TOKEN` and `JOBAGENT_PUSHPLUS_SECRET_KEY`; the resulting short-lived access key exists only in memory. References: [PushPlus limits](https://pushplus.plus/doc/help/limit.html), [send API](https://www.pushplus.plus/doc/guide/api.html), and [OpenAPI final-result query](https://pushplus.plus/doc/guide/openApi.html).
+
+The immutable report snapshot is the delivery source. Add `notification_deliveries` with a foreign key to `daily_report_snapshots`, fixed channel identity, delivery version, deterministic message hash, part count, status, timestamps, and safe error code/message. Enforce one logical delivery with `UNIQUE(report_snapshot_id, channel)`. Add append-only `notification_delivery_attempts` with delivery ID, part number, attempt number, part hash, attempt status, optional provider `shortCode`, timestamps, and safe error metadata; enforce `UNIQUE(delivery_id, part_number, attempt_number)`. Tokens, secret keys, access keys, request headers/bodies, provider response bodies, and raw provider error text are never persisted.
+
+Delivery becomes an explicit fifth pipeline stage after `report`, not hidden inside report generation. It must resolve the exact `report_snapshot_id` from the persisted successful report-stage output for the same pipeline run rather than selecting the latest snapshot by date. Migration `0010` would extend the pipeline stage constraints and add the delivery tables. Historical terminal JAI-026 runs are not retroactively delivered. A permanent or retry-exhausted delivery failure makes the pipeline `failed` while preserving the immutable report for inspection; a pre-existing partial collection remains `partial` only when delivery succeeds. These semantics are part of the approval request.
+
+Rendering and splitting are deterministic. Use the immutable Markdown snapshot and a versioned delivery renderer; cap each PushPlus body at 18,000 Unicode characters and each title at 90 characters to leave margin below the documented limits. Split first on complete report sections/items, then newlines, and only finally at a Unicode boundary for an oversized item. Titles include the report date and `[i/n]`; parts are submitted and confirmed sequentially in stable order, with at least 13 seconds between provider submissions. Empty reports are still delivered once.
+
+The parent state machine is `pending -> sending -> succeeded|failed|unknown`. An attempt is `submitting -> accepted -> succeeded`, or ends as `failed`, `unknown`, or `interrupted`. The parent becomes `succeeded` only after every part has provider-confirmed final success. A saved `shortCode` is polled within a bounded confirmation window without resubmission. Definitely pre-submission network failures and explicit temporary throttling/service responses are transient; they receive at most three submissions with 30/60-second delays. Invalid/missing credentials, unsupported content, stable client errors, malformed responses, and documented account restrictions are permanent. A write/read timeout or crash after submission but before a `shortCode` is durable is ambiguous and becomes `unknown`; it is never automatically resent because no local database can guarantee exactly-once delivery across that external crash window.
+
+The delivery service first creates or locks the unique logical row. A previously successful report/channel returns `reused`; deterministic hashes prevent a changed renderer from silently altering an existing logical delivery. Manual operation is a JAI-027 CLI targeting an explicit snapshot or delivery ID: `show` exposes safe state, `send --snapshot-id` creates/resumes eligible work, successful deliveries return `reused`, failed deliveries may be retried within policy, and `unknown` or succeeded deliveries refuse automatic resend. No maintenance API is added because that belongs to JAI-030.
+
+Secrets are `SecretStr` settings read only from environment variables. They are never command arguments, URL query values, log context, exception text, database values, fixtures resembling real credentials, or Git content. Provider code must map responses to an allowlisted safe error code/message and must not pass raw URLs, bodies, headers, or exception strings that may contain credentials into the existing logging/error pipeline. Unit tests use an injected synthetic provider/`httpx.MockTransport`; negative tests assert that test secrets do not appear in logs, exceptions, or persisted rows.
+
+Approval gates are mandatory. G1 approves PushPlus, the two-table identity/state model, fifth-stage/final-status semantics, secret names, and the external ambiguity rule. G2 then permits contracts, deterministic rendering/splitting, the injected provider adapter, and offline unit tests only. G3 permits migration `0010`, repositories, CLI, fifth-stage integration, and destructive integration tests only against a database whose name ends in `_test`; all provider traffic remains synthetic. G4 permits paired configuration/database/delivery documentation and the complete repository gate, but does not permit applying `0010` to the populated business database. G5 separately permits that business migration and exactly one named live test snapshot after credential injection and impact review. No live message, Docker restart, scheduler restart, makeup run, or live-source request is authorized by D-037. JAI-028's five unattended runs begin only after JAI-027 is completed and separately enabled; they are not JAI-027 acceptance work.
 
 ## 3. Active work history
 
@@ -616,6 +635,16 @@ The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06.
 - Repeating the same local-date makeup returned `reused` and retained exactly one logical run and four stage attempts, proving no repeat collection or downstream write. The scheduler remained up with one persistent job. G4 therefore passed and the approved condition for a safe non-fast-forward merge was met; JAI-027 remains unstarted.
 - After the G4 evidence commit was normally pushed, feature local/tracking/GitHub refs matched `4bc60fd1900ce5ae2cfc5ae5a8229f2595694d97`; develop local/tracking/GitHub refs and the merge base matched `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`. This merge commit then integrated JAI-026 non-fast-forward with both parents preserved. The post-merge PostgreSQL `scripts/check.py` repeated the authoritative result: 232 formatted files, Ruff lint, Mypy across 155 source files, 313 tests with no skips, and 86.20% coverage. Normal develop push and three-way verification are required before handoff.
 
+### 2026-09-08 — JAI-026 handoff verified and JAI-027 started
+
+- Verified a clean `develop` at `a9e9b643b629e5632015778549917f44bd658586`. Local HEAD, `origin/develop`, and the live GitHub `ls-remote` result all matched; `main` remained `e72f50ee8e2d07aae82ef7e85631f7003bfd3b5e`.
+- Verified JAI-026 feature tip `4bc60fd1900ce5ae2cfc5ae5a8229f2595694d97` is an ancestor of `develop`, and non-fast-forward merge `a9e9b643b629e5632015778549917f44bd658586` has that feature tip as its second parent. The repository-local author remains `user9527448 <2537759248@qq.com>`.
+- Verified `origin` remains `https://github.com/user9527448/JobAgent-demo.git` for fetch and push, with no persistent Git HTTP/HTTPS proxy configuration. No local or remote JAI-027 branch existed before startup.
+- Docker Desktop and the Linux engine were not running: the engine named pipe was absent, the Docker daemon was unreachable, local port 5432 was closed, and no standalone PostgreSQL service or JOBAGENT scheduler Python process was found. Compose declares `db`, `api`, and `scheduler`, but their runtime state could not be queried while the engine was down.
+- Consequently there is no current database evidence for Alembic version, `apscheduler_jobs`, `pipeline_runs`, `pipeline_stage_runs`, or the 2026-09-07/2026-09-08 schedule slots. No success, failure, misfire, or missing-run conclusion is inferred. Docker, the scheduler, makeup runs, and live source access remain untouched pending separate owner approval.
+- Created `feature/jai-027-wechat-delivery-idempotency` from the verified `develop` commit. JAI-027 is limited initially to a read-only architecture audit and a bilingual delivery-design approval packet; no provider dependency, migration, implementation, token, test database mutation, or live notification send is authorized yet.
+- Completed the read-only architecture audit. The current pipeline and database constraints contain exactly four stages; the report stage persists the exact immutable `report_snapshot_id`; no notification module or delivery table exists; settings already use `SecretStr`; and existing logging redaction cannot make raw provider exception text safe by itself. Proposed D-037 above records the required fifth-stage handoff, durable part/attempt ledger, explicit `unknown` state for ambiguous external submission, deterministic chunking, safe error mapping, operator CLI, and separated approval gates.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -631,13 +660,14 @@ The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06.
 - JAI-025 post-merge gate repeated the same authoritative result: Ruff format/lint passed, Mypy passed across 140 source files, all 295 PostgreSQL-enabled tests passed with no skips, and coverage was 87.82%. The pushed `develop` triple matched `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`.
 - JAI-026 G1–G3 final gate: Ruff format checked 232 files, Ruff lint passed, Mypy passed across 155 source files, all 313 PostgreSQL-enabled tests passed with no skips, and coverage was 86.20%. The business database and live scheduler remain untouched behind G4.
 - JAI-026 G4: business migration reached `0009_pipeline_scheduling` with no drift or pre-existing count change; one scheduler/job remained active; the controlled live makeup and same-date reuse checks passed with one succeeded run and four succeeded stage attempts.
+- JAI-027 startup/design documentation: `git diff --check` passed; the paired WORKLOGs each contain 72 Markdown headings, and their decision IDs and current-status Issue IDs match. No code, migration, dependency, database, Docker, scheduler, provider, or live-source operation was performed.
 
 ## 5. Next actions
 
-1. Normally push the verified non-fast-forward `develop` merge and confirm local HEAD, tracking ref, and GitHub `ls-remote` equality.
-2. Keep the single scheduler running for the next configured 08:00 execution; its multi-run observation belongs to JAI-028 rather than blocking completed JAI-026 acceptance.
-3. Treat JAI-027 as the next planned incomplete Issue, but do not implement it before creating its independent branch and recording an owner-reviewed delivery design.
-4. Keep deferred live-review volume, attachment handoff, and source diagnostics in JAI-049; do not silently change published versions.
+1. Obtain project-owner approval or requested changes for D-037: provider choice, two-table identity/state model, fifth-stage and final pipeline semantics, environment-only secrets, ambiguity handling, and gates G1–G5.
+2. If G1 is approved, implement only G2 on `feature/jai-027-wechat-delivery-idempotency`; do not add a migration, touch a database, start Docker/scheduler, or contact PushPlus in that gate.
+3. When Docker is separately restored, first query Alembic/job/pipeline ledgers read-only and report evidence for 2026-09-07 and 2026-09-08 before proposing any makeup. Do not infer outcomes or run makeup without approval.
+4. Keep JAI-028 unattended-run acceptance, JAI-029 release work, and JAI-049 deferred source/attachment work outside JAI-027.
 
 ## 6. Update template
 
