@@ -35,7 +35,7 @@
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
 | JAI-025 | 按获批流程优先例外完成、合并并推送到 `develop` | `develop` / `a070030` | 合并后 PostgreSQL 门禁以 295 项测试和 87.82% 覆盖率通过；真实人工评审样本量仍延期到 JAI-049 |
 | JAI-026 | 已完成；G1～G4 后合入 `develop` | `develop` / 当前非快进合并 | 业务迁移、唯一真实 scheduler、受控补跑/复用及合并后完整门禁均通过 |
-| JAI-027 | 已启动；D-037 待审批 | `feature/jai-027-wechat-delivery-idempotency` | 只读审计与双语设计提案已完成；尚未授权实施或真实发送 |
+| JAI-027 | D-037/G1 已批准；G2 完成；G3 待审批 | `feature/jai-027-wechat-delivery-idempotency` | 离线契约、确定性渲染、合成 provider 与单元测试均通过；迁移和数据库工作仍未授权 |
 
 ## 2. 当前决策
 
@@ -141,7 +141,7 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 
 项目负责人已于 2026-09-06 批准 D-036 及实施闸门 G1～G3。批准范围只包括在 feature 分支实施，并只允许对受 `_test` 名称保护的数据库执行破坏性 Schema 测试。执行顺序为：G1 完成依赖、设置、迁移/模型、台账/锁契约和单元测试；G2 完成可注入四阶段协调器、重试/恢复、强制重算支持及 PostgreSQL 并发/恢复测试；G3 完成调度命令、单一 Compose 服务、双语调度/数据库/配置文档、集成测试和完整门禁。把迁移 `0009` 应用于已有数据的本地业务数据库或启动真实调度器，必须在代码与证据审阅后另行取得 G4 运行批准。本方案不授权 rebase、force push、持久化凭据、线上来源运行或 JAI-027 工作。
 
-### D-037 PushPlus 投递台账与第五流水线阶段提案——待审批
+### D-037 已批准的 PushPlus 投递台账与第五流水线阶段
 
 单用户 MVP 建议选择 PushPlus，而非企业微信群机器人；只有项目负责人已经拥有并明确偏好受管理的企业微信群时才改选后者。PushPlus 更贴合个人微信接收目标，并可直接复用现有 `httpx` 依赖，无需 provider SDK。当前官方限制文档规定标题不超过 100 个字符、正文不超过 20,000 个字符，普通已实名用户每日不超过 200 次、每分钟不超过 5 次、相同内容每小时不超过 3 次。发送 API 是异步的：响应 `code=200` 仅表示已受理，不代表最终送达；必须用返回的 `shortCode` 通过最终结果 API 或回调核对。因此本提案要求同时使用 `JOBAGENT_PUSHPLUS_TOKEN` 与 `JOBAGENT_PUSHPLUS_SECRET_KEY`，生成的短期 access key 只存在于内存。参考：[PushPlus 限制](https://pushplus.plus/doc/help/limit.html)、[发送 API](https://www.pushplus.plus/doc/guide/api.html) 和 [OpenAPI 最终结果查询](https://pushplus.plus/doc/guide/openApi.html)。
 
@@ -158,6 +158,8 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 密钥采用仅从环境变量读取的 `SecretStr` 设置，不得出现在命令参数、URL 查询参数、日志上下文、异常文本、数据库值、看似真实的测试固定样本或 Git 内容中。Provider 代码必须把响应映射为白名单安全错误代码/信息，禁止把可能带凭据的原始 URL、正文、请求头或异常字符串传入现有日志/错误链路。单元测试使用注入式合成 provider/`httpx.MockTransport`；负向测试必须断言测试密钥不会出现在日志、异常或持久化记录中。
 
 审批闸门不可跳过。G1 审批 PushPlus、双表身份/状态模型、第五阶段及流水线最终状态语义、密钥名称和外部歧义规则。G2 随后仅允许实现契约、确定性渲染/分段、注入式 provider Adapter 和离线单元测试。G3 允许迁移 `0010`、仓储、CLI、第五阶段接入，以及只对名称以 `_test` 结尾的数据库执行破坏性集成测试；所有 provider 流量仍为合成。G4 允许同步配置/数据库/投递双语文档并运行仓库完整门禁，但不允许把 `0010` 应用于已有业务数据库。G5 在凭据注入和影响复核后，另行批准业务库迁移与一个明确指定日报快照的一次真实测试。D-037 不授权真实消息、Docker 重启、scheduler 重启、补跑或线上来源请求。JAI-028 的五次无人值守运行只能在 JAI-027 完成并另行启用后开始，不属于 JAI-027 验收。
+
+项目负责人已于 2026-09-08 批准 D-037。该批准满足 G1，当前仅授权 G2；迁移 `0010`、数据库写入/测试、流水线/CLI 接入、环境/Compose 改动、业务库迁移和真实 provider 流量仍受 G3～G5 保护。
 
 ## 3. 当前工作记录
 
@@ -645,6 +647,22 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 - 已从核验后的 `develop` 提交创建 `feature/jai-027-wechat-delivery-idempotency`。JAI-027 初始范围仅为只读架构审计与双语投递设计审批包；当前尚未授权 provider 依赖、迁移、实现、Token、测试数据库写入或真实通知发送。
 - 已完成只读架构审计。当前流水线及数据库约束恰好只包含四个阶段；日报阶段会持久化准确的不可变 `report_snapshot_id`；仓库不存在通知模块或投递表；设置已采用 `SecretStr`；既有日志脱敏本身无法保证原始 provider 异常文本安全。上方 D-037 已登记必要的第五阶段衔接、持久化分段/尝试台账、外部提交歧义所需的显式 `unknown` 状态、确定性分段、安全错误映射、运维 CLI 及相互隔离的审批闸门。
 
+### 2026-09-08 — JAI-027 D-037/G1 已批准并复核 Docker 台账
+
+- 项目负责人已批准 D-037，并手动启动 Docker Desktop。当前批准只开放 G2 离线实现；G3～G5 仍关闭。
+- 只读运行核验发现 Compose 中恰有一个健康 `db`、一个健康 `api` 和一个运行中的 `scheduler` 容器。业务数据库仍为 `0009_pipeline_scheduling`；`apscheduler_jobs` 恰有 `jobagent.daily-pipeline.v1`，下次执行时间为 `Asia/Shanghai` 2026-09-09 08:00。
+- 台账仍只有 2026-09-06 的成功补跑及四个均为首次尝试成功的阶段。2026-09-07、2026-09-08 没有 `pipeline_runs`，也不存在 pending、running、partial、failed 或 interrupted 记录。
+- scheduler 启动日志只显示在 `Asia/Shanghai` 2026-09-08 20:49 登记作业并启动，没有明确的 misfire 事件。因此缺失日期只报告为未执行/未记录，不表述为失败。补跑会访问线上来源并写入新的采集运行及可能的下游产物，所以没有自动启动或提出补跑。
+
+### 2026-09-08 — JAI-027 G2 离线投递边界完成
+
+- 新增 provider 无关的通知契约，覆盖 PushPlus 微信通道、确定性消息/分段哈希、provider 提交/最终结果状态、显式瞬时/永久/未知失败，以及获批的最多三次、30/60 秒退避策略。G2 刻意只定义重试策略，不在内存中直接运行提交重试循环；持久化重试编排仍受 G3 台账保护。
+- 新增带版本的 `jai-027-v1` 投递渲染器：从不可变日报快照生成稳定标题和哈希，完整保留 Markdown，优先按报告章节/条目和行边界分段，最后才按 Unicode 安全切片；正文上限 18,000 字符、标题上限 90 字符，空日报仍生成一段。
+- 新增使用既有 `httpx` 依赖和可注入 transport 的异步 PushPlus Adapter。它向个人 `wechat` 通道提交 Markdown，保证 13 秒发送间隔余量，只在内存中获取/缓存两小时 access key，并通过官方最终结果 API 核对 `shortCode`。原始响应正文、provider 消息、URL 和 transport 异常文本都不会进入返回错误。
+- Adapter 不隐式重试提交。明确发生在提交前的连接/连接池失败标为瞬时；写入/读取/其他 transport 失败及成功 HTTP 下的畸形提交响应标为 `unknown`；HTTP/provider 拒绝只使用窄重试白名单，provider 代码 900/905 及未知代码均为永久失败。Provider 最终失败只保留 `pushplus.delivery_failed`，丢弃原始 `errorMessage`。
+- 首轮定向检查发现 `httpx.URL` 用户名/密码空值判断过严，以及一个 Ruff `startswith` 提示；均在不改变范围的前提下修正。随后定向 Ruff/Mypy 与 28 项通知测试全部通过。全仓离线门禁通过：Ruff format 检查 238 个文件、Ruff lint 通过、Mypy 检查 161 个源文件、323 项非数据库测试全部通过；按 G2 边界明确排除了 18 项 PostgreSQL 集成测试。
+- 未新增 Settings/`.env`/Compose 改动、provider SDK、迁移、模型、仓储、CLI、流水线接入、数据库写入、真实凭据或真实 PushPlus 请求。任何持久化/集成改动前仍必须批准 G3。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -661,11 +679,13 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 - JAI-026 G1～G3 最终门禁：Ruff format 检查 232 个文件，Ruff lint 通过，Mypy 检查 155 个源文件通过，313 项 PostgreSQL 启用测试全部通过且无跳过，覆盖率 86.20%；业务库和真实 scheduler 仍受 G4 保护且未触碰。
 - JAI-026 G4：业务迁移到 `0009_pipeline_scheduling` 且无漂移/既有计数变化；一个 scheduler/作业保持运行；受控真实补跑和同日复用检查通过，恰有 1 条成功运行与 4 条成功阶段尝试。
 - JAI-027 启动/设计文档检查：`git diff --check` 通过；两份 WORKLOG 各有 72 个 Markdown 标题，决策 ID 与当前状态 Issue ID 一致。没有执行代码、迁移、依赖、数据库、Docker、scheduler、provider 或线上来源操作。
+- JAI-027 Docker 恢复后只读运行核验：Compose 显示一个 `db`、一个 `api` 和一个 `scheduler`；Alembic 为 `0009_pipeline_scheduling`；一个固定 APScheduler 作业指向 `Asia/Shanghai` 2026-09-09 08:00；流水线及阶段仍只有 2026-09-06 的成功补跑。没有执行补跑或线上请求。
+- JAI-027 G2 最终离线门禁：Ruff format 检查 238 个文件，Ruff lint 通过，Mypy 检查 161 个源文件，323 项非数据库测试全部通过；有意排除 18 项 PostgreSQL 集成测试。通知定向检查 28 项全部通过；`git diff --check` 通过。
 
 ## 5. 下一步
 
-1. 取得项目负责人对 D-037 的批准或修改意见：通道选择、双表身份/状态模型、第五阶段及流水线最终状态语义、仅环境变量密钥、歧义处理和 G1～G5。
-2. 如 G1 获批，只在 `feature/jai-027-wechat-delivery-idempotency` 实施 G2；该闸门不得新增迁移、操作数据库、启动 Docker/scheduler 或访问 PushPlus。
+1. 把已完成的 G2 代码与证据提交项目负责人审核，并另行取得 G3 批准。
+2. 如 G3 获批，新增迁移 `0010`、投递模型/仓储/服务与运维 CLI，接入显式第五流水线阶段，并且只对名称以 `_test` 结尾的数据库执行破坏性集成测试；provider 流量仍全部为合成。
 3. Docker 另行获批恢复后，必须先只读查询 Alembic/作业/流水线台账并报告 2026-09-07、2026-09-08 的证据，再提出任何补跑建议；不得推断结果或未经批准直接补跑。
 4. JAI-028 无人值守验收、JAI-029 发布工作及 JAI-049 延期来源/附件工作继续排除在 JAI-027 之外。
 

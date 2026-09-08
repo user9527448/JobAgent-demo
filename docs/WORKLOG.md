@@ -35,7 +35,7 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | Started; D-037 approval pending | `feature/jai-027-wechat-delivery-idempotency` | Read-only audit and paired design proposal are complete; no implementation or live send is authorized |
+| JAI-027 | D-037/G1 approved; G2 complete; G3 pending | `feature/jai-027-wechat-delivery-idempotency` | Offline contracts, deterministic rendering, synthetic provider, and unit tests passed; migration and database work remain unauthorized |
 
 ## 2. Current decisions
 
@@ -141,7 +141,7 @@ Only `TransientJobAgentError` outcomes receive at most three stage attempts with
 
 The project owner approved D-036 and implementation gates G1–G3 on 2026-09-06. Approval authorizes feature-branch implementation and destructive-schema tests only against the guarded `_test` database. Execution order is G1: dependency, settings, migration/models, ledger/lock contracts and unit tests; G2: injected four-stage coordinator, retry/recovery, force-recompute support and PostgreSQL concurrency/recovery tests; G3: scheduler command, single Compose service, bilingual scheduling/database/configuration documentation, integration test, and full gate. Applying migration `0009` to the populated local business database or starting a live scheduler remains a separate G4 runtime approval after the code and evidence are reviewed. No rebase, force push, credential persistence, live-source run, or JAI-027 work is authorized.
 
-### D-037 Proposed PushPlus delivery ledger and fifth pipeline stage — approval pending
+### D-037 Approved PushPlus delivery ledger and fifth pipeline stage
 
 For the single-user MVP, use PushPlus rather than a WeCom group robot unless the project owner already has and explicitly prefers a managed WeCom group. PushPlus matches the personal-WeChat target and works through the existing `httpx` dependency without a provider SDK. The current official limits document allows a 100-character title and 20,000-character body, while also limiting normal verified accounts to 200 requests per day, five per minute, and three repeats of identical content per hour. The send API is asynchronous: a `code=200` response means accepted rather than delivered, and the returned `shortCode` must be reconciled through the final-result API or callback. This proposal therefore requires both `JOBAGENT_PUSHPLUS_TOKEN` and `JOBAGENT_PUSHPLUS_SECRET_KEY`; the resulting short-lived access key exists only in memory. References: [PushPlus limits](https://pushplus.plus/doc/help/limit.html), [send API](https://www.pushplus.plus/doc/guide/api.html), and [OpenAPI final-result query](https://pushplus.plus/doc/guide/openApi.html).
 
@@ -158,6 +158,8 @@ The delivery service first creates or locks the unique logical row. A previously
 Secrets are `SecretStr` settings read only from environment variables. They are never command arguments, URL query values, log context, exception text, database values, fixtures resembling real credentials, or Git content. Provider code must map responses to an allowlisted safe error code/message and must not pass raw URLs, bodies, headers, or exception strings that may contain credentials into the existing logging/error pipeline. Unit tests use an injected synthetic provider/`httpx.MockTransport`; negative tests assert that test secrets do not appear in logs, exceptions, or persisted rows.
 
 Approval gates are mandatory. G1 approves PushPlus, the two-table identity/state model, fifth-stage/final-status semantics, secret names, and the external ambiguity rule. G2 then permits contracts, deterministic rendering/splitting, the injected provider adapter, and offline unit tests only. G3 permits migration `0010`, repositories, CLI, fifth-stage integration, and destructive integration tests only against a database whose name ends in `_test`; all provider traffic remains synthetic. G4 permits paired configuration/database/delivery documentation and the complete repository gate, but does not permit applying `0010` to the populated business database. G5 separately permits that business migration and exactly one named live test snapshot after credential injection and impact review. No live message, Docker restart, scheduler restart, makeup run, or live-source request is authorized by D-037. JAI-028's five unattended runs begin only after JAI-027 is completed and separately enabled; they are not JAI-027 acceptance work.
+
+The project owner approved D-037 on 2026-09-08. This satisfies G1 and authorizes G2 only. Migration `0010`, database writes/tests, pipeline/CLI integration, environment/Compose changes, business migration, and real provider traffic remain behind G3–G5.
 
 ## 3. Active work history
 
@@ -645,6 +647,22 @@ Approval gates are mandatory. G1 approves PushPlus, the two-table identity/state
 - Created `feature/jai-027-wechat-delivery-idempotency` from the verified `develop` commit. JAI-027 is limited initially to a read-only architecture audit and a bilingual delivery-design approval packet; no provider dependency, migration, implementation, token, test database mutation, or live notification send is authorized yet.
 - Completed the read-only architecture audit. The current pipeline and database constraints contain exactly four stages; the report stage persists the exact immutable `report_snapshot_id`; no notification module or delivery table exists; settings already use `SecretStr`; and existing logging redaction cannot make raw provider exception text safe by itself. Proposed D-037 above records the required fifth-stage handoff, durable part/attempt ledger, explicit `unknown` state for ambiguous external submission, deterministic chunking, safe error mapping, operator CLI, and separated approval gates.
 
+### 2026-09-08 — JAI-027 D-037/G1 approved and Docker ledger rechecked
+
+- The project owner approved D-037 and manually started Docker Desktop. Approval opens G2 offline implementation only; G3–G5 remain closed.
+- Read-only runtime verification found one healthy `db`, one healthy `api`, and one running `scheduler` Compose container. The business database remains at `0009_pipeline_scheduling`; `apscheduler_jobs` contains exactly `jobagent.daily-pipeline.v1`, whose next run is 2026-09-09 08:00 `Asia/Shanghai`.
+- The ledger still contains only the successful 2026-09-06 makeup run and its four first-attempt successful stages. There are no `pipeline_runs` for 2026-09-07 or 2026-09-08 and no pending, running, partial, failed, or interrupted rows.
+- Scheduler startup logs show only job registration and startup at 2026-09-08 20:49 `Asia/Shanghai`; they contain no explicit misfire event. The absent dates are therefore reported as not executed/recorded, not as failed. A makeup would contact live sources and write a new crawl run plus possible downstream artifacts, so none was started or requested automatically.
+
+### 2026-09-08 — JAI-027 G2 offline delivery boundary completed
+
+- Added provider-neutral notification contracts for the PushPlus WeChat channel, deterministic message/part hashes, provider submission/final-result states, explicit transient/permanent/unknown failures, and the approved three-attempt 30/60-second retry policy. G2 deliberately defines the retry policy without running an in-memory submission loop; durable retry orchestration remains behind the G3 ledger.
+- Added the versioned `jai-027-v1` delivery renderer. It derives stable titles and hashes from an immutable report snapshot, preserves complete Markdown content, prefers report section/item and line boundaries, falls back to Unicode-safe slicing, caps bodies at 18,000 characters and titles at 90 characters, and always emits one part for an empty report.
+- Added an asynchronous PushPlus adapter using the existing `httpx` dependency and injectable transport. It submits Markdown to the personal `wechat` channel, enforces a 13-second send margin, obtains/caches the two-hour access key only in memory, and reconciles `shortCode` through the documented final-result API. Raw response bodies, provider messages, URLs, and transport exception text never enter returned errors.
+- The adapter never retries a submission implicitly. Connect/pool failures known to precede submission are transient; write/read/other transport failures and malformed successful submission responses are `unknown`; HTTP/provider rejection uses a narrow retry allowlist, with provider codes 900/905 and unknown codes permanent. A final provider failure retains only `pushplus.delivery_failed`, discarding raw `errorMessage`.
+- The first targeted run exposed an overly strict `httpx.URL` username/password check and one Ruff `startswith` finding; both were corrected without changing scope. Targeted Ruff/Mypy and all 28 notification tests then passed. The full offline gate passed Ruff format across 238 files, Ruff lint, Mypy across 161 source files, and 323 non-database tests; 18 PostgreSQL integration tests were explicitly deselected under the G2 boundary.
+- No Settings/`.env`/Compose change, provider SDK, migration, model, repository, CLI, pipeline integration, database write, real credential, or real PushPlus request was added. G3 remains required before any of those persistence/integration changes.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -661,11 +679,13 @@ Approval gates are mandatory. G1 approves PushPlus, the two-table identity/state
 - JAI-026 G1–G3 final gate: Ruff format checked 232 files, Ruff lint passed, Mypy passed across 155 source files, all 313 PostgreSQL-enabled tests passed with no skips, and coverage was 86.20%. The business database and live scheduler remain untouched behind G4.
 - JAI-026 G4: business migration reached `0009_pipeline_scheduling` with no drift or pre-existing count change; one scheduler/job remained active; the controlled live makeup and same-date reuse checks passed with one succeeded run and four succeeded stage attempts.
 - JAI-027 startup/design documentation: `git diff --check` passed; the paired WORKLOGs each contain 72 Markdown headings, and their decision IDs and current-status Issue IDs match. No code, migration, dependency, database, Docker, scheduler, provider, or live-source operation was performed.
+- JAI-027 post-Docker read-only runtime check: Compose showed one `db`, one `api`, and one `scheduler`; Alembic was `0009_pipeline_scheduling`; one fixed APScheduler job pointed to 2026-09-09 08:00 `Asia/Shanghai`; the only pipeline run/stages remained the successful 2026-09-06 makeup. No makeup or live request was performed.
+- JAI-027 G2 final offline gate: Ruff format checked 238 files, Ruff lint passed, Mypy passed across 161 source files, and 323 non-database tests passed; 18 PostgreSQL integration tests were deliberately deselected. Notification-targeted checks passed all 28 tests. `git diff --check` passed.
 
 ## 5. Next actions
 
-1. Obtain project-owner approval or requested changes for D-037: provider choice, two-table identity/state model, fifth-stage and final pipeline semantics, environment-only secrets, ambiguity handling, and gates G1–G5.
-2. If G1 is approved, implement only G2 on `feature/jai-027-wechat-delivery-idempotency`; do not add a migration, touch a database, start Docker/scheduler, or contact PushPlus in that gate.
+1. Present the completed G2 code and evidence for project-owner review and obtain separate G3 approval.
+2. If G3 is approved, add migration `0010`, delivery models/repository/service and operator CLI, integrate the explicit fifth pipeline stage, and run destructive integration tests only against a database whose name ends in `_test`; provider traffic remains synthetic.
 3. When Docker is separately restored, first query Alembic/job/pipeline ledgers read-only and report evidence for 2026-09-07 and 2026-09-08 before proposing any makeup. Do not infer outcomes or run makeup without approval.
 4. Keep JAI-028 unattended-run acceptance, JAI-029 release work, and JAI-049 deferred source/attachment work outside JAI-027.
 
