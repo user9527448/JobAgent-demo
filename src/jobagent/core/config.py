@@ -40,6 +40,14 @@ class Settings(BaseSettings):
     pushplus_token: SecretStr | None = None
     pushplus_secret_key: SecretStr | None = None
 
+    @field_validator("pushplus_token", "pushplus_secret_key", mode="before")
+    @classmethod
+    def blank_optional_secret_is_unconfigured(cls, value: object) -> object:
+        """Let Compose pass empty optional secrets without enabling delivery."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
     @field_validator("timezone")
     @classmethod
     def timezone_must_exist(cls, value: str) -> str:

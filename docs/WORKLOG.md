@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-09
+> Last updated: 2026-09-10
 >
 > Active branch: `feature/jai-027-wechat-delivery-idempotency`
 
@@ -35,7 +35,7 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | D-037/G1–G3 approved; G3 implemented and targeted checks passed; G4 pending | `feature/jai-027-wechat-delivery-idempotency` | Durable ledger, fifth stage, operator CLI, retry/recovery, and `_test` PostgreSQL acceptance are complete; business migration and live delivery remain unauthorized |
+| JAI-027 | D-037/G1–G4 approved; G4 documentation complete, full gate blocked on Docker | `feature/jai-027-wechat-delivery-idempotency` | Delivery documentation/configuration is synchronized; business migration, credentials, and live delivery remain unauthorized |
 
 ## 2. Current decisions
 
@@ -160,6 +160,44 @@ Secrets are `SecretStr` settings read only from environment variables. They are 
 Approval gates are mandatory. G1 approves PushPlus, the two-table identity/state model, fifth-stage/final-status semantics, secret names, and the external ambiguity rule. G2 then permits contracts, deterministic rendering/splitting, the injected provider adapter, and offline unit tests only. G3 permits migration `0010`, repositories, CLI, fifth-stage integration, and destructive integration tests only against a database whose name ends in `_test`; all provider traffic remains synthetic. G4 permits paired configuration/database/delivery documentation and the complete repository gate, but does not permit applying `0010` to the populated business database. G5 separately permits that business migration and exactly one named live test snapshot after credential injection and impact review. No live message, Docker restart, scheduler restart, makeup run, or live-source request is authorized by D-037. JAI-028's five unattended runs begin only after JAI-027 is completed and separately enabled; they are not JAI-027 acceptance work.
 
 The project owner approved D-037 on 2026-09-08. This satisfies G1 and authorizes G2 only. Migration `0010`, database writes/tests, pipeline/CLI integration, environment/Compose changes, business migration, and real provider traffic remain behind G3–G5.
+
+### D-038 Proposed progressive usable-page release train (approval pending)
+
+On 2026-09-10 the project owner kept the backend-first and deliberately simple-frontend direction,
+but requested usable pages to appear progressively so features can be tested and feedback gathered
+before the late JAI-031 milestone. The current audit found reusable FastAPI health, preference,
+report, and reparse endpoints, but no page/static shell and no read models for recent pipeline,
+source, report, or delivery status.
+
+The proposed frontend stays same-origin with FastAPI and uses packaged semantic HTML, CSS, and
+small vanilla JavaScript modules: no Node toolchain, SPA framework, authentication system, generic
+admin framework, or design system. Every slice must ship loading/empty/error states, keyboard-usable
+controls, responsive desktop/mobile layout, safe error text, API contract tests, and a manual browser
+acceptance capture. A framework may be reconsidered only after measured interaction complexity makes
+the no-build approach a maintenance problem.
+
+Proposed execution order:
+
+1. Complete and merge JAI-027 under its existing G5 boundary.
+2. Insert JAI-050 before JAI-028: add a read-only `/app` operations dashboard with API/database
+   health, fixed scheduler last/next evidence, recent pipeline/stage status, latest report preview,
+   and safe delivery status. Add only the narrow read APIs the page needs; no run/makeup/send action.
+3. Run JAI-028's five unattended executions with JAI-050 as the observation surface; JAI-028's
+   acceptance semantics do not move into the UI Issue.
+4. Insert JAI-051 after JAI-028 and before JAI-029: add preference editing, report browsing, and a
+   minimal recommendation-feedback action tied to immutable report/position identities. Proposed
+   feedback is local, single-user, append-only (`useful`, `not_relevant`, `needs_correction`, optional
+   bounded note) and requires separate data-model approval before migration.
+5. Keep JAI-030 as the full maintenance API Issue. Refocus JAI-031 on source enable/disable,
+   run/failure detail, guarded rerun controls, and integration/polish over the existing page shell;
+   it is no longer the first visible UI delivery.
+
+Approval gates are proposed as U1: approve technology, Issue insertion, execution order, and whether
+feedback is persisted; U2: approve the JAI-050 information architecture/wireframe and exact read-only
+API list before code; U3: approve the JAI-051 feedback table/API and retention boundary before any
+migration. Runtime writes and external actions retain their existing Issue-specific gates. Until U1
+is approved, this work-log entry is a proposal only: the development plan and backlog are not
+reordered, no new branch is created, and no UI code is implemented.
 
 ## 3. Active work history
 
@@ -674,6 +712,13 @@ The project owner approved D-037 on 2026-09-08. This satisfies G1 and authorizes
 - G3 checks passed: Ruff format check covered 166 source/test/migration files, Ruff lint passed, Mypy passed across 156 source/test files, and 325 non-integration tests passed with 19 database tests deliberately deselected. Four targeted PostgreSQL tests passed for head upgrade/Alembic drift/downgrade, five-stage pipeline reuse/recovery, and delivery uniqueness, advisory-lock contention, 30/60 retry/exhaustion, bounded final-result resume, and `unknown` no-resend behavior. All provider traffic was synthetic.
 - No `.env`, Compose, dependency, business database, scheduler, credential, real notification, makeup run, or live source was changed or invoked. G4 remains required for paired configuration/database/delivery documentation and the complete repository gate; G5 remains separately required for applying `0010` to the populated business database and one explicitly named live snapshot.
 
+### 2026-09-10 — JAI-027 G4 documentation completed; full gate awaiting Docker
+
+- The project owner instructed the next step to continue, opening D-037 G4 only. Added paired PushPlus delivery documentation, synchronized database and scheduling guides, and created the missing English counterpart for the substantively updated Chinese configuration guide. Both documentation indexes now list configuration and delivery, and configuration is removed from the JAI-048 legacy inventory.
+- `.env.example` now contains empty optional PushPlus variables, and Compose passes them only to the scheduler. Settings normalize empty environment strings to unconfigured while still rejecting a partial pair or directly constructed empty secrets. No real value was written or loaded.
+- The same request asked for progressively usable pages without abandoning backend-first delivery. The read-only architecture audit and proposed D-038 above are recorded for U1 approval. No development-plan/backlog order or UI code has changed yet.
+- The 2026-09-10 read-only Compose check found no running `db` service. The business database, scheduler job, and pipeline ledgers were therefore unavailable; there is no database evidence for the 2026-09-10 slot and no success/failure/misfire inference. No Docker/scheduler start, makeup, business migration, credential injection, or provider request was attempted.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -694,13 +739,14 @@ The project owner approved D-037 on 2026-09-08. This satisfies G1 and authorizes
 - JAI-027 G2 final offline gate: Ruff format checked 238 files, Ruff lint passed, Mypy passed across 161 source files, and 323 non-database tests passed; 18 PostgreSQL integration tests were deliberately deselected. Notification-targeted checks passed all 28 tests. `git diff --check` passed.
 - JAI-027 G3 targeted gate: the initial `_test` migration run failed on an overlong foreign-key identifier and passed after using explicit short names. Final Ruff format/lint, Mypy, 325 non-integration tests, and four targeted PostgreSQL migration/scheduling/delivery tests passed. The populated business database stayed at `0009`; no provider request occurred.
 - JAI-027 G3 environment limitation: local editable installation could not materialize the new console wrapper because the existing `.venv` lacks Hatchling and network build isolation is blocked. No dependency was downloaded; direct module CLI help passed.
+- JAI-027 G4 static checks: Ruff format checked 247 files, Ruff lint passed, Mypy passed across 166 source files, the six configuration tests passed, `docker compose config --quiet`, `git diff --check`, bilingual heading parity, and relative Markdown-link checks passed. The first direct `pytest.exe` invocation could not import the repository `scripts` package on Windows; rerunning through `python -m pytest` collected the correct suite and all 325 selected non-integration tests passed, but the process correctly failed the 85% complete-gate threshold at 75.65% because 19 database tests were deselected. The Docker engine is reachable, but `db`, `api`, and `scheduler` all exited about three hours before the check, so the authoritative PostgreSQL gate and current ledger audit remain blocked rather than inferred.
 
 ## 5. Next actions
 
-1. Present the completed G3 code and targeted evidence for project-owner review and obtain separate G4 approval.
-2. If G4 is approved, synchronize paired configuration/database/delivery documentation and indexes, then run the complete repository gate. Do not migrate the populated business database or send a real notification under G4.
-3. Obtain separate G5 approval, including an explicitly named report snapshot and impact review, before applying `0010` to the populated business database or performing exactly one live PushPlus test.
-4. Report missing 2026-09-07 through 2026-09-09 slots only from ledger evidence; do not infer failure or run makeup without date-specific approval. Keep JAI-028, JAI-029, and JAI-049 outside JAI-027.
+1. Have the project owner manually start Docker, then recheck the business ledger read-only and run the complete PostgreSQL `scripts/check.py` G4 gate against `jobagent_test`.
+2. Obtain separate G5 approval, including an explicitly named report snapshot and impact review, before applying `0010` to the populated business database, injecting credentials, restarting the scheduler, or performing exactly one live PushPlus test.
+3. Obtain D-038/U1 approval before changing the bilingual development plan/backlog or creating JAI-050. If approved, record JAI-050/JAI-051 and the revised JAI-031 scope in those four planning files on the dedicated UI branch after JAI-027 integration.
+4. Report 2026-09-07 onward only from ledger evidence; do not infer failure or run makeup without date-specific approval. JAI-028 unattended acceptance and JAI-029 release remain separate Issues.
 
 ## 6. Update template
 

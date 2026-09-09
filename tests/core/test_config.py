@@ -102,12 +102,14 @@ def test_pushplus_credentials_are_secret_and_must_be_configured_together(
     assert "synthetic-secret" not in str(settings)
 
 
-def test_pushplus_credentials_cannot_be_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_blank_pushplus_environment_values_are_treated_as_unconfigured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("JOBAGENT_ENVIRONMENT", "test")
     monkeypatch.setenv("JOBAGENT_PUSHPLUS_TOKEN", " ")
     monkeypatch.setenv("JOBAGENT_PUSHPLUS_SECRET_KEY", " ")
 
-    with pytest.raises(ConfigurationError) as captured:
-        get_settings()
+    settings = get_settings()
 
-    assert captured.value.code == "configuration.invalid"
+    assert settings.pushplus_token is None
+    assert settings.pushplus_secret_key is None
