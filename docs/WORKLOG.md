@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-08
+> Last updated: 2026-09-09
 >
 > Active branch: `feature/jai-027-wechat-delivery-idempotency`
 
@@ -35,7 +35,7 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | D-037/G1 approved; G2 complete; G3 pending | `feature/jai-027-wechat-delivery-idempotency` | Offline contracts, deterministic rendering, synthetic provider, and unit tests passed; migration and database work remain unauthorized |
+| JAI-027 | D-037/G1–G3 approved; G3 implemented and targeted checks passed; G4 pending | `feature/jai-027-wechat-delivery-idempotency` | Durable ledger, fifth stage, operator CLI, retry/recovery, and `_test` PostgreSQL acceptance are complete; business migration and live delivery remain unauthorized |
 
 ## 2. Current decisions
 
@@ -663,6 +663,17 @@ The project owner approved D-037 on 2026-09-08. This satisfies G1 and authorizes
 - The first targeted run exposed an overly strict `httpx.URL` username/password check and one Ruff `startswith` finding; both were corrected without changing scope. Targeted Ruff/Mypy and all 28 notification tests then passed. The full offline gate passed Ruff format across 238 files, Ruff lint, Mypy across 161 source files, and 323 non-database tests; 18 PostgreSQL integration tests were explicitly deselected under the G2 boundary.
 - No Settings/`.env`/Compose change, provider SDK, migration, model, repository, CLI, pipeline integration, database write, real credential, or real PushPlus request was added. G3 remains required before any of those persistence/integration changes.
 
+### 2026-09-09 — JAI-027 G3 approved and persistent delivery integration completed
+
+- After reviewing the completed G2 evidence, the project owner instructed the next step to continue. This opens D-037 G3: migration `0010`, delivery persistence and CLI, the fifth pipeline stage, and destructive integration tests only against a database whose name ends in `_test`. G4/G5, the populated business migration, credential injection, real PushPlus traffic, scheduler restart, makeup runs, and live-source requests remain unauthorized.
+- A read-only runtime recheck found one healthy `db`, one healthy `api`, and one running `scheduler` after their 2026-09-09 restart. The populated business database remains at `0009_pipeline_scheduling`, with only the successful 2026-09-06 run and its four successful stages. There are no pipeline rows for 2026-09-07, 2026-09-08, or 2026-09-09. Scheduler logs show registration/startup around 20:30 `Asia/Shanghai`, no explicit misfire event, and the next run at 2026-09-10 08:00; no missing date is labelled failed and no makeup was run.
+- Added migration `0010_notification_delivery`, ORM models, a unique report/channel parent ledger, append-only part-attempt records, safe error metadata, and a PostgreSQL advisory lock. Added the persistent service for deterministic identity checks, sequential parts, three bounded submissions with 30/60-second delays, accepted-message polling without resubmission, and conservative `unknown` recovery for ambiguous provider outcomes or interrupted submissions.
+- Extended the fixed pipeline to `collection -> extraction -> matching -> report -> delivery`. The fifth stage resolves the exact immutable `report_snapshot_id` from the successful report-stage output of the same pipeline run; it never queries the latest report by date. Added `jobagent-delivery show --delivery-id` for credential-free safe inspection and `send --snapshot-id` for explicit idempotent create/resume. Settings require the PushPlus token and secret key as an all-or-nothing `SecretStr` environment pair.
+- The first isolated migration test exposed a PostgreSQL 63-character identifier violation in an explicit foreign-key name. Both foreign keys were shortened and the migration was rerun from a reset `jobagent_test` schema. No business schema or runtime row was modified.
+- A local editable-install check with `pip --no-deps -e .` failed because build isolation attempted to resolve Hatchling over the blocked network; retrying with build isolation disabled confirmed Hatchling is not installed in the current `.venv`. No package was downloaded or installed. The CLI module itself passed `python -m jobagent.notifications.cli --help`; materializing the new console-script wrapper is deferred to the normal image/build environment, which already installs declared build requirements.
+- G3 checks passed: Ruff format check covered 166 source/test/migration files, Ruff lint passed, Mypy passed across 156 source/test files, and 325 non-integration tests passed with 19 database tests deliberately deselected. Four targeted PostgreSQL tests passed for head upgrade/Alembic drift/downgrade, five-stage pipeline reuse/recovery, and delivery uniqueness, advisory-lock contention, 30/60 retry/exhaustion, bounded final-result resume, and `unknown` no-resend behavior. All provider traffic was synthetic.
+- No `.env`, Compose, dependency, business database, scheduler, credential, real notification, makeup run, or live source was changed or invoked. G4 remains required for paired configuration/database/delivery documentation and the complete repository gate; G5 remains separately required for applying `0010` to the populated business database and one explicitly named live snapshot.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -681,13 +692,15 @@ The project owner approved D-037 on 2026-09-08. This satisfies G1 and authorizes
 - JAI-027 startup/design documentation: `git diff --check` passed; the paired WORKLOGs each contain 72 Markdown headings, and their decision IDs and current-status Issue IDs match. No code, migration, dependency, database, Docker, scheduler, provider, or live-source operation was performed.
 - JAI-027 post-Docker read-only runtime check: Compose showed one `db`, one `api`, and one `scheduler`; Alembic was `0009_pipeline_scheduling`; one fixed APScheduler job pointed to 2026-09-09 08:00 `Asia/Shanghai`; the only pipeline run/stages remained the successful 2026-09-06 makeup. No makeup or live request was performed.
 - JAI-027 G2 final offline gate: Ruff format checked 238 files, Ruff lint passed, Mypy passed across 161 source files, and 323 non-database tests passed; 18 PostgreSQL integration tests were deliberately deselected. Notification-targeted checks passed all 28 tests. `git diff --check` passed.
+- JAI-027 G3 targeted gate: the initial `_test` migration run failed on an overlong foreign-key identifier and passed after using explicit short names. Final Ruff format/lint, Mypy, 325 non-integration tests, and four targeted PostgreSQL migration/scheduling/delivery tests passed. The populated business database stayed at `0009`; no provider request occurred.
+- JAI-027 G3 environment limitation: local editable installation could not materialize the new console wrapper because the existing `.venv` lacks Hatchling and network build isolation is blocked. No dependency was downloaded; direct module CLI help passed.
 
 ## 5. Next actions
 
-1. Present the completed G2 code and evidence for project-owner review and obtain separate G3 approval.
-2. If G3 is approved, add migration `0010`, delivery models/repository/service and operator CLI, integrate the explicit fifth pipeline stage, and run destructive integration tests only against a database whose name ends in `_test`; provider traffic remains synthetic.
-3. When Docker is separately restored, first query Alembic/job/pipeline ledgers read-only and report evidence for 2026-09-07 and 2026-09-08 before proposing any makeup. Do not infer outcomes or run makeup without approval.
-4. Keep JAI-028 unattended-run acceptance, JAI-029 release work, and JAI-049 deferred source/attachment work outside JAI-027.
+1. Present the completed G3 code and targeted evidence for project-owner review and obtain separate G4 approval.
+2. If G4 is approved, synchronize paired configuration/database/delivery documentation and indexes, then run the complete repository gate. Do not migrate the populated business database or send a real notification under G4.
+3. Obtain separate G5 approval, including an explicitly named report snapshot and impact review, before applying `0010` to the populated business database or performing exactly one live PushPlus test.
+4. Report missing 2026-09-07 through 2026-09-09 slots only from ledger evidence; do not infer failure or run makeup without date-specific approval. Keep JAI-028, JAI-029, and JAI-049 outside JAI-027.
 
 ## 6. Update template
 

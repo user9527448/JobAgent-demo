@@ -6,7 +6,7 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-09-08
+> 最后更新：2026-09-09
 >
 > 当前分支：`feature/jai-027-wechat-delivery-idempotency`
 
@@ -35,7 +35,7 @@
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
 | JAI-025 | 按获批流程优先例外完成、合并并推送到 `develop` | `develop` / `a070030` | 合并后 PostgreSQL 门禁以 295 项测试和 87.82% 覆盖率通过；真实人工评审样本量仍延期到 JAI-049 |
 | JAI-026 | 已完成；G1～G4 后合入 `develop` | `develop` / 当前非快进合并 | 业务迁移、唯一真实 scheduler、受控补跑/复用及合并后完整门禁均通过 |
-| JAI-027 | D-037/G1 已批准；G2 完成；G3 待审批 | `feature/jai-027-wechat-delivery-idempotency` | 离线契约、确定性渲染、合成 provider 与单元测试均通过；迁移和数据库工作仍未授权 |
+| JAI-027 | D-037/G1～G3 已批准；G3 已实施并通过定向检查；G4 待审批 | `feature/jai-027-wechat-delivery-idempotency` | 持久台账、第五阶段、运维 CLI、重试/恢复及 `_test` PostgreSQL 验收已完成；业务迁移与真实投递仍未授权 |
 
 ## 2. 当前决策
 
@@ -663,6 +663,17 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 - 首轮定向检查发现 `httpx.URL` 用户名/密码空值判断过严，以及一个 Ruff `startswith` 提示；均在不改变范围的前提下修正。随后定向 Ruff/Mypy 与 28 项通知测试全部通过。全仓离线门禁通过：Ruff format 检查 238 个文件、Ruff lint 通过、Mypy 检查 161 个源文件、323 项非数据库测试全部通过；按 G2 边界明确排除了 18 项 PostgreSQL 集成测试。
 - 未新增 Settings/`.env`/Compose 改动、provider SDK、迁移、模型、仓储、CLI、流水线接入、数据库写入、真实凭据或真实 PushPlus 请求。任何持久化/集成改动前仍必须批准 G3。
 
+### 2026-09-09 — JAI-027 G3 已批准并完成持久投递接入
+
+- 项目负责人审阅 G2 完成证据后指示继续下一步，因此开放 D-037 G3：允许迁移 `0010`、投递持久化与 CLI、第五流水线阶段，以及只对名称以 `_test` 结尾的数据库执行破坏性集成测试。G4/G5、已有数据的业务库迁移、凭据注入、真实 PushPlus 流量、scheduler 重启、补跑和线上来源请求仍未授权。
+- 只读运行复核发现 2026-09-09 重启后的一个 `db`、一个 `api` 均健康，且一个 `scheduler` 正在运行。已有数据的业务库仍为 `0009_pipeline_scheduling`，台账仍只有 2026-09-06 的成功运行及四个成功阶段；2026-09-07、2026-09-08、2026-09-09 都没有流水线记录。scheduler 日志只显示 `Asia/Shanghai` 约 20:30 登记任务并启动，没有显式 misfire 事件，下次运行是 2026-09-10 08:00；未把任何缺失日期表述为失败，也未执行补跑。
+- 新增迁移 `0010_notification_delivery`、ORM 模型、日报/通道唯一父台账、只追加的分段尝试记录、安全错误元数据及 PostgreSQL advisory lock。持久服务实现确定性身份校验、按序分段、最多三次且按 30/60 秒退避的提交、已受理消息只查询不重提，以及外部结果歧义或提交中断时保守转为 `unknown` 的恢复语义。
+- 固定流水线扩展为 `collection -> extraction -> matching -> report -> delivery`。第五阶段从同一流水线运行的成功日报阶段输出解析准确的不可变 `report_snapshot_id`，绝不按日期选择最新日报。新增无需凭据即可安全查询的 `jobagent-delivery show --delivery-id`，以及显式幂等创建/恢复的 `send --snapshot-id`。Settings 要求 PushPlus token 与 secret key 必须作为一对 `SecretStr` 环境变量同时配置。
+- 首次隔离迁移测试发现一个显式外键名违反 PostgreSQL 63 字符标识符上限；缩短两个外键名后，从重置的 `jobagent_test` schema 重新验证通过。业务 schema 与运行台账未被修改。
+- 使用 `pip --no-deps -e .` 做本地可编辑安装检查时，构建隔离尝试通过受阻网络解析 Hatchling，因而失败；关闭构建隔离重试后确认当前 `.venv` 未安装 Hatchling。没有下载或安装任何包。CLI 模块本身已通过 `python -m jobagent.notifications.cli --help`；新增控制台脚本包装器留待会安装声明构建依赖的常规镜像/构建环境生成。
+- G3 检查通过：Ruff format 检查 166 个源码/测试/迁移文件，Ruff lint 通过，Mypy 检查 156 个源码/测试文件通过；325 项非集成测试通过，并按边界明确排除 19 项数据库测试。四项定向 PostgreSQL 测试通过，覆盖 head 升级/Alembic 漂移/降级、五阶段流水线复用/恢复，以及投递唯一性、advisory lock 竞争、30/60 重试/耗尽、有界最终结果恢复和 `unknown` 禁止重发；provider 流量全部为合成。
+- 未更改或调用 `.env`、Compose、依赖、业务数据库、scheduler、凭据、真实通知、补跑或线上来源。G4 仍是同步配置/数据库/投递双语文档及完整仓库门禁的前置审批；把 `0010` 应用于已有数据的业务库并对一个明确快照执行一次真实测试，仍需另行批准 G5。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -681,13 +692,15 @@ JAI-026 拟采用当前稳定的 APScheduler 3 系列（`APScheduler>=3.11.3,<4`
 - JAI-027 启动/设计文档检查：`git diff --check` 通过；两份 WORKLOG 各有 72 个 Markdown 标题，决策 ID 与当前状态 Issue ID 一致。没有执行代码、迁移、依赖、数据库、Docker、scheduler、provider 或线上来源操作。
 - JAI-027 Docker 恢复后只读运行核验：Compose 显示一个 `db`、一个 `api` 和一个 `scheduler`；Alembic 为 `0009_pipeline_scheduling`；一个固定 APScheduler 作业指向 `Asia/Shanghai` 2026-09-09 08:00；流水线及阶段仍只有 2026-09-06 的成功补跑。没有执行补跑或线上请求。
 - JAI-027 G2 最终离线门禁：Ruff format 检查 238 个文件，Ruff lint 通过，Mypy 检查 161 个源文件，323 项非数据库测试全部通过；有意排除 18 项 PostgreSQL 集成测试。通知定向检查 28 项全部通过；`git diff --check` 通过。
+- JAI-027 G3 定向门禁：首次 `_test` 迁移因外键标识符过长失败，改用显式短名称后通过。最终 Ruff format/lint、Mypy、325 项非集成测试和四项定向 PostgreSQL 迁移/调度/投递测试全部通过；已有数据的业务库保持 `0009`，未发生 provider 请求。
+- JAI-027 G3 环境限制：当前 `.venv` 缺少 Hatchling，且网络构建隔离受阻，因此本地可编辑安装未能生成新的控制台脚本包装器；没有下载依赖，直接调用模块的 CLI 帮助已通过。
 
 ## 5. 下一步
 
-1. 把已完成的 G2 代码与证据提交项目负责人审核，并另行取得 G3 批准。
-2. 如 G3 获批，新增迁移 `0010`、投递模型/仓储/服务与运维 CLI，接入显式第五流水线阶段，并且只对名称以 `_test` 结尾的数据库执行破坏性集成测试；provider 流量仍全部为合成。
-3. Docker 另行获批恢复后，必须先只读查询 Alembic/作业/流水线台账并报告 2026-09-07、2026-09-08 的证据，再提出任何补跑建议；不得推断结果或未经批准直接补跑。
-4. JAI-028 无人值守验收、JAI-029 发布工作及 JAI-049 延期来源/附件工作继续排除在 JAI-027 之外。
+1. 把已完成的 G3 代码与定向证据提交项目负责人审核，并另行取得 G4 批准。
+2. 如 G4 获批，同步配置/数据库/投递双语文档与索引，再运行完整仓库门禁；G4 不授权迁移已有数据的业务库或发送真实通知。
+3. 把 `0010` 应用于已有数据的业务库或执行一次真实 PushPlus 测试前，必须另行取得 G5 批准，并明确指定日报快照且完成影响复核。
+4. 只按台账证据报告 2026-09-07 至 2026-09-09 缺失时刻；未经日期级批准不得推断失败或补跑。JAI-028、JAI-029 和 JAI-049 继续排除在 JAI-027 之外。
 
 ## 6. 更新模板
 

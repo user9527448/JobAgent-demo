@@ -77,3 +77,37 @@ def test_invalid_scheduler_time_is_rejected(monkeypatch: pytest.MonkeyPatch) -> 
         get_settings()
 
     assert captured.value.details["errors"]
+
+
+def test_pushplus_credentials_are_secret_and_must_be_configured_together(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("JOBAGENT_ENVIRONMENT", "test")
+    monkeypatch.setenv("JOBAGENT_PUSHPLUS_TOKEN", "synthetic-token")
+
+    with pytest.raises(ConfigurationError) as captured:
+        get_settings()
+
+    assert captured.value.code == "configuration.invalid"
+    assert "synthetic-token" not in str(captured.value.to_dict())
+
+    monkeypatch.setenv("JOBAGENT_PUSHPLUS_SECRET_KEY", "synthetic-secret")
+    clear_settings_cache()
+    settings = get_settings()
+    assert settings.pushplus_token is not None
+    assert settings.pushplus_token.get_secret_value() == "synthetic-token"
+    assert settings.pushplus_secret_key is not None
+    assert settings.pushplus_secret_key.get_secret_value() == "synthetic-secret"
+    assert "synthetic-token" not in str(settings)
+    assert "synthetic-secret" not in str(settings)
+
+
+def test_pushplus_credentials_cannot_be_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("JOBAGENT_ENVIRONMENT", "test")
+    monkeypatch.setenv("JOBAGENT_PUSHPLUS_TOKEN", " ")
+    monkeypatch.setenv("JOBAGENT_PUSHPLUS_SECRET_KEY", " ")
+
+    with pytest.raises(ConfigurationError) as captured:
+        get_settings()
+
+    assert captured.value.code == "configuration.invalid"

@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 
 from jobagent.core import Settings
 from jobagent.db import Database
+from jobagent.notifications import PushPlusProvider, build_pushplus_delivery_service
 
 from .contracts import (
     DAILY_PIPELINE_JOB_NAME,
@@ -26,10 +27,21 @@ class PipelineRuntime:
         self.settings = settings
         self.database = Database(settings.database_url.get_secret_value())
         self.repository = SqlAlchemyPipelineRepository(self.database.session_factory)
+        self.delivery_provider: PushPlusProvider | None = None
+        delivery_service = None
+        if settings.pushplus_token is not None:
+            self.delivery_provider, delivery_service = build_pushplus_delivery_service(
+                self.database.session_factory,
+                settings,
+            )
         self.coordinator = PipelineCoordinator(
             self.repository,
             SqlAlchemyPipelineLock(self.database.session_factory),
-            ProductionPipelineStages(self.database.session_factory, settings),
+            ProductionPipelineStages(
+                self.database.session_factory,
+                settings,
+                delivery=delivery_service,
+            ),
             timezone=settings.timezone,
             policy=PipelinePolicy(
                 max_attempts=settings.scheduler_stage_max_attempts,
@@ -56,6 +68,8 @@ class PipelineRuntime:
         return await self.repository.get(run_id)
 
     async def close(self) -> None:
+        if self.delivery_provider is not None:
+            await self.delivery_provider.aclose()
         await self.database.close()
 
 

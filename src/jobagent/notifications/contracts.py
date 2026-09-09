@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
+
+from jobagent.core.exceptions import JsonValue
 
 
 class DeliveryChannel(StrEnum):
@@ -29,6 +32,35 @@ class ProviderDeliveryStatus(StrEnum):
     SENDING = "sending"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+
+
+class DeliveryStatus(StrEnum):
+    """Durable state of one report/channel logical delivery."""
+
+    PENDING = "pending"
+    SENDING = "sending"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+
+
+class DeliveryAttemptStatus(StrEnum):
+    """Durable state of one numbered message-part submission."""
+
+    SUBMITTING = "submitting"
+    ACCEPTED = "accepted"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    INTERRUPTED = "interrupted"
+
+
+class DeliveryDispatchStatus(StrEnum):
+    """Immediate result of trying to deliver one immutable report."""
+
+    EXECUTED = "executed"
+    REUSED = "reused"
+    LOCKED = "locked"
 
 
 class DeliveryProviderError(Exception):
@@ -157,6 +189,88 @@ class DeliveryRetryPolicy:
         return self.delays_seconds[attempt - 1]
 
 
+@dataclass(frozen=True, slots=True)
+class DeliverySnapshot:
+    """Safe persisted view of one logical report/channel delivery."""
+
+    id: int
+    report_snapshot_id: int
+    channel: DeliveryChannel
+    delivery_version: str
+    message_hash: str
+    part_count: int
+    status: DeliveryStatus
+    started_at: datetime | None
+    finished_at: datetime | None
+    error_code: str | None
+    error_message: str | None
+    created_at: datetime
+    updated_at: datetime
+
+    def as_json(self) -> dict[str, JsonValue]:
+        return {
+            "id": self.id,
+            "report_snapshot_id": self.report_snapshot_id,
+            "channel": self.channel.value,
+            "delivery_version": self.delivery_version,
+            "message_hash": self.message_hash,
+            "part_count": self.part_count,
+            "status": self.status.value,
+            "started_at": self.started_at.isoformat() if self.started_at else None,
+            "finished_at": self.finished_at.isoformat() if self.finished_at else None,
+            "error_code": self.error_code,
+            "error_message": self.error_message,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class DeliveryAttemptSnapshot:
+    """Safe persisted view of one delivery-part attempt."""
+
+    id: int
+    delivery_id: int
+    part_number: int
+    attempt: int
+    part_hash: str
+    status: DeliveryAttemptStatus
+    provider_message_id: str | None
+    started_at: datetime
+    finished_at: datetime | None
+    error_code: str | None
+    error_message: str | None
+
+    def as_json(self) -> dict[str, JsonValue]:
+        return {
+            "id": self.id,
+            "delivery_id": self.delivery_id,
+            "part_number": self.part_number,
+            "attempt": self.attempt,
+            "part_hash": self.part_hash,
+            "status": self.status.value,
+            "provider_message_id": self.provider_message_id,
+            "started_at": self.started_at.isoformat(),
+            "finished_at": self.finished_at.isoformat() if self.finished_at else None,
+            "error_code": self.error_code,
+            "error_message": self.error_message,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class DeliveryExecutionResult:
+    """Operator and pipeline result for one delivery dispatch."""
+
+    dispatch_status: DeliveryDispatchStatus
+    delivery: DeliverySnapshot | None
+
+    def as_json(self) -> dict[str, JsonValue]:
+        return {
+            "dispatch_status": self.dispatch_status.value,
+            "delivery": None if self.delivery is None else self.delivery.as_json(),
+        }
+
+
 class DeliveryProvider(Protocol):
     """Replaceable asynchronous delivery provider boundary."""
 
@@ -167,6 +281,13 @@ class DeliveryProvider(Protocol):
 
     async def get_result(self, provider_message_id: str) -> ProviderDeliveryResult:
         """Query an accepted message without resubmitting it."""
+
+
+class DeliveryOperations(Protocol):
+    """Application-facing idempotent delivery boundary."""
+
+    async def deliver(self, report_snapshot_id: int) -> DeliveryExecutionResult:
+        """Deliver or safely reuse one immutable report snapshot."""
 
 
 def _require_sha256(value: str, label: str) -> None:

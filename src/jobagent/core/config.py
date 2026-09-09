@@ -2,10 +2,10 @@
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Self
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import Field, SecretStr, ValidationError, field_validator
+from pydantic import Field, SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from jobagent.core.exceptions import ConfigurationError, JsonValue
@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     scheduler_misfire_grace_seconds: int = Field(default=6 * 60 * 60, gt=0)
     scheduler_stage_max_attempts: int = Field(default=3, ge=1, le=10)
     scheduler_retry_delay_seconds: int = Field(default=30, ge=0, le=3600)
+    pushplus_token: SecretStr | None = None
+    pushplus_secret_key: SecretStr | None = None
 
     @field_validator("timezone")
     @classmethod
@@ -47,6 +49,23 @@ class Settings(BaseSettings):
         except ZoneInfoNotFoundError as error:
             raise ValueError("must be a valid IANA time zone") from error
         return value
+
+    @model_validator(mode="after")
+    def pushplus_credentials_must_be_complete(self) -> Self:
+        """Require the approved provider credentials as one all-or-nothing pair."""
+        if (self.pushplus_token is None) != (self.pushplus_secret_key is None):
+            raise ValueError(
+                "JOBAGENT_PUSHPLUS_TOKEN and JOBAGENT_PUSHPLUS_SECRET_KEY "
+                "must be configured together."
+            )
+        if self.pushplus_token is not None and not self.pushplus_token.get_secret_value().strip():
+            raise ValueError("JOBAGENT_PUSHPLUS_TOKEN cannot be empty.")
+        if (
+            self.pushplus_secret_key is not None
+            and not self.pushplus_secret_key.get_secret_value().strip()
+        ):
+            raise ValueError("JOBAGENT_PUSHPLUS_SECRET_KEY cannot be empty.")
+        return self
 
 
 def _safe_validation_errors(error: ValidationError) -> list[JsonValue]:
