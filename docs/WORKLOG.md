@@ -35,7 +35,7 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | D-037/G1–G4 approved; G4 documentation complete, full gate blocked on Docker | `feature/jai-027-wechat-delivery-idempotency` | Delivery documentation/configuration is synchronized; business migration, credentials, and live delivery remain unauthorized |
+| JAI-027 | D-037/G1–G4 approved and complete; G5 pending | `feature/jai-027-wechat-delivery-idempotency` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration, credentials, and live delivery remain unauthorized |
 
 ## 2. Current decisions
 
@@ -198,6 +198,36 @@ API list before code; U3: approve the JAI-051 feedback table/API and retention b
 migration. Runtime writes and external actions retain their existing Issue-specific gates. Until U1
 is approved, this work-log entry is a proposal only: the development plan and backlog are not
 reordered, no new branch is created, and no UI code is implemented.
+
+#### 2026-09-10 revision: production UI foundation and DESIGN.md
+
+The project owner directed that progressive pages become the production UI foundation and requested
+Tailwind CSS plus shadcn/ui instead of the disposable no-build proposal above. That direction is
+accepted; the earlier text is preserved as decision history but its vanilla-JavaScript technology
+recommendation is superseded.
+
+The recommended implementation is a `frontend/` React + TypeScript + Vite application managed by
+pnpm, using Tailwind CSS v4, locally owned shadcn/ui source components with Radix primitives,
+semantic CSS-variable tokens, and Lucide icons. Vite development proxies the required FastAPI route
+prefixes; production assets are built once and served from the existing FastAPI origin. This keeps one deployment origin while
+giving later pages a durable router, typed component model, accessibility primitives, and reusable
+layout shell. The current machine already has Node.js, npm, pnpm, and Corepack; no package has been
+installed and no dependency has been downloaded.
+
+JAI-050 should create paired `docs/DESIGN.md` and `docs/zh-CN/DESIGN.md` files and add them to both
+indexes and the UI-required repository context. Their structure should follow Google's open
+DESIGN.md format: normative machine-readable tokens plus human-readable rationale. Tailwind and
+shadcn/ui official theme/token contracts are the implementation authority. The public design-md
+catalog and Cherry Studio's layered design documentation are research references only; no external
+brand identity, generated theme, third-party registry, or component code is copied into the
+repository without separate review.
+
+U1-R remains pending for the exact application architecture and revised Issue order: approve React,
+TypeScript, Vite, pnpm, Tailwind v4, shadcn/ui with Radix, `frontend/`, FastAPI same-origin serving,
+JAI-050 before JAI-028, and JAI-051 after JAI-028; also decide whether JAI-051 persists append-only
+recommendation feedback. After U1-R, U2 begins with three visual directions grounded in the same
+information architecture and DESIGN.md constraints; one direction must be selected before UI code
+or dependencies are added. U3 remains required before any feedback migration.
 
 ## 3. Active work history
 
@@ -712,12 +742,16 @@ reordered, no new branch is created, and no UI code is implemented.
 - G3 checks passed: Ruff format check covered 166 source/test/migration files, Ruff lint passed, Mypy passed across 156 source/test files, and 325 non-integration tests passed with 19 database tests deliberately deselected. Four targeted PostgreSQL tests passed for head upgrade/Alembic drift/downgrade, five-stage pipeline reuse/recovery, and delivery uniqueness, advisory-lock contention, 30/60 retry/exhaustion, bounded final-result resume, and `unknown` no-resend behavior. All provider traffic was synthetic.
 - No `.env`, Compose, dependency, business database, scheduler, credential, real notification, makeup run, or live source was changed or invoked. G4 remains required for paired configuration/database/delivery documentation and the complete repository gate; G5 remains separately required for applying `0010` to the populated business database and one explicitly named live snapshot.
 
-### 2026-09-10 — JAI-027 G4 documentation completed; full gate awaiting Docker
+### 2026-09-10 — JAI-027 G4 completed after Docker recovery
 
 - The project owner instructed the next step to continue, opening D-037 G4 only. Added paired PushPlus delivery documentation, synchronized database and scheduling guides, and created the missing English counterpart for the substantively updated Chinese configuration guide. Both documentation indexes now list configuration and delivery, and configuration is removed from the JAI-048 legacy inventory.
 - `.env.example` now contains empty optional PushPlus variables, and Compose passes them only to the scheduler. Settings normalize empty environment strings to unconfigured while still rejecting a partial pair or directly constructed empty secrets. No real value was written or loaded.
 - The same request asked for progressively usable pages without abandoning backend-first delivery. The read-only architecture audit and proposed D-038 above are recorded for U1 approval. No development-plan/backlog order or UI code has changed yet.
 - The 2026-09-10 read-only Compose check found no running `db` service. The business database, scheduler job, and pipeline ledgers were therefore unavailable; there is no database evidence for the 2026-09-10 slot and no success/failure/misfire inference. No Docker/scheduler start, makeup, business migration, credential injection, or provider request was attempted.
+- The project owner later started Compose manually. At 01:03 `Asia/Shanghai`, one healthy `db`, one healthy `api`, and one scheduler were running; the 08:00 slot was still in the future. Read-only database evidence showed business Alembic `0009_pipeline_scheduling`, exactly one fixed job with next run 2026-09-10 08:00, and only the successful 2026-09-06 makeup run with four successful stages. There were no 2026-09-07 through 2026-09-09 runs and no non-terminal or failed ledger statuses. No makeup, migration, credential, provider, or live-source action was performed.
+- The first PostgreSQL full gate ran all 344 tests successfully but exposed 84.61% coverage, below the 85% policy; the check script still returned success despite pytest-cov's explicit failure text, so the result was rejected. Added behavior-based notification CLI tests for show/not-found, locked, failed, reused-success, and resource cleanup. Their first collection failed because the new test filename duplicated a top-level module; declaring the notification tests as a package fixed the module identity without weakening checks.
+- The final G4 gate passed: Ruff format checked 249 files, Ruff lint passed, Mypy passed across 168 source files, all 350 PostgreSQL-enabled tests passed with no skips, and coverage reached 85.37%. The test database public schema returned to zero tables. A post-gate read-only audit confirmed the populated business database remained unchanged at `0009`, one fixed job, one 2026-09-06 run, and four successful stages.
+- The owner also revised D-038 toward a production UI base using Tailwind plus shadcn/ui. The technology audit, DESIGN.md source hierarchy, and remaining U1-R/U2/U3 gates are recorded above. No frontend dependency, file, branch, or planning-order change has been made.
 
 ## 4. Verification and blockers
 
@@ -743,10 +777,9 @@ reordered, no new branch is created, and no UI code is implemented.
 
 ## 5. Next actions
 
-1. Have the project owner manually start Docker, then recheck the business ledger read-only and run the complete PostgreSQL `scripts/check.py` G4 gate against `jobagent_test`.
-2. Obtain separate G5 approval, including an explicitly named report snapshot and impact review, before applying `0010` to the populated business database, injecting credentials, restarting the scheduler, or performing exactly one live PushPlus test.
-3. Obtain D-038/U1 approval before changing the bilingual development plan/backlog or creating JAI-050. If approved, record JAI-050/JAI-051 and the revised JAI-031 scope in those four planning files on the dedicated UI branch after JAI-027 integration.
-4. Report 2026-09-07 onward only from ledger evidence; do not infer failure or run makeup without date-specific approval. JAI-028 unattended acceptance and JAI-029 release remain separate Issues.
+1. Present the completed JAI-027 G4 commit and full-gate evidence for review. Obtain separate G5 approval, including an explicitly named report snapshot and impact review, before applying `0010` to the populated business database, injecting credentials, restarting the scheduler, or performing exactly one live PushPlus test.
+2. Obtain D-038/U1-R approval before changing the bilingual development plan/backlog or adding frontend dependencies. If approved, record JAI-050/JAI-051 and the revised JAI-031 scope in those four planning files on the dedicated JAI-050 branch after JAI-027 integration, then prepare three U2 visual directions and the paired DESIGN.md draft.
+3. Report 2026-09-07 onward only from ledger evidence; do not infer failure or run makeup without date-specific approval. JAI-028 unattended acceptance and JAI-029 release remain separate Issues.
 
 ## 6. Update template
 
