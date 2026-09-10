@@ -443,6 +443,6 @@ Issue 开始前必须具备：目标、范围、验收标准、依赖、测试�
 
 ## 13. 当前下一步
 
-JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-025 已依次合并并普通推送到 `develop`，当前基线为 JAI-025 非快进合并 `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`。JAI-021 Day 3 的中国移动 `PoolTimeout` 实际 4/5 指标和用户豁免记录完整保留；JAI-025 的流程优先例外与延期质量债务也完整保留在 JAI-049。
+JAI-011、JAI-037、JAI-046、JAI-047、JAI-012 至 JAI-026 已依次合并并普通推送到 `develop`；当前 `develop` 基线为 JAI-026 非快进合并 `a9e9b643b629e5632015778549917f44bd658586`。JAI-021 Day 3 的中国移动 `PoolTimeout` 实际 4/5 指标和用户豁免记录完整保留；JAI-025 的流程优先例外与延期质量债务也完整保留在 JAI-049。
 
-JAI-026 已按获批 D-036 完成 G1～G4，并通过非快进提交合入 `develop`：APScheduler 3 独立单 scheduler 进程、PostgreSQL 持久 job store、领域运行/阶段台账和 advisory lock，按采集、抽取/校验、匹配、日报顺序执行，并支持有界重试、重启恢复和同逻辑运行的手工补跑。业务库无漂移迁移到 `0009`，唯一 scheduler、一次真实完整补跑与同日幂等复用均通过；合并后 313 项 PostgreSQL 测试无跳过通过，覆盖率 86.20%。JAI-027 是下一项计划内未完成 Issue，但其通知设计必须在独立分支登记并审核后才实施。禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。
+JAI-027 正在独立分支 `feature/jai-027-wechat-delivery-idempotency` 开发。获批的 D-037 G1～G4 已完成：PushPlus 离线 Adapter、确定性分段、双表持久投递台账、第五流水线阶段、有限重试/歧义保护、运维 CLI、双语文档及 350 项无跳过 PostgreSQL 门禁均已通过，覆盖率 85.37%。业务库仍为 `0009_pipeline_scheduling`，真实密钥、迁移 `0010` 与指定快照的一次真实发送归入双语人工操作队列，等待负责人日后完成 M-001/M-002 并明确批准 A-001/G5；不得因此推断完成或提前启动 JAI-028。D-038 正式页面基底方向已记录，但开发计划/Backlog 重排及前端依赖仍等待 A-002/U1-R。禁止 rebase、force push 或改写已发布历史。OCR 仍延期至 JAI-B01，JAI-048 保持独立文档 Issue。
