@@ -229,6 +229,20 @@ recommendation feedback. After U1-R, U2 begins with three visual directions grou
 information architecture and DESIGN.md constraints; one direction must be selected before UI code
 or dependencies are added. U3 remains required before any feedback migration.
 
+#### 2026-09-10 revision: U2 visual direction selected
+
+The project owner selected option 1, “Morning Briefing,” from three independent high-fidelity
+directions. The chosen baseline makes the latest report and actionable job recommendations the
+primary reading flow, with scheduler, pipeline, and safe-delivery state as supporting evidence. Its
+restrained light editorial hierarchy should be implemented with Tailwind CSS + shadcn/ui semantic
+tokens and accessible components.
+
+This selection completes manual-queue item `A-003`, but it neither implies nor replaces
+`A-002/U1-R`. The preview image is a visual-decision aid and is not added as a runtime asset. The
+auditable implementation baseline must be captured in paired `docs/DESIGN.md` files under Git after
+JAI-050 starts. No JAI-050 branch, dependency installation, backlog reorder, or UI implementation has
+occurred.
+
 ### D-039 Central owner-action and approval queue
 
 On 2026-09-10 the project owner asked that all actions requiring personal execution be grouped for
@@ -792,7 +806,7 @@ interrupting safe work.
 ## 5. Next actions
 
 1. Keep `M-001`, `M-002`, and `A-001` deferred in the manual-action queue. Do not apply `0010`, inject credentials, restart the scheduler for JAI-027, or perform the named live snapshot test until the owner completes and approves those items.
-2. Keep `A-002` pending before changing the bilingual development plan/backlog or adding frontend dependencies. If approved, record JAI-050/JAI-051 and the revised JAI-031 scope in those four planning files on the dedicated JAI-050 branch after JAI-027 integration, then prepare three U2 visual directions for `A-003` and the paired DESIGN.md draft.
+2. Keep `A-002` pending before changing the bilingual development plan/backlog or adding frontend dependencies. `A-003` has selected option 1, “Morning Briefing,” but does not unlock implementation early. If `A-002` is approved, record JAI-050/JAI-051 and the revised JAI-031 scope in those four planning files on the dedicated JAI-050 branch after JAI-027 integration, then capture the selected direction in paired DESIGN.md files.
 3. Report 2026-09-07 onward only from ledger evidence; do not infer failure or run makeup without date-specific approval. JAI-028 unattended acceptance and JAI-029 release remain separate Issues.
 
 ## 6. Update template

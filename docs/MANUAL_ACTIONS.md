@@ -14,7 +14,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `M-002` | Deferred by owner | Create the local `.env` and enter both PushPlus secrets | JAI-027 G5 controlled live test |
 | `A-001` | Pending after `M-001`/`M-002` | Explicitly approve JAI-027 G5 | Business migration `0010` and one named live test |
 | `A-002` | Pending | Approve D-038/U1-R and the persisted-feedback choice | Formal bilingual backlog update and JAI-050 design work |
-| `A-003` | Future | Select one of three U2 visual directions | JAI-050 frontend dependency installation and UI implementation |
+| `A-003` | Completed: option 1 | Selected the “Morning Briefing” direction from three U2 options | Visual baseline for JAI-050 after A-002/U1-R |
 | `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
 
 No current queue item authorizes a makeup run, a live recruitment-source request, a second live
@@ -90,10 +90,23 @@ This approval permits formal updates to both development plans and both backlogs
 integrated. It does not install packages or choose a visual direction. JAI-050 must first create the
 paired DESIGN.md draft and three U2 visual options.
 
+## A-003 — JAI-050 visual-direction selection
+
+On 2026-09-10 the project owner selected option 1, “Morning Briefing,” from three independent U2
+directions. It makes the latest report and actionable job recommendations the primary reading flow,
+with scheduler, pipeline, and delivery evidence as supporting information. Its restrained light
+editorial layout is the visual baseline for the later production Tailwind CSS + shadcn/ui pages.
+
+This selection completes only the visual-direction decision. It does not replace `A-002/U1-R`
+approval for the technology, Issue insertion, and execution order, nor does it authorize creating a
+JAI-050 branch, installing frontend dependencies, or implementing UI. When JAI-050 starts, this
+direction must be translated into paired, version-controlled `docs/DESIGN.md` and
+`docs/zh-CN/DESIGN.md` specifications; the preview image is neither a runtime asset nor the sole
+implementation acceptance reference.
+
 ## Reusable Docker recovery
 
 Start Docker Desktop manually when the engine is unavailable, then tell the agent only that Docker
 is ready. Do not independently run migrations, makeup commands, live-source collection, scheduler
 scaling, or notification commands. The agent will first perform read-only Compose and ledger checks
 and will request the exact approval needed for any write.
-
