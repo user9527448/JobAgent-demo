@@ -1,0 +1,90 @@
+# 需要项目负责人手动执行的事项
+
+> English: [Manual owner actions](../MANUAL_ACTIONS.md)
+
+本文档集中维护必须由项目负责人亲自完成或明确批准的事项。文档不保存任何凭据值，也不能替代各
+Issue 自己的审批闸门。新增、完成、延期或取代事项时，必须同步更新中英文文件。
+
+## 当前队列
+
+| ID | 状态 | 负责人操作 | 解锁事项 |
+|---|---|---|---|
+| `M-001` | 负责人已延期 | 准备 PushPlus 账户与 OpenAPI 设置 | JAI-027 G5 凭据校验 |
+| `M-002` | 负责人已延期 | 创建本地 `.env` 并填写两项 PushPlus 密钥 | JAI-027 G5 受控真实测试 |
+| `A-001` | 等待 `M-001`/`M-002` | 明确批准 JAI-027 G5 | 业务迁移 `0010` 与一次指定真实测试 |
+| `A-002` | 待审批 | 批准 D-038/U1-R 并决定是否持久化反馈 | 正式双语 Backlog 更新与 JAI-050 设计工作 |
+| `A-003` | 未来事项 | 从三个 U2 视觉方向中选择一个 | JAI-050 前端依赖安装与 UI 实现 |
+| `A-004` | 未来事项 | 在 U3 审批 JAI-051 反馈 Schema/API/保留边界 | 反馈迁移与写入 |
+
+当前队列中的任何事项都不授权补跑、线上招聘来源请求、第二次真实通知、JAI-028 五次无人值守运行或
+JAI-029 发布工作。
+
+## M-001 — 准备 PushPlus
+
+以下步骤由负责人在 PushPlus 网站完成；不得通过对话发送得到的值：
+
+1. 注册/登录，绑定接收消息的微信账户，并完成 provider 要求的实名认证。
+2. 打开“个人中心 → 一对一推送”，复制**用户 token**。不得使用消息 token：PushPlus 的基础发送
+   接口可以使用两类 token，但 OpenAPI 只接受用户 token；JOBAGENT 需要 OpenAPI 核对最终发送结果。
+3. 打开“个人中心 → 开发设置”，启用 OpenAPI，并创建至少 32 位、混合数字和英文字母的随机
+   `secretKey`；应使用密码管理器生成并保存。
+4. 把运行 Docker 的机器当前公网出口 IP 加入 PushPlus 安全 IP 列表。条目缺失或过期会使 AccessKey
+   获取返回 403。
+
+官方参考：[token 类型](https://pushplus.plus/doc/help/token.html)和
+[OpenAPI 设置](https://pushplus.plus/doc/guide/openApi.html)。
+
+## M-002 — 配置被忽略的本地文件
+
+仓库本地需要 `.env`，但 Git 中绝不能出现它。如果 `.env` 尚不存在，只在仓库根目录执行一次：
+
+```powershell
+Test-Path .env
+Copy-Item .env.example .env
+```
+
+如果 `Test-Path` 返回 `True`，不得复制或覆盖已有文件。用本地文本编辑器打开 `.env`，只填写其中
+已有的两行空值：
+
+```dotenv
+JOBAGENT_PUSHPLUS_TOKEN=<PushPlus 用户 token>
+JOBAGENT_PUSHPLUS_SECRET_KEY=<PushPlus secretKey>
+```
+
+不得把任一值写入 `.env.example`、命令参数、Shell 历史、截图、测试固定样本、日志、数据库、Git 或
+对话。无需手工创建 AccessKey；JOBAGENT 会在内存中换取且绝不持久化。
+
+完成 `M-001` 和 `M-002` 后，只回复“`M-001/M-002 已完成`”，不要附带具体值。随后可由 Agent 在不
+打印密钥的前提下校验是否存在且成对配置。
+
+## A-001 — JAI-027 G5 审批
+
+凭据存在性通过安全校验后，审批文本为：
+
+```text
+批准 JAI-027 G5：业务迁移 0010，并且只对日报快照 2 执行一次真实 PushPlus 测试。
+```
+
+由 Agent 执行的顺序为：取得业务台账只读快照、停止唯一 scheduler、应用只新增结构的迁移、核验
+Alembic/漂移/计数、构建已审批运行时、只发送一次快照 ID `2`、核对 provider 最终结果并审计投递
+台账。测试后 scheduler 保持停止，直到 JAI-028 启用另行获批，避免本次真实测试静默开始五次验收。
+
+## A-002 — 正式 UI 基底审批
+
+建议审批文本为：
+
+```text
+批准 D-038/U1-R：React、TypeScript、Vite、pnpm、Tailwind CSS v4、基于 Radix 的 shadcn/ui、
+frontend/、FastAPI 同源生产发布、JAI-050 位于 JAI-028 前、JAI-051 位于 JAI-028 后，并采用受 U3
+约束的追加式持久化推荐反馈。
+```
+
+该批准允许在 JAI-027 集成后正式更新两份开发计划与两份 Backlog，但不等于安装依赖或选择视觉
+方向。JAI-050 必须先形成成对 DESIGN.md 草案和三个 U2 视觉方案。
+
+## 可复用 Docker 恢复步骤
+
+Docker engine 不可用时，由负责人手动启动 Docker Desktop，然后只告知 Agent“Docker 已就绪”。
+不要自行执行迁移、补跑、线上来源采集、scheduler 扩容或通知命令。Agent 会先进行只读 Compose 与
+台账核验，并在任何写入前请求准确审批。
+

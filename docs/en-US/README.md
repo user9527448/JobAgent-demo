@@ -13,6 +13,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | GitHub Issues backlog | [English](GITHUB_ISSUES.md) | [中文](../GITHUB_ISSUES.md) |
 | Continuous development work log | [English](../WORKLOG.md) | [中文](../zh-CN/WORKLOG.md) |
 | Configuration, logging, and error conventions | [English](CONFIGURATION.md) | [中文](../CONFIGURATION.md) |
+| Manual owner actions and approval queue | [English](../MANUAL_ACTIONS.md) | [中文](../zh-CN/MANUAL_ACTIONS.md) |
 | Source Adapter and collection orchestration | [English](../COLLECTION.md) | [中文](../zh-CN/COLLECTION.md) |
 | Database models and migrations | [English](../DATABASE.md) | [中文](../zh-CN/DATABASE.md) |
 | Source HTTP client policy | [English](../HTTP_CLIENT.md) | [中文](../zh-CN/HTTP_CLIENT.md) |

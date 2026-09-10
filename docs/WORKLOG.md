@@ -229,6 +229,16 @@ recommendation feedback. After U1-R, U2 begins with three visual directions grou
 information architecture and DESIGN.md constraints; one direction must be selected before UI code
 or dependencies are added. U3 remains required before any feedback migration.
 
+### D-039 Central owner-action and approval queue
+
+On 2026-09-10 the project owner asked that all actions requiring personal execution be grouped for
+later completion while safe repository work continues. The paired `docs/MANUAL_ACTIONS.md` and
+`docs/zh-CN/MANUAL_ACTIONS.md` are the single current queue. They distinguish owner-executed setup
+(`M-*`) from explicit approvals (`A-*`), identify what each item unblocks, and contain no credential
+values. Deferred items are not silently treated as approval. They should be surfaced again only when
+they block the next planned write or when their external state changes, rather than repeatedly
+interrupting safe work.
+
 ## 3. Active work history
 
 ### 2026-08-14 — JAI-046 bilingual documentation and Git identity rules completed
@@ -752,6 +762,7 @@ or dependencies are added. U3 remains required before any feedback migration.
 - The first PostgreSQL full gate ran all 344 tests successfully but exposed 84.61% coverage, below the 85% policy; the check script still returned success despite pytest-cov's explicit failure text, so the result was rejected. Added behavior-based notification CLI tests for show/not-found, locked, failed, reused-success, and resource cleanup. Their first collection failed because the new test filename duplicated a top-level module; declaring the notification tests as a package fixed the module identity without weakening checks.
 - The final G4 gate passed: Ruff format checked 249 files, Ruff lint passed, Mypy passed across 168 source files, all 350 PostgreSQL-enabled tests passed with no skips, and coverage reached 85.37%. The test database public schema returned to zero tables. A post-gate read-only audit confirmed the populated business database remained unchanged at `0009`, one fixed job, one 2026-09-06 run, and four successful stages.
 - The owner also revised D-038 toward a production UI base using Tailwind plus shadcn/ui. The technology audit, DESIGN.md source hierarchy, and remaining U1-R/U2/U3 gates are recorded above. No frontend dependency, file, branch, or planning-order change has been made.
+- The owner deferred personal setup and requested one consolidated checklist. Added the paired manual-action queue and indexed it from both documentation indexes and configuration guides. PushPlus setup/G5 and UI approval/visual selection remain pending there; no secret, business migration, external request, frontend dependency, or priority change was introduced.
 
 ## 4. Verification and blockers
 
@@ -777,8 +788,8 @@ or dependencies are added. U3 remains required before any feedback migration.
 
 ## 5. Next actions
 
-1. Present the completed JAI-027 G4 commit and full-gate evidence for review. Obtain separate G5 approval, including an explicitly named report snapshot and impact review, before applying `0010` to the populated business database, injecting credentials, restarting the scheduler, or performing exactly one live PushPlus test.
-2. Obtain D-038/U1-R approval before changing the bilingual development plan/backlog or adding frontend dependencies. If approved, record JAI-050/JAI-051 and the revised JAI-031 scope in those four planning files on the dedicated JAI-050 branch after JAI-027 integration, then prepare three U2 visual directions and the paired DESIGN.md draft.
+1. Keep `M-001`, `M-002`, and `A-001` deferred in the manual-action queue. Do not apply `0010`, inject credentials, restart the scheduler for JAI-027, or perform the named live snapshot test until the owner completes and approves those items.
+2. Keep `A-002` pending before changing the bilingual development plan/backlog or adding frontend dependencies. If approved, record JAI-050/JAI-051 and the revised JAI-031 scope in those four planning files on the dedicated JAI-050 branch after JAI-027 integration, then prepare three U2 visual directions for `A-003` and the paired DESIGN.md draft.
 3. Report 2026-09-07 onward only from ledger evidence; do not infer failure or run makeup without date-specific approval. JAI-028 unattended acceptance and JAI-029 release remain separate Issues.
 
 ## 6. Update template

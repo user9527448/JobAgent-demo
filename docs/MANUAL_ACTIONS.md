@@ -1,0 +1,99 @@
+# Manual owner actions
+
+> 简体中文：[需要项目负责人手动执行的事项](zh-CN/MANUAL_ACTIONS.md)
+
+This is the single queue for actions that must be performed or explicitly approved by the project
+owner. It contains no credential values and is not a substitute for Issue-specific approval gates.
+Update the paired files whenever an item is added, completed, deferred, or superseded.
+
+## Current queue
+
+| ID | Status | Owner action | Unblocks |
+|---|---|---|---|
+| `M-001` | Deferred by owner | Prepare the PushPlus account and OpenAPI settings | JAI-027 G5 credential validation |
+| `M-002` | Deferred by owner | Create the local `.env` and enter both PushPlus secrets | JAI-027 G5 controlled live test |
+| `A-001` | Pending after `M-001`/`M-002` | Explicitly approve JAI-027 G5 | Business migration `0010` and one named live test |
+| `A-002` | Pending | Approve D-038/U1-R and the persisted-feedback choice | Formal bilingual backlog update and JAI-050 design work |
+| `A-003` | Future | Select one of three U2 visual directions | JAI-050 frontend dependency installation and UI implementation |
+| `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
+
+No current queue item authorizes a makeup run, a live recruitment-source request, a second live
+notification, JAI-028's five unattended runs, or JAI-029 release work.
+
+## M-001 — Prepare PushPlus
+
+Perform these steps in the PushPlus website; do not send the resulting values through chat:
+
+1. Register/sign in, bind the receiving WeChat account, and complete provider-required identity
+   verification.
+2. Open **Personal Center → One-to-one push** and copy the **user token**. Do not use a message
+   token: PushPlus permits either token type for basic sending, but its OpenAPI requires the user
+   token, and JOBAGENT needs OpenAPI final-result reconciliation.
+3. Open **Personal Center → Developer settings**, enable OpenAPI, and create a random `secretKey`
+   of at least 32 mixed alphanumeric characters. Generate and store it with a password manager.
+4. Add the current public egress IP of the machine running Docker to the PushPlus security-IP list.
+   A missing or stale entry causes AccessKey acquisition to return 403.
+
+Official references: [token types](https://pushplus.plus/doc/help/token.html) and
+[OpenAPI setup](https://pushplus.plus/doc/guide/openApi.html).
+
+## M-002 — Configure the ignored local file
+
+The repository must contain a local `.env`, but Git must never contain it. If `.env` does not yet
+exist, run this once from the repository root:
+
+```powershell
+Test-Path .env
+Copy-Item .env.example .env
+```
+
+If `Test-Path` returns `True`, do not copy or overwrite the existing file. Open `.env` in a local
+text editor and fill only the two existing empty lines:
+
+```dotenv
+JOBAGENT_PUSHPLUS_TOKEN=<PushPlus user token>
+JOBAGENT_PUSHPLUS_SECRET_KEY=<PushPlus secretKey>
+```
+
+Do not put either value in `.env.example`, a command argument, shell history, a screenshot, a test
+fixture, a log, a database row, Git, or chat. Do not manually create an AccessKey; JOBAGENT derives
+it in memory and never persists it.
+
+When `M-001` and `M-002` are complete, report only `M-001/M-002 complete`; do not include values.
+The agent may then validate presence and pairing without printing them.
+
+## A-001 — JAI-027 G5 approval
+
+After credential presence is safely validated, the approval statement is:
+
+```text
+Approve JAI-027 G5 for business migration 0010 and exactly one live PushPlus test of report snapshot 2.
+```
+
+The agent-owned execution sequence is: capture a read-only business-ledger snapshot, stop the sole
+scheduler, apply the additive migration, verify Alembic/drift/counts, build the approved runtime,
+send snapshot ID `2` exactly once, reconcile the final provider result, and audit the delivery
+ledger. The scheduler remains stopped afterward until JAI-028 activation is separately approved, so
+the live test cannot silently begin the five-run acceptance period.
+
+## A-002 — Production UI foundation approval
+
+The recommended approval statement is:
+
+```text
+Approve D-038/U1-R: React, TypeScript, Vite, pnpm, Tailwind CSS v4, shadcn/ui with Radix, frontend/,
+FastAPI same-origin production serving, JAI-050 before JAI-028, JAI-051 after JAI-028, and append-only
+persisted recommendation feedback subject to U3.
+```
+
+This approval permits formal updates to both development plans and both backlogs after JAI-027 is
+integrated. It does not install packages or choose a visual direction. JAI-050 must first create the
+paired DESIGN.md draft and three U2 visual options.
+
+## Reusable Docker recovery
+
+Start Docker Desktop manually when the engine is unavailable, then tell the agent only that Docker
+is ready. Do not independently run migrations, makeup commands, live-source collection, scheduler
+scaling, or notification commands. The agent will first perform read-only Compose and ledger checks
+and will request the exact approval needed for any write.
+

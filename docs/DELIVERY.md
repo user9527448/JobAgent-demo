@@ -121,5 +121,5 @@ live test must name one snapshot in advance.
   credential injection, one named report snapshot, and exactly one controlled live test.
 - JAI-028's five unattended executions begin only after JAI-027 is accepted and separately enabled.
 
-Related references: [configuration](en-US/CONFIGURATION.md), [database](DATABASE.md), and
-[scheduling](SCHEDULING.md).
+Related references: [manual owner actions](MANUAL_ACTIONS.md),
+[configuration](en-US/CONFIGURATION.md), [database](DATABASE.md), and [scheduling](SCHEDULING.md).

@@ -91,6 +91,7 @@ first be mapped to an allowlisted code and fixed safe explanation.
 
 ## Related documentation
 
+- [Manual owner actions and approval queue](../MANUAL_ACTIONS.md)
 - [PushPlus report delivery](../DELIVERY.md)
 - [Daily scheduling, recovery, and makeup](../SCHEDULING.md)
 - [Database models and migrations](../DATABASE.md)

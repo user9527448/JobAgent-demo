@@ -84,6 +84,7 @@ with bind_log_context(request_id="request-123", run_id="run-456", source_id=7):
 
 ## 相关文档
 
+- [项目负责人手动操作与审批队列](zh-CN/MANUAL_ACTIONS.md)
 - [PushPlus 日报投递](DELIVERY.md)
 - [每日调度、恢复与补跑](SCHEDULING.md)
 - [数据库模型与迁移](DATABASE.md)

@@ -109,4 +109,5 @@ jobagent-delivery send --snapshot-id 2
   受控真实测试。
 - JAI-028 的五次无人值守运行只能在 JAI-027 验收并另行启用后开始。
 
-相关文档：[配置](../CONFIGURATION.md)、[数据库](DATABASE.md)和[调度](SCHEDULING.md)。
+相关文档：[负责人手动操作](MANUAL_ACTIONS.md)、[配置](../CONFIGURATION.md)、
+[数据库](DATABASE.md)和[调度](SCHEDULING.md)。
