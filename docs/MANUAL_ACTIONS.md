@@ -13,7 +13,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `M-001` | Deferred by owner | Prepare the PushPlus account and OpenAPI settings | JAI-027 G5 credential validation |
 | `M-002` | Deferred by owner | Create the local `.env` and enter both PushPlus secrets | JAI-027 G5 controlled live test |
 | `A-001` | Pending after `M-001`/`M-002` | Explicitly approve JAI-027 G5 | Business migration `0010` and one named live test |
-| `A-002` | Pending | Approve D-038/U1-R and the persisted-feedback choice | Formal bilingual backlog update and JAI-050 design work |
+| `A-002` | Approved: 2026-09-14 | Approve D-038/U1-R, stacked-branch order, and append-only persisted-feedback direction | Bilingual plan update and independent JAI-050 design/implementation |
 | `A-003` | Completed: option 1 | Selected the “Morning Briefing” direction from three U2 options | Visual baseline for JAI-050 after A-002/U1-R |
 | `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
 
@@ -89,6 +89,13 @@ persisted recommendation feedback subject to U3.
 This approval permits formal updates to both development plans and both backlogs after JAI-027 is
 integrated. It does not install packages or choose a visual direction. JAI-050 must first create the
 paired DESIGN.md draft and three U2 visual options.
+
+On 2026-09-14 the project owner approved the technology, Issue insertion, and append-only persisted
+feedback direction above, with one sequencing revision: because JAI-027 G5 is deferred, JAI-050 may
+continue on the independent stacked branch `feature/jai-050-production-ui-foundation` created from
+the current JAI-027 tip. That branch must not merge into `develop` before JAI-027 and must not absorb
+JAI-027 G5, JAI-028, or JAI-051 runtime/migration acceptance. The concrete JAI-051 schema, API, and
+retention boundary remain protected by separate `A-004/U3` approval.
 
 ## A-003 — JAI-050 visual-direction selection
 

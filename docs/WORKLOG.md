@@ -243,6 +243,20 @@ auditable implementation baseline must be captured in paired `docs/DESIGN.md` fi
 JAI-050 starts. No JAI-050 branch, dependency installation, backlog reorder, or UI implementation has
 occurred.
 
+#### 2026-09-14 revision: D-038/U1-R approved
+
+The project owner approved React, TypeScript, Vite, pnpm, Tailwind CSS v4, shadcn/ui with Radix,
+`frontend/`, FastAPI same-origin production serving, option 1 “Morning Briefing,” JAI-050 before
+JAI-028, JAI-051 after JAI-028 and before JAI-029, and append-only persisted recommendation feedback
+subject to U3. Because the owner deferred JAI-027 G5, the approval also permits safe repository work
+to continue on an independent stacked `feature/jai-050-production-ui-foundation` branch from the
+current JAI-027 tip. JAI-050 must not merge into `develop` before JAI-027 or absorb JAI-027 G5,
+JAI-028, or JAI-051 runtime/migration acceptance.
+
+U1-R and U2 are now complete, and `A-002`/`A-003` are updated. The planning files formally adopt
+JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029. U3, live external delivery, business migration,
+unattended trials, and release retain their independent approval boundaries.
+
 ### D-039 Central owner-action and approval queue
 
 On 2026-09-10 the project owner asked that all actions requiring personal execution be grouped for
@@ -779,6 +793,13 @@ interrupting safe work.
 - The owner deferred personal setup and requested one consolidated checklist. Added the paired manual-action queue and indexed it from both documentation indexes and configuration guides. PushPlus setup/G5 and UI approval/visual selection remain pending there; no secret, business migration, external request, frontend dependency, or priority change was introduced.
 - A follow-up read-only audit found that the current-status paragraphs in both development plans and both backlogs still described the JAI-025/JAI-026 handoff. Updated only those four status paragraphs to the pushed JAI-026 baseline and the actual JAI-027 G4/deferred-action state. Acceptance boxes, Issue order, dependencies, and priorities remain unchanged behind their existing gates.
 
+### 2026-09-14 — D-038/U1-R planning revision approved
+
+- The project owner explicitly approved the recorded D-038/U1-R revision and selected option 1. Both development plans and both backlogs now formally add JAI-050/JAI-051, adjust JAI-028/JAI-029/JAI-031 dependencies and scope, and record that the stacked branch cannot integrate before JAI-027.
+- This stage changes only planning, the approval queue, and work logs. It has not created the JAI-050 branch, installed frontend dependencies, or modified application code, the database, Docker, scheduler, credentials, provider, or live sources.
+- Next, verify bilingual structure and links and commit the planning revision; then create `feature/jai-050-production-ui-foundation` from that commit, record Issue startup, and capture option 1 in paired DESIGN.md files before any UI implementation.
+- Planning-document checks passed: development-plan, backlog, WORKLOG, and manual-queue heading counts matched at 45/45, 73/73, 82/82, and 8/8; both backlogs exposed the same 51 Issue headings in the same order, 251 Markdown files had no broken relative links, and `git diff --check` passed. The first ad hoc link-check command hit a Python `SyntaxError` from mismatched list-comprehension parentheses; the corrected checker passed and no repository file required repair.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -806,7 +827,7 @@ interrupting safe work.
 ## 5. Next actions
 
 1. Keep `M-001`, `M-002`, and `A-001` deferred in the manual-action queue. Do not apply `0010`, inject credentials, restart the scheduler for JAI-027, or perform the named live snapshot test until the owner completes and approves those items.
-2. Keep `A-002` pending before changing the bilingual development plan/backlog or adding frontend dependencies. `A-003` has selected option 1, “Morning Briefing,” but does not unlock implementation early. If `A-002` is approved, record JAI-050/JAI-051 and the revised JAI-031 scope in those four planning files on the dedicated JAI-050 branch after JAI-027 integration, then capture the selected direction in paired DESIGN.md files.
+2. `A-002/U1-R` and `A-003/U2` are approved and recorded in the bilingual plans. After committing this planning revision, create the independent stacked `feature/jai-050-production-ui-foundation` branch from the current JAI-027 tip, record startup, and commit paired DESIGN.md files before implementing the read-only page. The branch must not merge into `develop` before JAI-027.
 3. Report 2026-09-07 onward only from ledger evidence; do not infer failure or run makeup without date-specific approval. JAI-028 unattended acceptance and JAI-029 release remain separate Issues.
 
 ## 6. Update template

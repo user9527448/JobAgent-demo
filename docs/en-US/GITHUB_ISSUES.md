@@ -360,10 +360,27 @@ This document turns the ten-week plan into executable Issues. These are planning
   - [ ] Temporary failures retry within limits; permanent failures expose a reason.
   - [ ] Tokens never appear in logs or database records.
 
+### JAI-050 Establish the production frontend foundation and read-only Morning Briefing
+
+- **Labels**: `type:feature` `area:ui` `area:api` `priority:P0` `size:L`
+- **Dependencies**: JAI-024, JAI-026, JAI-027
+- **Status**: D-038/U1-R and option 1 were approved on 2026-09-14. An independent stacked `feature/jai-050-production-ui-foundation` branch may start from the current JAI-027 tip, but it must not merge into `develop` before JAI-027.
+- **Goal**: provide a durable production UI foundation before the five unattended trials so the owner can inspect run evidence, read the latest report, and give visual/information-architecture feedback.
+- **Scope**: a pnpm-managed React + TypeScript + Vite application under `frontend/`; Tailwind CSS v4, shadcn/ui with Radix, semantic tokens, production routing/layout, and FastAPI same-origin serving; option 1 “Morning Briefing”; API/database health, scheduler last/next evidence, recent pipeline/stage state, latest report preview, safe delivery status, and only the narrow read APIs required by the page.
+- **Non-goals**: run, makeup, retry, send/resend, source toggles, preference writes, recommendation-feedback writes, authentication, multiple users, JAI-028 acceptance, or the JAI-051 migration.
+- **Test method**: frontend format/lint/type/unit/build checks, FastAPI contract tests, loading/empty/error-state tests, common desktop and narrow-screen browser acceptance, design QA at the selected reference viewport, and the unchanged Python full gate.
+- **Acceptance**:
+  - [ ] Paired `docs/DESIGN.md` files are versioned, indexed, and required context for UI changes.
+  - [ ] The page displays backend evidence only; a missing run is never inferred as success, failure, or misfire.
+  - [ ] Latest report, four/five-stage-compatible run history, and delivery state have loading, empty, error, and narrow-screen states.
+  - [ ] No run, makeup, or send action exists; keyboard navigation, focus, contrast, and semantic structure pass acceptance.
+  - [ ] FastAPI serves the production build from the same origin and registered frontend routes survive refresh.
+  - [ ] Automated checks and design QA against the selected visual baseline pass.
+
 ### JAI-028 Complete end-to-end tests and five unattended trials
 
 - **Labels**: `type:test` `area:infra` `priority:P0` `size:L`
-- **Dependencies**: JAI-026, JAI-027
+- **Dependencies**: JAI-026, JAI-027, JAI-050
 - **Goal**: prove the real scheduled MVP loop is stable.
 - **Scope**: offline E2E, controlled live trials, metrics, issue list.
 - **Acceptance**:
@@ -371,10 +388,26 @@ This document turns the ten-week plan into executable Issues. These are planning
   - [ ] Five consecutive automatic runs succeed without duplicate announcements or notifications.
   - [ ] Record availability, completeness, parsing success, and duration.
 
+### JAI-051 Add preferences, report browsing, and persisted recommendation feedback
+
+- **Labels**: `type:feature` `area:ui` `area:matching` `priority:P1` `size:L`
+- **Dependencies**: JAI-022, JAI-024, JAI-028, JAI-050
+- **Goal**: collect traceable single-user recommendation feedback in the production UI before MVP release while preserving report and score evidence identities.
+- **Scope**: preference editing, historical report browsing, and append-only `useful`, `not_relevant`, and `needs_correction` feedback with an optional bounded note, tied to immutable report-snapshot and position identities; reuse the JAI-050 shell.
+- **Non-goals**: automatic applications, source control, automatic score training, deletion/overwrite of feedback history, collaboration, or a generic CRM.
+- **Approval gate**: only the append-only persistence direction is approved. Any migration or write API still requires `A-004/U3` approval for the exact schema, input bounds, audit fields, and retention rules.
+- **Test method**: database identity/append constraints, API contract and access-boundary tests, accessible form and error/duplicate-submit tests, and the full repository gate.
+- **Acceptance**:
+  - [ ] Preference changes can trigger recomputation with clear saved/failed UI states.
+  - [ ] Immutable reports can be browsed by date with position, score, and source-evidence traceability.
+  - [ ] Each feedback entry uses stable identities, preserves append history, and defines duplicate-submit behavior.
+  - [ ] Note length, allowed values, error redaction, and audit data match U3.
+  - [ ] Feedback is not automatically used for training, external delivery, or mutation of existing scores.
+
 ### JAI-029 Write the operations guide and release v0.1.0-mvp
 
 - **Labels**: `type:docs` `area:infra` `priority:P0` `size:M`
-- **Dependencies**: JAI-028
+- **Dependencies**: JAI-028, JAI-051
 - **Goal**: remain installable, operable, diagnosable, and recoverable one month later.
 - **Scope**: install, config, source addition, reruns, troubleshooting, backup/restore, upgrade/rollback, release checklist.
 - **Acceptance**:
@@ -400,9 +433,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 ### JAI-031 Implement the minimal configuration/status page
 
 - **Labels**: `type:feature` `area:ui` `priority:P1` `size:L`
-- **Dependencies**: JAI-030
+- **Dependencies**: JAI-030, JAI-050, JAI-051
 - **Goal**: perform frequent maintenance in one simple page.
-- **Scope**: source state/toggles, preferences, recent runs, failure details, today's report link.
+- **Scope**: add source state/toggles, run/failure detail, and guarded reruns to the existing production shell, integrating the existing preference, report, and feedback entry points.
 - **Non-goals**: login, multiple users, generic CRUD admin, complex design system.
 - **Acceptance**:
   - [ ] Supported desktop browsers perform all scoped actions.
@@ -635,4 +668,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-021 through JAI-026 have completed and merged into `develop` in order; the current baseline is the JAI-026 non-fast-forward merge `a9e9b643b629e5632015778549917f44bd658586`. JAI-027 has completed approved D-037 G1–G4 implementation, paired documentation, and the no-skip 350-test PostgreSQL gate at 85.37% coverage on its independent feature branch. Business migration, credentials, and one named live snapshot test remain in the manual-action queue behind A-001/G5; do not mark the Issue complete or start JAI-028 early. The D-038 production-page foundation and Tailwind/shadcn direction are recorded, but formal order changes still await A-002/U1-R. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
+JAI-021 through JAI-026 have completed and merged into `develop` in order; the current baseline is the JAI-026 non-fast-forward merge `a9e9b643b629e5632015778549917f44bd658586`. JAI-027 has completed approved D-037 G1–G4 implementation, paired documentation, and the no-skip 350-test PostgreSQL gate at 85.37% coverage on its independent feature branch. Business migration, credentials, and one named live snapshot test remain in the manual-action queue behind A-001/G5; do not mark the Issue complete. D-038/U1-R and option 1 were approved on 2026-09-14: create the independent stacked JAI-050 branch from the current JAI-027 tip and deliver the production read-only “Morning Briefing,” but do not merge JAI-050 into `develop` before JAI-027. The planned sequence is now JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029; JAI-051 migration still requires U3. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
