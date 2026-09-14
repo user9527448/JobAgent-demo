@@ -187,4 +187,3 @@ JAI-051 feedback migration, or JAI-029 release work.
 - [shadcn/ui Vite installation](https://ui.shadcn.com/docs/installation/vite)
 - [Tailwind CSS theme variables](https://tailwindcss.com/docs/theme)
 - [Tailwind CSS responsive design](https://tailwindcss.com/docs/responsive-design)
-

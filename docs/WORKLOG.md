@@ -807,6 +807,7 @@ interrupting safe work.
 - Added paired DESIGN.md files that define information architecture, visual tokens, responsive/accessibility rules, the read-only API list, pre-`0010` delivery-state compatibility, FastAPI same-origin serving, and the design-QA gate. Both indexes and the English/Chinese AGENTS UI-required context are synchronized.
 - No frontend dependency or application code has changed in this stage. Next, verify and commit the design baseline, then audit backend query/static-serving boundaries before implementation.
 - Design-baseline checks passed: DESIGN, AGENTS, index, and WORKLOG heading counts matched at 12/12, 8/8, 5/5, and 83/83; 253 Markdown files had no broken relative links, the reference SHA-256 matched the recorded value, and `git diff --check` passed.
+- The staged pre-commit diff check found one extra EOF blank line in each new DESIGN.md. PowerShell did not stop after the preceding native command returned nonzero and still created commit `86cdf16`. History was not rewritten; the extra lines are removed immediately in a same-scope follow-up commit.
 
 ## 4. Verification and blockers
 
