@@ -12,6 +12,10 @@ Before changing code or project configuration, read:
 2. `docs/GITHUB_ISSUES.md`
 3. `docs/WORKLOG.md`
 
+Before changing frontend code, UI routes, UI-facing API contracts, or visual tokens, also read:
+
+4. `docs/DESIGN.md`
+
 Use the planned Issue order unless the user explicitly changes the priority.
 
 ## Work log

@@ -800,6 +800,14 @@ interrupting safe work.
 - Next, verify bilingual structure and links and commit the planning revision; then create `feature/jai-050-production-ui-foundation` from that commit, record Issue startup, and capture option 1 in paired DESIGN.md files before any UI implementation.
 - Planning-document checks passed: development-plan, backlog, WORKLOG, and manual-queue heading counts matched at 45/45, 73/73, 82/82, and 8/8; both backlogs exposed the same 51 Issue headings in the same order, 251 Markdown files had no broken relative links, and `git diff --check` passed. The first ad hoc link-check command hit a Python `SyntaxError` from mismatched list-comprehension parentheses; the corrected checker passed and no repository file required repair.
 
+### 2026-09-14 — JAI-050 production frontend foundation started
+
+- Created `feature/jai-050-production-ui-foundation` at planning commit `ff423f1ec3b622b6bb934519f57ccf5d08cac885` under the approved stacked strategy. It inherits JAI-027 G1–G4 but must not merge into `develop` before JAI-027.
+- Re-verified the original option 1 reference and added it as a versioned documentation asset. The image is `1484x1060` with SHA-256 `09D55CFD2B5550E6D4D199004F690992DA90703B73AC38828808F94295AF8DE4`. It governs composition and hierarchy only; its generated business data must not enter implementation.
+- Added paired DESIGN.md files that define information architecture, visual tokens, responsive/accessibility rules, the read-only API list, pre-`0010` delivery-state compatibility, FastAPI same-origin serving, and the design-QA gate. Both indexes and the English/Chinese AGENTS UI-required context are synchronized.
+- No frontend dependency or application code has changed in this stage. Next, verify and commit the design baseline, then audit backend query/static-serving boundaries before implementation.
+- Design-baseline checks passed: DESIGN, AGENTS, index, and WORKLOG heading counts matched at 12/12, 8/8, 5/5, and 83/83; 253 Markdown files had no broken relative links, the reference SHA-256 matched the recorded value, and `git diff --check` passed.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -827,7 +835,7 @@ interrupting safe work.
 ## 5. Next actions
 
 1. Keep `M-001`, `M-002`, and `A-001` deferred in the manual-action queue. Do not apply `0010`, inject credentials, restart the scheduler for JAI-027, or perform the named live snapshot test until the owner completes and approves those items.
-2. `A-002/U1-R` and `A-003/U2` are approved and recorded in the bilingual plans. After committing this planning revision, create the independent stacked `feature/jai-050-production-ui-foundation` branch from the current JAI-027 tip, record startup, and commit paired DESIGN.md files before implementing the read-only page. The branch must not merge into `develop` before JAI-027.
+2. JAI-050 has started on its independent stacked branch. First verify and commit the paired DESIGN.md files, reference asset, indexes, and AGENTS baseline; then implement only the JAI-050 aggregate read API, production shell, and Morning Briefing. The branch must not merge into `develop` before JAI-027.
 3. Report 2026-09-07 onward only from ledger evidence; do not infer failure or run makeup without date-specific approval. JAI-028 unattended acceptance and JAI-029 release remain separate Issues.
 
 ## 6. Update template

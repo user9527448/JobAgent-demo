@@ -12,6 +12,10 @@
 2. `docs/GITHUB_ISSUES.md`
 3. `docs/WORKLOG.md`
 
+修改前端代码、UI 路由、面向 UI 的 API 契约或视觉 token 前，还必须阅读：
+
+4. `docs/zh-CN/DESIGN.md`
+
 除非用户明确调整优先级，否则按计划中的 Issue 顺序执行。
 
 ## 工作日志

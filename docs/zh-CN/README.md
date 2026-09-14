@@ -14,6 +14,7 @@
 | 持续开发工作日志 | [中文](WORKLOG.md) | [English](../WORKLOG.md) |
 | 配置、日志与错误约定 | [中文](../CONFIGURATION.md) | [English](../en-US/CONFIGURATION.md) |
 | 项目负责人手动操作与审批队列 | [中文](MANUAL_ACTIONS.md) | [English](../MANUAL_ACTIONS.md) |
+| 产品界面设计系统与证据规则 | [中文](DESIGN.md) | [English](../DESIGN.md) |
 | Source Adapter 与采集编排 | [中文](COLLECTION.md) | [English](../COLLECTION.md) |
 | 数据库模型与迁移 | [中文](DATABASE.md) | [English](../DATABASE.md) |
 | 来源 HTTP 客户端策略 | [中文](HTTP_CLIENT.md) | [English](../HTTP_CLIENT.md) |
