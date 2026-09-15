@@ -823,6 +823,11 @@ interrupting safe work.
 - `docker compose config --quiet` passed, but `docker compose build api` could not obtain the `node:24-alpine` anonymous Docker Hub token over IPv6; no local image is cached and no container was recreated. This is recorded as `M-003`. The automatic scheduler recovery and its 08:00 live-source/write impact are recorded as time-sensitive `A-005`. This JAI-050 work did not manually initiate a migration, makeup, provider request, live-source request, business-database write, push, merge, or JAI-028/JAI-051 implementation, and did not read or write credentials.
 - The first ad hoc final Markdown-link scan accidentally traversed ignored pnpm stores and `node_modules`, so it reported third-party package links outside repository documentation. The corrected project-document scan covered 68 root/`docs` Markdown files with zero missing relative links; bilingual heading counts matched at 45/45, 73/73, 84/84, 10/10, and 5/5, both backlogs exposed the same 57 Issue headings in order, and `git diff --check` passed.
 
+### 2026-09-15 — JAI-050 implementation committed
+
+- Created scoped feature commit `1e66afa` (`feat: add production morning briefing foundation`) with the verified repository-local author `user9527448 <2537759248@qq.com>`. It contains the reviewed application, tests, paired documentation, acceptance-status updates, and the post-08:00 factual ledger record.
+- The branch remains stacked on JAI-027 and has not been pushed or merged. JAI-050 stays incomplete until `M-003` permits container-image build verification; no JAI-028/JAI-051/JAI-029 work starts from this commit.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -851,7 +856,7 @@ interrupting safe work.
 
 1. The owner decides `A-006` before 2026-09-16 08:00: either keep ordinary daily business runs enabled or explicitly approve stopping only the scheduler. The evidenced 2026-09-15 run is not counted as JAI-028 and no makeup is authorized.
 2. Keep `M-001`, `M-002`, and `A-001` deferred. Complete `M-003` later by pre-pulling `node:24-alpine`; then rerun the container build without recreating current services.
-3. Finish JAI-050 documentation/diff review and create a scoped feature commit. The stacked branch must not merge into `develop` before JAI-027; JAI-028, JAI-051, and JAI-029 remain separate.
+3. After `M-003`, rerun the JAI-050 container-image build without recreating services, then update acceptance evidence. The stacked branch must not merge into `develop` before JAI-027; JAI-028, JAI-051, and JAI-029 remain separate.
 
 ## 6. Update template
 
