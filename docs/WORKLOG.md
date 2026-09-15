@@ -828,6 +828,12 @@ interrupting safe work.
 - Created scoped feature commit `1e66afa` (`feat: add production morning briefing foundation`) with the verified repository-local author `user9527448 <2537759248@qq.com>`. It contains the reviewed application, tests, paired documentation, acceptance-status updates, and the post-08:00 factual ledger record.
 - The branch remains stacked on JAI-027 and has not been pushed or merged. JAI-050 stays incomplete until `M-003` permits container-image build verification; no JAI-028/JAI-051/JAI-029 work starts from this commit.
 
+### 2026-09-15 — MVP plan-to-execution reconciliation
+
+- The owner reported that overall progress no longer felt aligned with the original plan. A read-only audit confirmed `develop` still ends at the integrated JAI-026 baseline, JAI-027 is the next incomplete Issue, JAI-050 is its explicitly approved stacked exception, and JAI-028/JAI-051/JAI-029 have not started. The branch graph is linear: JAI-027 tip `ff423f1` is an ancestor of JAI-050 implementation checkpoint `facbdac`, which is 13 commits ahead of `develop`; no history was rewritten. `git ls-remote --heads` returned no JAI-027 or JAI-050 remote ref, confirming both remain local-only.
+- The loss of clarity came from closure gates being distributed across the backlog, manual queue, and WORKLOG rather than from an unrecorded Issue reorder. Added a paired MVP execution control board to both development plans and expanded JAI-027 acceptance to distinguish completed G1–G4 evidence from pending G5. Issue order and scope are unchanged.
+- The enforced critical path is JAI-027 closure → JAI-050 container verification and ordered integration → JAI-028 five unattended trials → JAI-051 feedback → JAI-029 release. No later branch starts while a predecessor remains open, except an owner-approved and documented stacked exception that preserves integration order; JAI-050 remains the only such exception.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -855,8 +861,8 @@ interrupting safe work.
 ## 5. Next actions
 
 1. The owner decides `A-006` before 2026-09-16 08:00: either keep ordinary daily business runs enabled or explicitly approve stopping only the scheduler. The evidenced 2026-09-15 run is not counted as JAI-028 and no makeup is authorized.
-2. Keep `M-001`, `M-002`, and `A-001` deferred. Complete `M-003` later by pre-pulling `node:24-alpine`; then rerun the container build without recreating current services.
-3. After `M-003`, rerun the JAI-050 container-image build without recreating services, then update acceptance evidence. The stacked branch must not merge into `develop` before JAI-027; JAI-028, JAI-051, and JAI-029 remain separate.
+2. Complete `M-003` later by pre-pulling `node:24-alpine`; then rerun the JAI-050 container build without recreating current services and close its remaining technical acceptance item.
+3. Keep `M-001`, `M-002`, and `A-001/G5` deferred until the owner is ready. Only after JAI-027 G5 closes may JAI-027 integrate first; then normally synchronize/reverify JAI-050 and integrate it. Do not start JAI-028, JAI-051, or JAI-029 early.
 
 ## 6. Update template
 

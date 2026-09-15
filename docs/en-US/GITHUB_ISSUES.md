@@ -353,12 +353,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:notification` `priority:P0` `size:M`
 - **Dependencies**: JAI-024
+- **Status**: D-037 G1–G4 implementation, paired documentation, and the 350-test PostgreSQL full gate passed. Business migration `0010`, real credentials, and one named-snapshot live verification still require `M-001`, `M-002`, and `A-001/G5`; the Issue is incomplete, unpushed, and not integrated into `develop`.
 - **Goal**: reliably deliver through one selected channel.
 - **Scope**: PushPlus or WeCom bot, message length, retries, send records, secret configuration.
 - **Acceptance**:
-  - [ ] A successful report/channel pair is not sent again.
-  - [ ] Temporary failures retry within limits; permanent failures expose a reason.
-  - [ ] Tokens never appear in logs or database records.
+  - [x] Offline and PostgreSQL integration tests prove that a successful report/channel pair is not sent again.
+  - [x] Synthetic-provider tests prove that temporary failures retry within limits and permanent failures retain a safe reason.
+  - [x] Configuration, logging, and database tests prove that tokens are neither persisted nor emitted.
+  - [ ] After `A-001/G5` approval, migrate the populated business database to `0010`, send exactly one named report snapshot, and reconcile the provider's final state; do not perform a second live send.
 
 ### JAI-050 Establish the production frontend foundation and read-only Morning Briefing
 
