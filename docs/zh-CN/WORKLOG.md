@@ -784,6 +784,20 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 顺序；U3、真实外�
 - 设计基线检查通过：DESIGN、AGENTS、索引和 WORKLOG 标题数分别为 12/12、8/8、5/5、83/83；253 份 Markdown 无失效相对链接，参考图 SHA-256 与登记值一致，`git diff --check` 通过。
 - 设计基线提交前的暂存差异检查发现两份新 DESIGN.md 各多一个 EOF 空行；PowerShell 未因前一条原生命令非零而停止，仍创建提交 `86cdf16`。未改写提交历史；立即删除多余空行并以同范围后续提交修正。
 
+### 2026-09-15 — JAI-050 实现与设计验收完成
+
+- 实现有界只读 `GET /dashboard/briefing` 契约和 SQLAlchemy 聚合，覆盖固定 scheduler 作业、最多七条近期流水线及其最新阶段尝试、包含最多 20 条有序条目的最新不可变日报、明确的缺失台账日期和投递能力/状态。服务先检查 `to_regclass` 再查询 JAI-027 表，使已有数据的 `0009` 数据库显示 `unavailable_schema` 而不是伪造失败；数据库错误只返回固定脱敏 503 详情。
+- 新增生产 `frontend/` 基底：React 19、严格 TypeScript 5.9、Vite、pnpm lockfile、Tailwind CSS v4 语义 token、仓库自有 shadcn/ui 风格 Radix 组件和 Lucide 图标。“今日简报”实现方案 1 的层级、已载入/加载中/空数据/错误状态、安全 `http`/`https` 来源链接、禁用的未来导航、响应式证据布局和键盘可操作移动 sheet；不含写操作或内嵌业务固定样本。
+- 新增 FastAPI 同源 `/app/` 托管与客户端路由回退、可配置 `JOBAGENT_FRONTEND_DIST_PATH`，以及把锁定前端复制进 Python 镜像的 Docker 多阶段构建。新增成对前端/配置文档、设计验收证据和两份索引入口；没有引入 Sites 部署或独立前端运行时。
+- npm registry 元数据/tarball 间歇性缓慢或重置，但已批准依赖最终从公共 registry 完成安装。`typescript@7` 起初超出已装 `typescript-eslint` 的 peer 范围，随后改为兼容的 `5.9.3`。一次架构设置调整后的 pnpm 缓存重建失去进度；只删除了被忽略的 `frontend/node_modules` 并按 lockfile 重建，没有删除仓库或业务数据。
+- 初次前端检查发现 Vite/Vitest 配置类型不匹配、ESLint typed rule 作用域错误、无效 `Intl.DateTimeFormat` 参数组合，以及 Vitest 错误收集 Node worker 测试。均按根因修正，没有禁用产品检查。新增空状态测试首次断言了页面没有使用的草案文案，改为核对实际无障碍证据文本后通过。最终前端门禁通过 peer check、Prettier、ESLint、严格 typecheck、3 项 Vitest、生产构建和 4 项 worker/package 测试；生产包为 301.53 kB JavaScript（gzip 94.58 kB）与 27.20 kB CSS（gzip 5.74 kB）。
+- 浏览器验收仅使用只读合成服务。`1484x1060` 参考对比后移除无依据眉题、压缩日报身份并恢复摘要密度；当前无 P0～P2 问题。`1440`、`1024`、`720` 和 `390` CSS 像素视图均无横向溢出，控制台干净，`Tab`/`Enter`/`Escape` 可操作移动 sheet，同源持久日报链接成功打开；`design-qa.md` 已记录 `final result: passed`。
+- 负责人启动 Docker Desktop 后，只读核验发现 Docker 29.6.2、一个健康 `db`、一个健康 `api` 和一个自动恢复的 scheduler。业务库仍为 `0009_pipeline_scheduling`，一个固定作业下次计划为 `Asia/Shanghai` 2026-09-15 08:00；台账只有 2026-09-06 的一条成功运行和四个成功阶段，业务计数仍为 8/26/35/6/6/2。2026-09-07、09-08 没有运行行，也没有投递表；不推断两日结果。
+- 2026-09-15 08:00 时刻在负责人登记 `A-005` 决定前已经经过。时刻后的只读审计发现新增一条 2026-09-15 计划运行：`Asia/Shanghai` 08:00:00 至 08:00:49 成功，collection、extraction、matching、report 均在第 1 次尝试成功；固定作业下一时刻为 2026-09-16 08:00，业务计数为 13/43/52/11/15/3。这里只登记实际证据，不倒推批准，也不计入 JAI-028；新增 `A-006` 要求在下一时刻前明确 scheduler 状态。
+- JAI-050 PostgreSQL 集成测试在 `jobagent_test` 通过。随后完整门禁通过：Ruff format 检查 265 个文件、Ruff lint、Mypy 检查 176 个源文件、357 项测试全部通过且无跳过，覆盖率 85.65%。首次完整门禁因新测试 import 顺序及两个合成中文标题违反仓库 lint 规则而停止；修正后才执行权威重跑。测试库最终回到 0 张 public 表，业务 `0009` 的一条运行/四个阶段/一个作业保持不变。
+- `docker compose config --quiet` 通过，但 `docker compose build api` 通过 IPv6 获取 `node:24-alpine` 的 Docker Hub 匿名 token 时失败；本地没有缓存镜像，也没有重建任何容器。该项登记为 `M-003`。自动恢复 scheduler 及其 08:00 线上来源/写入影响登记为限时 `A-005`。本次 JAI-050 工作没有人工发起迁移、补跑、provider 请求、线上来源请求、业务库写入、推送、合并或 JAI-028/JAI-051 实现，也未读写凭据。
+- 首次临时 Markdown 链接终检误扫了被忽略的 pnpm store 与 `node_modules`，因此报告的是仓库文档范围外的第三方包链接。修正后的项目文档检查覆盖根目录及 `docs` 的 68 份 Markdown，失效相对链接为 0；双语标题数分别为 45/45、73/73、84/84、10/10、5/5，两份 Backlog 的 57 个 Issue 标题顺序一致，`git diff --check` 通过。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -810,9 +824,9 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 顺序；U3、真实外�
 
 ## 5. 下一步
 
-1. 在手动操作队列中保持 `M-001`、`M-002` 与 `A-001` 延期；负责人完成并批准前，不应用 `0010`、不注入凭据、不为 JAI-027 重启 scheduler，也不执行指定快照的真实测试。
-2. JAI-050 已在独立堆叠分支启动。先验证并提交成对 DESIGN.md、参考资产、索引和 AGENTS 基线；随后只按 JAI-050 实现聚合只读 API、正式前端壳和“晨间简报”，该分支不得先于 JAI-027 合入 `develop`。
-3. 2026-09-07 之后只按台账证据报告；未经日期级批准不得推断失败或补跑。JAI-028 无人值守验收与 JAI-029 发布仍保持独立。
+1. 负责人在 2026-09-16 08:00 前决定 `A-006`：继续启用普通每日业务运行，或明确批准只停止 scheduler。已有证据的 2026-09-15 运行不计入 JAI-028，且未授权补跑。
+2. 保持 `M-001`、`M-002` 和 `A-001` 延期；稍后通过预拉取 `node:24-alpine` 完成 `M-003`，再重跑容器构建且不重建当前服务。
+3. 完成 JAI-050 文档/差异复核并创建范围内 feature 提交。该堆叠分支不得先于 JAI-027 合入 `develop`；JAI-028、JAI-051 和 JAI-029 保持独立。
 
 ## 6. 更新模板
 

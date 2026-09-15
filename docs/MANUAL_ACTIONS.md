@@ -16,9 +16,45 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-002` | Approved: 2026-09-14 | Approve D-038/U1-R, stacked-branch order, and append-only persisted-feedback direction | Bilingual plan update and independent JAI-050 design/implementation |
 | `A-003` | Completed: option 1 | Selected the “Morning Briefing” direction from three U2 options | Visual baseline for JAI-050 after A-002/U1-R |
 | `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
+| `M-003` | Pending | Restore Docker Hub access or pre-pull `node:24-alpine` | JAI-050 container-build verification |
+| `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
+| `A-006` | Pending before 2026-09-16 08:00 | Decide whether daily scheduled business runs should remain enabled; otherwise approve stopping only the scheduler | Explicit operating state before the next live-source slot |
 
 No current queue item authorizes a makeup run, a live recruitment-source request, a second live
 notification, JAI-028's five unattended runs, or JAI-029 release work.
+
+## M-003 — Restore the Docker build prerequisite
+
+The JAI-050 Dockerfile now builds the locked frontend in a `node:24-alpine` stage. The first
+`docker compose build api` reached Docker Hub but timed out while obtaining its anonymous token over
+IPv6; Compose syntax is valid and no local copy of that image exists. Do not change repository
+remotes, Git proxy settings, or committed Docker configuration to work around this.
+
+When Docker Hub access is available, run this from any directory:
+
+```powershell
+docker pull node:24-alpine
+```
+
+Report only `M-003 complete`. The agent will rerun `docker compose build api`; do not recreate or
+restart the current Compose services as part of this item.
+
+## A-005/A-006 — Decide the restored scheduler state
+
+Starting Docker Desktop on 2026-09-15 caused Compose's existing `restart: unless-stopped` policy to
+restore the sole scheduler automatically. Read-only evidence shows its next slot is
+2026-09-15 08:00 `Asia/Shanghai`. Leaving it running permits the existing four-stage production
+pipeline to contact approved live sources and write business data at that time. It is not a JAI-028
+trial and does not apply migration `0010`.
+
+The 2026-09-15 slot elapsed before a decision was recorded. Read-only evidence now shows one
+scheduled run for that date, succeeded once across the existing four stages, and the fixed job next
+points to 2026-09-16 08:00. This fact does not retroactively approve the run and is not a JAI-028
+trial.
+
+Before the next slot, decide whether ordinary daily business runs should stay enabled. If not,
+explicitly approve stopping only the scheduler. Do not run a makeup, migration, delivery, or source
+command manually.
 
 ## M-001 — Prepare PushPlus
 

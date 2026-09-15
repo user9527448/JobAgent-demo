@@ -4,6 +4,7 @@ from typing import cast
 
 from fastapi import HTTPException, Request, status
 
+from jobagent.dashboard import DashboardOperations
 from jobagent.db import DatabaseHealth
 from jobagent.extraction.reparse import ReparseOperations
 from jobagent.preferences import PreferenceOperations
@@ -13,6 +14,20 @@ from jobagent.reports import DailyReportOperations
 def get_database(request: Request) -> DatabaseHealth:
     """Return the application-scoped database service."""
     return cast(DatabaseHealth, request.app.state.database)
+
+
+def get_dashboard_service(request: Request) -> DashboardOperations:
+    """Return read-only dashboard operations or an explicit unavailable response."""
+    service = cast(DashboardOperations | None, request.app.state.dashboard_service)
+    if service is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "dashboard.service_unavailable",
+                "message": "Dashboard service is unavailable for this application instance.",
+            },
+        )
+    return service
 
 
 def get_reparse_service(request: Request) -> ReparseOperations:

@@ -17,6 +17,7 @@ Copy-Item .env.example .env
 | `JOBAGENT_TIMEZONE` | 否 | `Asia/Shanghai` | 有效 IANA 时区；用于日报和调度边界 |
 | `JOBAGENT_APP_NAME` | 否 | `jobagent` | 日志和服务标识 |
 | `JOBAGENT_DATABASE_URL` | 是 | 无 | SQLAlchemy PostgreSQL URL |
+| `JOBAGENT_FRONTEND_DIST_PATH` | 否 | `frontend/dist/client` | FastAPI 同源托管的前端构建目录；镜像内为 `/app/frontend-dist` |
 | `JOBAGENT_ATTACHMENT_STORAGE_PATH` | 否 | `data/attachments` | 附件根目录 |
 | `JOBAGENT_ATTACHMENT_MAX_BYTES` | 否 | `26214400` | 单个附件最大字节数 |
 | `JOBAGENT_ATTACHMENT_CHUNK_BYTES` | 否 | `65536` | 附件流式写入块大小 |

@@ -8,6 +8,9 @@
 .coverage
 __pycache__
 *.pyc
+frontend/node_modules
+frontend/dist
+.pnpm-store
 data
 docs
 tests

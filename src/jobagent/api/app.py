@@ -6,11 +6,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from jobagent import __version__
+from jobagent.api.frontend import install_frontend
+from jobagent.api.routes.dashboard import router as dashboard_router
 from jobagent.api.routes.extraction import router as extraction_router
 from jobagent.api.routes.health import router as health_router
 from jobagent.api.routes.preferences import router as preferences_router
 from jobagent.api.routes.reports import router as reports_router
 from jobagent.core import Settings, configure_logging, get_logger, get_settings
+from jobagent.dashboard import DashboardOperations, SqlAlchemyDashboardService
 from jobagent.db import Database, DatabaseHealth, create_database
 from jobagent.extraction import (
     DeterministicFieldExtractor,
@@ -32,6 +35,7 @@ def create_app(
     reparse_service: ReparseOperations | None = None,
     preference_service: PreferenceOperations | None = None,
     report_service: DailyReportOperations | None = None,
+    dashboard_service: DashboardOperations | None = None,
 ) -> FastAPI:
     """Create an application with explicitly injectable infrastructure."""
     resolved_settings = settings or get_settings()
@@ -47,6 +51,10 @@ def create_app(
     resolved_report_service = report_service or _default_report_service(
         resolved_database,
         resolved_settings.timezone,
+    )
+    resolved_dashboard_service = dashboard_service or _default_dashboard_service(
+        resolved_database,
+        resolved_settings,
     )
     logger = get_logger(__name__)
 
@@ -72,10 +80,13 @@ def create_app(
     app.state.reparse_service = resolved_reparse_service
     app.state.preference_service = resolved_preference_service
     app.state.report_service = resolved_report_service
+    app.state.dashboard_service = resolved_dashboard_service
     app.include_router(health_router, prefix="/health", tags=["health"])
     app.include_router(extraction_router, prefix="/extraction", tags=["extraction"])
     app.include_router(preferences_router, prefix="/preferences", tags=["preferences"])
     app.include_router(reports_router, prefix="/reports", tags=["reports"])
+    app.include_router(dashboard_router, prefix="/dashboard", tags=["dashboard"])
+    install_frontend(app, resolved_settings.frontend_dist_path)
     return app
 
 
@@ -113,3 +124,17 @@ def _default_report_service(
     if not isinstance(database, Database):
         return None
     return SqlAlchemyDailyReportService(database.session_factory, timezone)
+
+
+def _default_dashboard_service(
+    database: DatabaseHealth,
+    settings: Settings,
+) -> DashboardOperations | None:
+    if not isinstance(database, Database):
+        return None
+    return SqlAlchemyDashboardService(
+        database.session_factory,
+        settings.timezone,
+        settings.scheduler_hour,
+        settings.scheduler_minute,
+    )

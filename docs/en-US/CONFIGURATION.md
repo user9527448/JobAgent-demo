@@ -18,6 +18,7 @@ Copy-Item .env.example .env
 | `JOBAGENT_TIMEZONE` | No | `Asia/Shanghai` | Valid IANA zone used at report and schedule boundaries |
 | `JOBAGENT_APP_NAME` | No | `jobagent` | Log and service identity |
 | `JOBAGENT_DATABASE_URL` | Yes | None | SQLAlchemy PostgreSQL URL |
+| `JOBAGENT_FRONTEND_DIST_PATH` | No | `frontend/dist/client` | Frontend build served by FastAPI on the same origin; `/app/frontend-dist` in the image |
 | `JOBAGENT_ATTACHMENT_STORAGE_PATH` | No | `data/attachments` | Attachment storage root |
 | `JOBAGENT_ATTACHMENT_MAX_BYTES` | No | `26214400` | Maximum bytes per attachment |
 | `JOBAGENT_ATTACHMENT_CHUNK_BYTES` | No | `65536` | Streaming attachment write size |
