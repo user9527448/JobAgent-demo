@@ -18,7 +18,9 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
 | `M-003` | Pending | Restore Docker Hub access or pre-pull `node:24-alpine` | JAI-050 container-build verification |
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
-| `A-006` | Pending before 2026-09-16 08:00 | Decide whether daily scheduled business runs should remain enabled; otherwise approve stopping only the scheduler | Explicit operating state before the next live-source slot |
+| `A-006` | Expired unresolved; runtime unavailable 2026-09-23 | After Docker returns, review the read-only ledger audit before deciding whether the scheduler remains enabled | Current operating state; no retrospective inference or makeup |
+| `M-004` | Pending | Supply the daily-updated Excel workbook link and authorize read-only G1 inspection; do not send credentials | JAI-052 G1 structural/source audit |
+| `A-007` | Pending after `M-004/G1` | Approve JAI-052 G2 field mapping, identity, disappearance, refresh, and access rules | Importer implementation against synthetic fixtures |
 
 No current queue item authorizes a makeup run, a live recruitment-source request, a second live
 notification, JAI-028's five unattended runs, or JAI-029 release work.
@@ -52,9 +54,27 @@ scheduled run for that date, succeeded once across the existing four stages, and
 points to 2026-09-16 08:00. This fact does not retroactively approve the run and is not a JAI-028
 trial.
 
-Before the next slot, decide whether ordinary daily business runs should stay enabled. If not,
-explicitly approve stopping only the scheduler. Do not run a makeup, migration, delivery, or source
-command manually.
+The 2026-09-16 decision deadline elapsed without a recorded decision. On 2026-09-23 the Docker
+Desktop Linux engine was unavailable, so no read-only evidence exists here for scheduled records
+from 2026-09-16 through 2026-09-23. The earlier running/next-slot statement is stale and must not be
+used to infer success, failure, misfire, or current scheduler state. After Docker returns, the agent
+must first read Compose, Alembic, APScheduler, `pipeline_runs`, and `pipeline_stage_runs` evidence.
+The owner then decides the scheduler state; no makeup, migration, delivery, or source command is
+authorized by A-006.
+
+## M-004/A-007 — Supply and approve the spreadsheet source
+
+For `M-004`, send only the workbook link and state that read-only G1 inspection is authorized. If
+the link requires a login, token, cookie, password, or private sharing grant, do not paste it into
+chat or commit it. State only that authentication is required; G1 will record the provider boundary
+and propose an environment-variable or approved connector approach for separate approval.
+
+G1 may inspect workbook structure and update semantics only. It does not authorize a database
+migration, production import, recurring fetch, workbook write, Agent implementation, crawler
+change, or access-control bypass. After G1, the agent will present an evidence-based mapping for
+`A-007/G2`, including row identity, missing-row semantics, refresh frequency, and credential
+boundary. Approving G2 permits implementation with synthetic fixtures only; production activation
+remains behind later JAI-052 gates.
 
 ## M-001 — Prepare PushPlus
 

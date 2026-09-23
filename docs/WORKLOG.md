@@ -834,6 +834,16 @@ interrupting safe work.
 - The loss of clarity came from closure gates being distributed across the backlog, manual queue, and WORKLOG rather than from an unrecorded Issue reorder. Added a paired MVP execution control board to both development plans and expanded JAI-027 acceptance to distinguish completed G1–G4 evidence from pending G5. Issue order and scope are unchanged.
 - The enforced critical path is JAI-027 closure → JAI-050 container verification and ordered integration → JAI-028 five unattended trials → JAI-051 feedback → JAI-029 release. No later branch starts while a predecessor remains open, except an owner-approved and documented stacked exception that preserves integration order; JAI-050 remains the only such exception.
 
+### 2026-09-23 — Pre-pivot checkpoint and JAI-052 spreadsheet-Agent route started
+
+- The owner explicitly requested an incremental route change: preserve all completed crawler-backed progress, use a later-supplied daily updated Excel workbook as the first Agent information source, deliver a usable read-only Agent and production conversation/filter page, then resume the crawler-driven line. This is recorded as a bounded acceleration track rather than a replacement architecture.
+- Before changing the plan, verified current branch `feature/jai-050-production-ui-foundation` at `96fe7984d0a46e5f2c94b2bddebee35adcdf1377`, clean worktree, repository-local author `user9527448 <2537759248@qq.com>`, unchanged HTTPS origin, and no persistent HTTP/HTTPS Git proxy. `develop`/`origin/develop` remain `a9e9b643...`; no merge or history rewrite occurred.
+- Normally pushed the archived JAI-050 branch at `96fe798...` and annotated tag `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23`; remote peel verification points exactly to `96fe798...`. Normally pushed the archived JAI-027 branch at `ff423f1...`; its first attempt hit GitHub port 443 timeout and only the retry used command-scoped proxy `http://127.0.0.1:7892`. No proxy setting or remote URL was persisted. The checkpoint is not a release tag and neither Issue is declared complete.
+- Docker Desktop's Linux engine was unavailable during the 2026-09-23 read-only check. Therefore Alembic, APScheduler, `pipeline_runs`, `pipeline_stage_runs`, and 2026-09-16 through 2026-09-23 scheduled evidence could not be read. `A-006` is now expired/unresolved; the old running/next-slot claim is stale, and no success, failure, misfire, or makeup is inferred.
+- Created independent branch `feature/jai-052-spreadsheet-source-contract` from the verified checkpoint. Added paired `SPREADSHEET_SOURCE.md`, development-plan/backlog/manual-queue updates, and index entries. The approved path is JAI-052 → JAI-032 read-only services → JAI-033 read-only tools → JAI-034 single Agent/evaluations → JAI-053 conversation/filter UI; the preserved line JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 resumes only after spreadsheet-Agent acceptance and owner confirmation.
+- Documentation verification passed: paired plan, backlog, WORKLOG, manual queue, and spreadsheet-contract heading counts match at 47/47, 76/76, 87/87, 11/11, and 9/9; both backlogs contain the same 59 Issue headings in the same order; all relative links in changed Markdown resolve; `git diff --check` passes.
+- No workbook link has been supplied. No workbook access, field guess, credential handling, database migration/write, Docker start, scheduler change, live-source/provider request, dependency installation, or product-code implementation occurred. `M-004/G1` asks only for the link and read-only authorization; exact mapping and identity still require `A-007/G2` before implementation.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -860,9 +870,9 @@ interrupting safe work.
 
 ## 5. Next actions
 
-1. The owner decides `A-006` before 2026-09-16 08:00: either keep ordinary daily business runs enabled or explicitly approve stopping only the scheduler. The evidenced 2026-09-15 run is not counted as JAI-028 and no makeup is authorized.
-2. Complete `M-003` later by pre-pulling `node:24-alpine`; then rerun the JAI-050 container build without recreating current services and close its remaining technical acceptance item.
-3. Keep `M-001`, `M-002`, and `A-001/G5` deferred until the owner is ready. Only after JAI-027 G5 closes may JAI-027 integrate first; then normally synchronize/reverify JAI-050 and integrate it. Do not start JAI-028, JAI-051, or JAI-029 early.
+1. Complete `M-004`: the owner supplies only the daily-updated workbook link and authorizes JAI-052 G1 read-only inspection; credentials must not be sent. Record observed structure/update facts without importing or writing data.
+2. Present the evidence-based field/identity/refresh/access proposal for `A-007/G2`. Do not implement an importer, migration, recurring fetch, Agent, or UI before that approval.
+3. When Docker is manually available again, perform the expired `A-006` read-only Compose/database audit before any scheduler decision. No makeup is authorized. Keep `M-001`, `M-002`, `A-001/G5`, and `M-003` deferred and leave archived JAI-027/JAI-050 branches unchanged.
 
 ## 6. Update template
 

@@ -28,6 +28,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 | M4 Intelligence | W7 | JAI-022–JAI-025 |
 | M5 MVP Release | W8 | JAI-026–JAI-029 |
 | M6 Agent | W9–W10 | JAI-030–JAI-035 |
+| M5A Spreadsheet-Agent acceleration | Evidence-gated from 2026-09-23 | JAI-052, JAI-032–JAI-034, JAI-053 |
 | Cross-cutting documentation | Ongoing | JAI-036, JAI-046–JAI-048 |
 
 ---
@@ -353,7 +354,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:notification` `priority:P0` `size:M`
 - **Dependencies**: JAI-024
-- **Status**: D-037 G1–G4 implementation, paired documentation, and the 350-test PostgreSQL full gate passed. Business migration `0010`, real credentials, and one named-snapshot live verification still require `M-001`, `M-002`, and `A-001/G5`; the Issue is incomplete, unpushed, and not integrated into `develop`.
+- **Status**: D-037 G1–G4 implementation, paired documentation, and the 350-test PostgreSQL full gate passed. Business migration `0010`, real credentials, and one named-snapshot live verification still require `M-001`, `M-002`, and `A-001/G5`; the Issue is incomplete and not integrated into `develop`. Its archived branch was normally pushed on 2026-09-23 at remote tip `ff423f1...`.
 - **Goal**: reliably deliver through one selected channel.
 - **Scope**: PushPlus or WeCom bot, message length, retries, send records, secret configuration.
 - **Acceptance**:
@@ -419,6 +420,26 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ---
 
+## M5A Spreadsheet-Agent acceleration track (approved 2026-09-23)
+
+### JAI-052 Integrate the daily-updated spreadsheet and define the canonical source contract
+
+- **Labels**: `type:feature` `area:collection` `area:data` `priority:P0` `size:L`
+- **Dependencies**: JAI-023; pre-pivot remote checkpoint `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23`
+- **Status**: design and planning started on independent branch `feature/jai-052-spreadsheet-source-contract`; no workbook link has been supplied, so G1 is closed.
+- **Goal**: use the owner's daily updated Excel workbook as a traceable, idempotent, read-only source mapped into the crawler-compatible canonical job boundary.
+- **Scope**: workbook/sheet audit, raw-snapshot metadata, deterministic cleaning/classification, stable identity/content hashes, rejected-row records, refresh-run ledger, canonical mapping, and read-only operational evidence. Exact rules require `SPREADSHEET_SOURCE.md` and G2 approval.
+- **Non-goals**: guessed columns, real workbook writes, unapproved authentication, access-control bypass, Agent orchestration, UI, crawler deletion, JAI-028 trials, or JAI-029 release.
+- **Test method**: synthetic workbook fixtures, deterministic/idempotency/change-detection and redaction tests, plus PostgreSQL integration tests against databases whose names end in `_test` only.
+- **Acceptance**:
+  - [ ] `M-004/G1` completes a read-only structural audit that separates observed facts, unresolved questions, and proposed mappings.
+  - [ ] `A-007/G2` explicitly approves field mapping, row identity, disappearance semantics, refresh frequency, and access boundary.
+  - [ ] Re-importing one version creates no duplicates; new, changed, unchanged, rejected, and missing observations are auditable.
+  - [ ] Original values/source coordinates remain traceable, missing values are not invented, and real business rows/credentials never enter Git or fixtures.
+  - [ ] Spreadsheet and crawler sources produce one canonical query boundary without deleting or rewriting crawler/scheduler/delivery history.
+
+---
+
 ## M6 Agent (weeks 9–10)
 
 ### JAI-030 Implement source, preference, run-history, and failure APIs
@@ -447,9 +468,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 ### JAI-032 Implement stable job-query and explanation services
 
 - **Labels**: `type:feature` `area:api` `area:matching` `priority:P0` `size:L`
-- **Dependencies**: JAI-023, JAI-030
+- **Dependencies**: read-only first slice depends on JAI-023 and JAI-052; write/run expansion still depends on JAI-030
 - **Goal**: let Agent and UI share business services instead of direct database access.
-- **Scope**: search, detail, score explanation, generate/read report, controlled source collection.
+- **Scope**: the first slice includes canonical-job search, detail, filters, source evidence, and score explanation only. Report generation/reading and controlled collection remain in the resumed original-plan expansion.
 - **Acceptance**:
   - [ ] Inputs/outputs use explicit Schemas.
   - [ ] Search supports region, organization type, keywords, deadline state, and minimum score.
@@ -460,7 +481,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Labels**: `type:feature` `area:agent` `priority:P0` `size:L`
 - **Dependencies**: JAI-032
 - **Goal**: expose a minimal, controlled, auditable tool set.
-- **Scope**: `search_jobs`, `get_job_detail`, `explain_match`, `generate_report`, `run_crawl`; parameter Schemas, timeouts, result limits, audit.
+- **Scope**: first expose only `search_jobs`, `get_job_detail`, and `explain_match`, with parameter Schemas, timeouts, result limits, and audit. Defer `generate_report`, `run_crawl`, and other write/run tools until original dependencies resume.
 - **Acceptance**:
   - [ ] The Agent cannot run arbitrary SQL/code or unregistered tools.
   - [ ] Write/run tools have confirmation and idempotency keys.
@@ -470,17 +491,30 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `type:test` `area:agent` `priority:P1` `size:L`
 - **Dependencies**: JAI-033
-- **Goal**: reliably query, explain, and perform controlled operations from natural language.
-- **Scope**: system instructions, tool selection, step limits, failure fallback, at least 30 evaluation tasks.
+- **Goal**: reliably query, filter, and explain from natural language; controlled operations wait for the original plan to resume.
+- **Scope**: system instructions, read-only tool selection, step limits, failure fallback, source-evidence citations, and at least 30 evaluation tasks.
 - **Acceptance**:
   - [ ] Query/explanation tasks never trigger writes.
   - [ ] Ambiguous run requests require confirmation.
   - [ ] Evaluation succeeds at least 90% with classified failures.
 
+### JAI-053 Add Agent conversation and filtering to the production UI foundation
+
+- **Labels**: `type:feature` `area:ui` `area:agent` `priority:P0` `size:L`
+- **Dependencies**: JAI-034, JAI-050
+- **Goal**: let users query, combine filters, inspect details, and review explanations in the production UI foundation so functional testing and feedback can start early.
+- **Scope**: reuse JAI-050 React, Tailwind CSS v4, and shadcn/ui shell; conversation flow, structured filters, result cards, source evidence, loading/empty/error states, and narrow-screen behavior; call approved read-only Agent/APIs only.
+- **Non-goals**: crawler runs, makeup, delivery, source toggles, workbook writes, preference/feedback persistence, login, or multiple users.
+- **Acceptance**:
+  - [ ] Natural-language and structured-filter forms of one query produce understandable, consistent results.
+  - [ ] Results expose source, observation time, and necessary explanations without inventing unsupported content.
+  - [ ] Loading, empty, partial-data, error, narrow-screen, and keyboard states are covered.
+  - [ ] Browser design QA, frontend gates, API contract tests, and at least 30 Agent evaluations pass.
+
 ### JAI-035 Stabilize and release v0.2.0-agent
 
 - **Labels**: `type:chore` `area:agent` `priority:P1` `size:M`
-- **Dependencies**: JAI-031, JAI-034
+- **Dependencies**: JAI-031, JAI-034, JAI-053; the resumed MVP line must also be complete
 - **Goal**: finish and document the Agent release.
 - **Scope**: regression, performance/cost review, limitations, upgrade guidance, demo script.
 - **Acceptance**:
@@ -670,4 +704,6 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-021 through JAI-026 have completed and merged into `develop` in order; the current baseline is the JAI-026 non-fast-forward merge `a9e9b643b629e5632015778549917f44bd658586`. JAI-027 has completed approved D-037 G1–G4 implementation, paired documentation, and the no-skip 350-test PostgreSQL gate at 85.37% coverage on its independent feature branch. Business migration, credentials, and one named live snapshot test remain in the manual-action queue behind A-001/G5; do not mark the Issue complete. JAI-050 option 1 implementation, browser design QA, and the 357-test full gate passed; container-image build verification is pending as `M-003` because Docker Hub could not provide `node:24-alpine`, so the Issue remains incomplete and must not merge into `develop` before JAI-027. The planned sequence remains JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029; JAI-051 migration still requires U3. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
+JAI-001 through JAI-026 are integrated at `develop=a9e9b643...`. JAI-027 and JAI-050 remain incomplete and unmerged, but their actual progress is normally pushed at `ff423f1...` and `96fe798...`, with `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23` preserving the pre-pivot tip. The approved critical path is now JAI-052 → JAI-032 read-only slice → JAI-033 read-only tools → JAI-034 single Agent/evaluation → JAI-053 conversation/filter UI. Before the workbook link arrives, advance JAI-052 design only; after G1 read-only audit, A-007/G2 must still approve exact mappings before implementation.
+
+After the spreadsheet-Agent slice is accepted, the owner confirms resumption of JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029. All existing G5, M-003, U3, five-unattended-run, and release gates remain. JAI-030/JAI-031 write-capable operations and the JAI-035 formal Agent release remain after the resumed line; the read-only acceleration track does not pull them forward. Never rebase, force push, rewrite history, or delete crawler work. Source expansion and JAI-048 remain independent, and restricted portals still must not be forced through login, CAPTCHA, Playwright, or evasion.

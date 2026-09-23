@@ -62,14 +62,21 @@ The primary asset is stable, traceable recruitment data rather than a chat inter
 - JAI-048 inventories and migrates remaining legacy single-language documents. If a feature Issue substantively changes one first, it must add the missing counterpart in the same commit.
 - Historical archives are not translated, deleted, or rewritten. Code identifiers, environment variables, error codes, URLs, and commands remain unchanged.
 
-### 2.5 Out of scope for V1
+### 2.5 Spreadsheet-backed Agent acceleration track (approved 2026-09-23)
+
+- First connect the owner's daily updated Excel workbook as a read-only source and map deterministic, traceable, idempotent cleaning/classification into the canonical job model.
+- The first slice covers search, filters, detail, explanation, single-Agent orchestration, and a production conversation page only. It excludes crawler runs, delivery, reruns, source control, and workbook writes.
+- Preserve existing crawler, scheduler, delivery, and Morning Briefing work in remote branches and a checkpoint tag. Do not delete or rewrite it, and do not mark the original Issues complete.
+- Resume the original MVP critical path after the spreadsheet-Agent slice is accepted. Long term, spreadsheet and crawler sources produce one canonical job model rather than separate Agents.
+
+### 2.6 Out of scope for V1
 
 - Multiple users, login, permissions, subscriptions, or commercialization.
 - Recruitment-platform account login, CAPTCHA bypass, or automatic applications.
 - Elasticsearch, a standalone vector database, Kubernetes, or microservices.
 - Arbitrary-site discovery or a universal crawler.
 - Multi-Agent collaboration or complex long-term memory.
-- A full recruitment-site frontend; only necessary configuration and runtime-status views are planned.
+- A full recruitment-site frontend; only the planned Morning Briefing, Agent conversation/filter experience, and necessary configuration/runtime-status views are included.
 
 ## 3. Success metrics and acceptance definitions
 
@@ -439,24 +446,27 @@ Before starting, an Issue must define goal, scope, acceptance criteria, dependen
 - **W6 gate**: if five sources are too expensive to maintain, ship MVP with three stable sources; stability outranks count.
 - **Source-expansion gate**: 11 official candidates and the foreign-enterprise section do not block MVP. Keep any source disabled when it requires login, CAPTCHA, anti-bot evasion, or terms violations, and record the reason in the catalog and WORKLOG.
 - **W8 gate**: do not mark MVP complete until five unattended runs succeed.
-- **Agent gate**: if the MVP data loop is unstable, use weeks 9–10 to fix it instead of adding the Agent early.
+- **Agent gate**: the original plan still requires a stable MVP loop before write/run Agent capabilities. On 2026-09-23 the owner explicitly approved a read-only spreadsheet-backed acceleration track; it may read canonical jobs only and must not expose crawler, delivery, rerun, or other write operations early.
 
 ## 13. Current next step
 
-JAI-011, JAI-037, JAI-046, JAI-047, and JAI-012 through JAI-026 have been merged and normally pushed to `develop` in order. The current `develop` baseline is the JAI-026 non-fast-forward merge `a9e9b643b629e5632015778549917f44bd658586`. JAI-021's actual 4/5 China Mobile `PoolTimeout` metric and the user's Day 3 waiver remain intact; JAI-025's flow-first exception and deferred quality debt also remain explicitly tracked in JAI-049.
+JAI-001 through JAI-026 have been merged and normally pushed to `develop` in order. The immutable baseline remains `a9e9b643b629e5632015778549917f44bd658586`. The implemented portions of JAI-027 G1–G4 and JAI-050 are not merged into `develop`, but on 2026-09-23 they were normally pushed to remote branches at `ff423f1...` and `96fe798...`. The annotated remote tag `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23` peels exactly to `96fe798...`. It is a pre-pivot checkpoint, not a release tag, and does not mark either Issue complete.
 
-JAI-027 is active on `feature/jai-027-wechat-delivery-idempotency`. Approved D-037 gates G1–G4 are complete: the offline PushPlus adapter, deterministic splitting, durable two-table delivery ledger, fifth pipeline stage, bounded retry/ambiguity protection, operator CLI, paired documentation, and the no-skip 350-test PostgreSQL gate all passed at 85.37% coverage. The business database remains at `0009_pipeline_scheduling`; real credentials, migration `0010`, and one named live snapshot send are deferred in the paired manual-action queue until the owner later completes M-001/M-002 and explicitly approves A-001/G5. This is not completion and does not start JAI-028. JAI-050 option 1 implementation, browser design QA, and the 357-test full gate have passed; container-image build verification remains pending as `M-003` because Docker Hub could not provide `node:24-alpine`, so the Issue remains incomplete and must not merge into `develop` before JAI-027. JAI-051 follows JAI-028 and precedes JAI-029, while its concrete feedback migration remains behind U3 approval. Never rebase, force push, or rewrite published history. OCR remains deferred to JAI-B01, and JAI-048 remains an independent documentation Issue.
+On 2026-09-23 the owner explicitly requested and approved an incremental route adjustment: deliver a usable read-only Agent from a later-supplied daily updated Excel workbook, then resume the crawler-driven line. The active independent branch is `feature/jai-052-spreadsheet-source-contract`. JAI-052 is limited to source audit, traceable cleaning contracts, and canonical-model ingestion. No workbook link has been supplied, so fields must not be guessed and no source read, migration, or refresh may start. The paired `SPREADSHEET_SOURCE.md` files define the exact boundary.
 
-### 13.1 MVP execution control board (2026-09-15)
+### 13.1 Execution control board (2026-09-23)
 
 | Order | Issue/baseline | Actual state | Closure condition | Allowed next action |
 |---:|---|---|---|---|
 | 0 | JAI-001–JAI-026 | Integrated and pushed in order; `develop=a9e9b643...` | Closed | Immutable baseline only |
-| 1 | JAI-027 | G1–G4 complete; feature tip `ff423f1`; unpushed/unmerged | After `M-001`, `M-002`, and `A-001/G5`, complete `0010` plus one named-snapshot live verification and rerun the full gate | Handle only owner prerequisites and G5; do not start JAI-028 |
-| 2 | JAI-050 | Stacked-branch implementation checkpoint `facbdac`; implementation, design QA, and 357-test gate passed | Complete the container-image build after `M-003`; after JAI-027 integrates first, normally synchronize and reverify | Close only container verification and integration preparation |
-| Runtime control | `A-006` | Sole scheduler is running; next slot is 2026-09-16 08:00 | Owner explicitly chooses “keep” or “stop only scheduler” | Do not count the 2026-09-15 run toward JAI-028 |
-| 3 | JAI-028 | Not started | JAI-027 and JAI-050 integrate in order and the five unattended trials receive separate approval | Do not create a branch or count runs before prerequisites close |
-| 4 | JAI-051 | Not started | JAI-028 completes and `A-004/U3` approves the schema/API/retention boundary | Do not migrate or write feedback early |
-| 5 | JAI-029 | Not started | JAI-028 and JAI-051 complete with release-gate evidence | Do not publish or tag early |
+| Archive A | JAI-027 | G1–G4 complete; remote feature tip `ff423f1...`; unmerged | Keep `M-001`, `M-002`, and `A-001/G5` deferred | Do not modify the archived branch; resume after the acceleration slice |
+| Archive B | JAI-050 | Implementation, design QA, and 357-test gate passed; remote checkpoint `96fe798...`; unmerged | `M-003` container verification and ordered integration | Reuse as the JAI-053 shell; do not claim Issue completion |
+| Runtime control | `A-006` | Docker engine unavailable on 2026-09-23, so the 09-16–09-23 ledger cannot be read and the old running/next-slot claim is stale | Perform read-only Compose/database audit after Docker returns | Do not infer success, failure, misfire, or makeup |
+| 1 | JAI-052 | Design/plan started; no workbook link yet | `M-004/G1` read-only audit, `A-007/G2` mapping approval, then G3/G4 | Complete the contract and wait for the link |
+| 2 | JAI-032 | Not started under the revised boundary | JAI-052 canonical jobs are queryable | Implement search, filters, detail, and explanation only |
+| 3 | JAI-033 | Not started | JAI-032 complete | Wrap read-only tools in the first slice |
+| 4 | JAI-034 | Not started | JAI-033 complete | Implement the single Agent and at least 30 evaluations |
+| 5 | JAI-053 | Not started | JAI-034 and the JAI-050 shell are available | Add conversation/filter UI without writes |
+| Resume line | JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 | Paused and preserved | Owner confirms resumption after spreadsheet-Agent acceptance | Continue with original dependencies, gates, and normal integration order |
 
-Execution follows one critical path: while the current Issue lacks any closure condition, the next Issue does not start. A blocked-period stacked exception is allowed only when the owner explicitly approves it, both plans and backlogs record it, and integration order remains unchanged; JAI-050 is the sole current exception. Every closure requires a feature commit, proportionate gates, paired documentation, owner-gate evidence, ordered non-fast-forward integration, and post-push three-way ref equality. Missing any element keeps the Issue incomplete.
+The acceleration track is a recorded plan change, not open-ended parallel work. Only the first incomplete Issue in the table proceeds. Workbook authentication, database migration, real recurring retrieval, external writes, or resuming the original runtime line require their specific owner gates. Every closure still needs a scoped feature commit, proportionate checks, paired documentation, approval evidence, and remote preservation. Never rebase, force push, or rewrite published history.
