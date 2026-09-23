@@ -426,13 +426,13 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:collection` `area:data` `priority:P0` `size:L`
 - **Dependencies**: JAI-023; pre-pivot remote checkpoint `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23`
-- **Status**: design and planning started on independent branch `feature/jai-052-spreadsheet-source-contract`; no workbook link has been supplied, so G1 is closed.
+- **Status**: `M-004/G1` read-only audit completed on independent branch `feature/jai-052-spreadsheet-source-contract`; source write-back is permanently forbidden and offline implementation awaits `A-007/G2` approval.
 - **Goal**: use the owner's daily updated Excel workbook as a traceable, idempotent, read-only source mapped into the crawler-compatible canonical job boundary.
 - **Scope**: workbook/sheet audit, raw-snapshot metadata, deterministic cleaning/classification, stable identity/content hashes, rejected-row records, refresh-run ledger, canonical mapping, and read-only operational evidence. Exact rules require `SPREADSHEET_SOURCE.md` and G2 approval.
 - **Non-goals**: guessed columns, real workbook writes, unapproved authentication, access-control bypass, Agent orchestration, UI, crawler deletion, JAI-028 trials, or JAI-029 release.
 - **Test method**: synthetic workbook fixtures, deterministic/idempotency/change-detection and redaction tests, plus PostgreSQL integration tests against databases whose names end in `_test` only.
 - **Acceptance**:
-  - [ ] `M-004/G1` completes a read-only structural audit that separates observed facts, unresolved questions, and proposed mappings.
+  - [x] `M-004/G1` completes a read-only structural audit that separates observed facts, unresolved questions, and proposed mappings.
   - [ ] `A-007/G2` explicitly approves field mapping, row identity, disappearance semantics, refresh frequency, and access boundary.
   - [ ] Re-importing one version creates no duplicates; new, changed, unchanged, rejected, and missing observations are auditable.
   - [ ] Original values/source coordinates remain traceable, missing values are not invented, and real business rows/credentials never enter Git or fixtures.
@@ -704,6 +704,6 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-001 through JAI-026 are integrated at `develop=a9e9b643...`. JAI-027 and JAI-050 remain incomplete and unmerged, but their actual progress is normally pushed at `ff423f1...` and `96fe798...`, with `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23` preserving the pre-pivot tip. The approved critical path is now JAI-052 → JAI-032 read-only slice → JAI-033 read-only tools → JAI-034 single Agent/evaluation → JAI-053 conversation/filter UI. Before the workbook link arrives, advance JAI-052 design only; after G1 read-only audit, A-007/G2 must still approve exact mappings before implementation.
+JAI-001 through JAI-026 are integrated at `develop=a9e9b643...`. JAI-027 and JAI-050 remain incomplete and unmerged, but their actual progress is normally pushed at `ff423f1...` and `96fe798...`, with `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23` preserving the pre-pivot tip. The approved critical path is now JAI-052 → JAI-032 read-only slice → JAI-033 read-only tools → JAI-034 single Agent/evaluation → JAI-053 conversation/filter UI. JAI-052 `M-004/G1` read-only audit is complete and source write-back is permanently forbidden; exact mapping and the offline implementation boundary still require A-007/G2 approval before coding.
 
 After the spreadsheet-Agent slice is accepted, the owner confirms resumption of JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029. All existing G5, M-003, U3, five-unattended-run, and release gates remain. JAI-030/JAI-031 write-capable operations and the JAI-035 formal Agent release remain after the resumed line; the read-only acceleration track does not pull them forward. Never rebase, force push, rewrite history, or delete crawler work. Source expansion and JAI-048 remain independent, and restricted portals still must not be forced through login, CAPTCHA, Playwright, or evasion.

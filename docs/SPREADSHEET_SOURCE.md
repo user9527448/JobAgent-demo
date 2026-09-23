@@ -6,7 +6,7 @@
 
 This document defines the design gate for JAI-052. The owner has approved an incremental acceleration track in which a daily updated Excel workbook becomes the first information source for a read-only Agent. The existing crawler, scheduling, delivery, and frontend work is preserved and is not replaced or declared complete.
 
-No workbook has been supplied or inspected yet. Column names, sheet names, row identity, update semantics, access method, and refresh frequency therefore remain unknown and must not be guessed.
+The owner supplied the shared Feishu Bitable link and authorized G1 read-only inspection on 2026-09-23. G1 is complete; no data was written, exported, downloaded to disk, or persisted. Exact implementation remains closed until `A-007/G2` approval.
 
 ## 2. Source boundary
 
@@ -39,6 +39,7 @@ Rules must be deterministic and testable. Ambiguous values stay explicit, origin
 ## 5. Access and security
 
 - JAI-052 begins with read-only access only.
+- The shared source is permanently read-only from JOBAGENT's perspective. No implementation, operator command, test, or recovery path may edit cells, views, filters, sorting, comments, sharing, permissions, or other source state. There is no write-back mode.
 - Public links may be recorded as source configuration only after the owner supplies and approves them. Private links, access tokens, cookies, passwords, and signed URLs must not be committed or pasted into logs, fixtures, database error text, or documentation.
 - If authentication is required, the access mechanism and environment-variable boundary require a separate approval after the read-only audit. Do not bypass login, CAPTCHA, access control, sharing restrictions, or provider terms.
 - Provider errors are mapped to safe internal reason codes; raw response bodies and secrets are not persisted.
@@ -80,3 +81,42 @@ When the owner supplies the link, record without exposing secrets:
 - provider rate/export limits and terms relevant to automated read-only access.
 
 The G1 report must separate observed facts, unresolved questions, and proposed mappings. Implementation begins only after G2 approval.
+
+## 9. G1 evidence — 2026-09-23
+
+### 9.1 Observed facts
+
+- The supplied resource is a public shared Feishu Bitable named `☛秋招+春招汇总表（全年直投）`. The exact shared URL and its query parameters remain runtime-only and are not recorded in Git.
+- The anonymous share grants view and preview only. Edit, comment, export, print, collaboration management, metadata management, duplication, and operation-history access are unavailable. The inspecting identity is not the owner.
+- The main table `❤秋招+春招汇总表` reports 10,082 records and ten views: the combined autumn/spring list, internship list, previous-graduate list, no-written-test list, state-owned/public-sector, foreign-enterprise, finance/banking, internet, arts, and college-applicable views.
+- Three additional tables are visible: `央国企&事业单位` with 200 records, `内推码` with 321 records, and `笔试题库` with 12 records. Their record contents and complete field schemas were not inspected. They are outside the proposed first source scope.
+- The main table exposes 18 fields: `投递链接`, `行业分类`, `工作地点`, `父记录 2`, `届次`, `批次`, `更新时间`, `学历要求`, `公司名称`, `公告链接`, `企业性质`, `文本 10`, `招聘岗位`, `是否笔试`, `公告来源`, `专业要求`, `截止时间`, and `父记录`.
+- Feishu marks `更新时间` as the schema primary key, but timestamps are not stable row identities. Provider table identity plus provider record ID is available and is the safer source identity.
+- The bootstrap response exposed values for only a 2,000-record window, although metadata covered all 10,082 records. In that window, company, position, application link, source, and location were populated for all 2,000 records. Rich text and multi-select fields used mixed object/scalar/array representations and require deterministic normalization.
+- In that 2,000-record window, application links had 35 duplicate groups covering 94 rows, announcement links had 9 groups covering 18 rows, while `(公司名称, 招聘岗位, 投递链接)` had no exact duplicate group. URL alone is therefore not a valid source-row identity.
+- Record modification metadata across all 10,082 records shows 151 changes on 2026-09-18, 237 on 09-19, 89 on 09-20, 91 on 09-21, 217 on 09-22, and 158 on 09-23 in `Asia/Shanghai`. This confirms continuing daily changes but does not prove append-only behavior or guarantee a future refresh time.
+- Inspection used bounded read-only public responses and decoded structural metadata in memory only. No login, credential, write endpoint, export, local workbook, raw row dump, database write, or scheduler action was used.
+
+### 9.2 Unresolved questions
+
+- The public-share browser endpoints are not a committed official automation contract and may change. Recurring production access requires a separate G4 review of stability, provider terms, rate limits, and failure behavior.
+- The source owner's willingness to grant a read-only Feishu OpenAPI application is unknown. Official OpenAPI is preferred for a durable connector if such authorization becomes available; no credential request is part of G2.
+- Row deletion, archival, reordering, formula behavior, hidden fields, and auxiliary-table relationships were not proven by G1. Missing rows must therefore remain non-destructive observations rather than deletions.
+- `截止时间` contains multiple source text forms. Only unambiguous dates may populate the canonical deadline; ambiguous/raw values must remain traceable and raise a bounded validation result.
+
+## 10. A-007/G2 recommendation
+
+Approval is requested for the following bounded implementation contract:
+
+1. Limit the first source to `❤秋招+春招汇总表`; exclude `央国企&事业单位`, `内推码`, and `笔试题库`.
+2. Use `(provider, workbook/base identity, table_id, record_id)` as source identity. Use normalized content hashes only for change detection, never as identity.
+3. Reuse existing `sources`, `crawl_runs`, `raw_documents`, `job_posts`, and `job_positions`. Do not create a second job domain or delete crawler evidence.
+4. Introduce a provider-neutral read-only `SpreadsheetSnapshotReader` boundary. The first implementation uses synthetic fixtures and `_test` databases only; it performs no live recurring retrieval.
+5. Fetch one bounded snapshot per future import attempt and normalize it in memory; never issue one provider request per row. Production acquisition remains behind G4. Prefer official Feishu OpenAPI if the owner can authorize a read-only app; otherwise any provisional public-share adapter needs a separate G4 stability/terms approval.
+6. Normalize rich text to visible text; normalize scalar/array multi-selects to ordered unique values; validate only `http`/`https` URLs and strip tracking parameters; normalize times to `Asia/Shanghai`; never invent missing or ambiguous values. Version the mapping as `feishu-rollup-v1`.
+7. Map company to `JobPost.organization`, normalized industry/company nature to category evidence, location to `JobPost.region` and position location, application link to `JobPost.apply_url`, unambiguous deadline to `JobPost.deadline`, position to `JobPosition.name`, education to `JobPosition.education`, and major to `JobPosition.major`. Preserve cohort, batch, written-test flag, announcement link/source, original deadline, and other unmapped values as traceable raw evidence until a later schema decision.
+8. Re-importing unchanged records must reuse existing versions. Changed records create a new immutable raw-document version and deterministic canonical projection. A record absent from a later snapshot becomes `not_observed` evidence only; it is never hard-deleted or automatically expired in G2.
+9. Canonicalize record provenance as an `https` source URL containing only stable table/record identity; strip share/user/tracking parameters. Keep the exact shared URL outside Git as runtime configuration.
+10. All tests use synthetic response shapes and, where PostgreSQL is needed, a database ending in `_test`. No real Feishu row, share URL, token, cookie, personal data, or response body enters Git, fixtures, logs, or error storage.
+
+G2 approval permits only the offline reader/parser, deterministic mapping, and tests described above. It does not authorize a database migration, business-database import, recurring Feishu request, scheduler change, Agent/UI implementation, external write, or source write-back. Those actions remain behind G3/G4 and their original downstream Issue gates.

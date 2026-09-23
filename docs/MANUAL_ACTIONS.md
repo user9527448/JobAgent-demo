@@ -19,8 +19,8 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `M-003` | Pending | Restore Docker Hub access or pre-pull `node:24-alpine` | JAI-050 container-build verification |
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
 | `A-006` | Expired unresolved; runtime unavailable 2026-09-23 | After Docker returns, review the read-only ledger audit before deciding whether the scheduler remains enabled | Current operating state; no retrospective inference or makeup |
-| `M-004` | Pending | Supply the daily-updated Excel workbook link and authorize read-only G1 inspection; do not send credentials | JAI-052 G1 structural/source audit |
-| `A-007` | Pending after `M-004/G1` | Approve JAI-052 G2 field mapping, identity, disappearance, refresh, and access rules | Importer implementation against synthetic fixtures |
+| `M-004` | Completed: 2026-09-23 | Supplied the shared Feishu Bitable link and authorized read-only G1 inspection | JAI-052 G1 structural/source audit |
+| `A-007` | Pending after completed G1 | Approve the bounded JAI-052 G2 source scope, identity, canonical reuse, normalization, disappearance, and offline implementation rules | Offline importer implementation against synthetic fixtures |
 
 No current queue item authorizes a makeup run, a live recruitment-source request, a second live
 notification, JAI-028's five unattended runs, or JAI-029 release work.
@@ -75,6 +75,23 @@ change, or access-control bypass. After G1, the agent will present an evidence-b
 `A-007/G2`, including row identity, missing-row semantics, refresh frequency, and credential
 boundary. Approving G2 permits implementation with synthetic fixtures only; production activation
 remains behind later JAI-052 gates.
+
+`M-004/G1` completed on 2026-09-23. The public share proved view/preview-only access, a 10,082-record
+main jobs table, 18 fields, and daily modification metadata. No source state, database, file, or
+scheduler was changed. The exact shared URL and response data remain outside Git. The shared source
+is permanently non-writable from JOBAGENT: no later gate may authorize cell, view, filter, sort,
+comment, sharing, or permission changes.
+
+The recommended `A-007/G2` approval statement is:
+
+```text
+Approve JAI-052 A-007/G2: ingest only the main jobs table initially; use provider/workbook/table/record
+identity; reuse the existing source, crawl-run, raw-document, job-post, and job-position domain; build
+only a provider-neutral read-only snapshot reader, deterministic feishu-rollup-v1 mapping, synthetic
+fixtures, and _test-database tests; treat missing records as not_observed without deletion; never write
+back to Feishu. Real recurring retrieval, business-database changes, Agent/UI work, and all source
+writes remain unauthorized.
+```
 
 ## M-001 — Prepare PushPlus
 

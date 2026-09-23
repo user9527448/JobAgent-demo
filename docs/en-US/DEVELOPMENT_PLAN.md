@@ -452,7 +452,7 @@ Before starting, an Issue must define goal, scope, acceptance criteria, dependen
 
 JAI-001 through JAI-026 have been merged and normally pushed to `develop` in order. The immutable baseline remains `a9e9b643b629e5632015778549917f44bd658586`. The implemented portions of JAI-027 G1–G4 and JAI-050 are not merged into `develop`, but on 2026-09-23 they were normally pushed to remote branches at `ff423f1...` and `96fe798...`. The annotated remote tag `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23` peels exactly to `96fe798...`. It is a pre-pivot checkpoint, not a release tag, and does not mark either Issue complete.
 
-On 2026-09-23 the owner explicitly requested and approved an incremental route adjustment: deliver a usable read-only Agent from a later-supplied daily updated Excel workbook, then resume the crawler-driven line. The active independent branch is `feature/jai-052-spreadsheet-source-contract`. JAI-052 is limited to source audit, traceable cleaning contracts, and canonical-model ingestion. No workbook link has been supplied, so fields must not be guessed and no source read, migration, or refresh may start. The paired `SPREADSHEET_SOURCE.md` files define the exact boundary.
+On 2026-09-23 the owner explicitly requested and approved an incremental route adjustment: deliver a usable read-only Agent from a daily updated Feishu Bitable, then resume the crawler-driven line. The active independent branch is `feature/jai-052-spreadsheet-source-contract`. `M-004/G1` is complete within the read-only boundary and confirms a 10,082-record main table, 18 fields, and daily modification metadata; no source data was written, exported, downloaded, or persisted. JAI-052 is now paused at `A-007/G2`; no code, database migration, or recurring retrieval may start before approval. The paired `SPREADSHEET_SOURCE.md` files contain the exact evidence and recommendation.
 
 ### 13.1 Execution control board (2026-09-23)
 
@@ -462,7 +462,7 @@ On 2026-09-23 the owner explicitly requested and approved an incremental route a
 | Archive A | JAI-027 | G1–G4 complete; remote feature tip `ff423f1...`; unmerged | Keep `M-001`, `M-002`, and `A-001/G5` deferred | Do not modify the archived branch; resume after the acceleration slice |
 | Archive B | JAI-050 | Implementation, design QA, and 357-test gate passed; remote checkpoint `96fe798...`; unmerged | `M-003` container verification and ordered integration | Reuse as the JAI-053 shell; do not claim Issue completion |
 | Runtime control | `A-006` | Docker engine unavailable on 2026-09-23, so the 09-16–09-23 ledger cannot be read and the old running/next-slot claim is stale | Perform read-only Compose/database audit after Docker returns | Do not infer success, failure, misfire, or makeup |
-| 1 | JAI-052 | Design/plan started; no workbook link yet | `M-004/G1` read-only audit, `A-007/G2` mapping approval, then G3/G4 | Complete the contract and wait for the link |
+| 1 | JAI-052 | `M-004/G1` read-only audit complete; source write-back permanently forbidden | `A-007/G2` approves bounded offline implementation, then G3/G4 | Submit evidence/approval packet only; await owner decision |
 | 2 | JAI-032 | Not started under the revised boundary | JAI-052 canonical jobs are queryable | Implement search, filters, detail, and explanation only |
 | 3 | JAI-033 | Not started | JAI-032 complete | Wrap read-only tools in the first slice |
 | 4 | JAI-034 | Not started | JAI-033 complete | Implement the single Agent and at least 30 evaluations |

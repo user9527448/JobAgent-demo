@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-10
+> Last updated: 2026-09-23
 >
-> Active branch: `feature/jai-027-wechat-delivery-idempotency`
+> Active branch: `feature/jai-052-spreadsheet-source-contract`
 
 ## 1. Current status
 
@@ -36,6 +36,8 @@
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | D-037/G1–G4 approved and complete; G5 pending | `feature/jai-027-wechat-delivery-idempotency` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration, credentials, and live delivery remain unauthorized |
+| JAI-050 | Implemented checkpoint archived; incomplete and unmerged | `feature/jai-050-production-ui-foundation` / `96fe798...` | Production UI shell is preserved for JAI-053; container verification and ordered integration remain pending |
+| JAI-052 | G1 read-only audit complete; G2 approval pending | `feature/jai-052-spreadsheet-source-contract` | Main Feishu jobs table evidence is recorded; source write-back is permanently forbidden; no implementation has started |
 
 ## 2. Current decisions
 
@@ -266,6 +268,14 @@ later completion while safe repository work continues. The paired `docs/MANUAL_A
 values. Deferred items are not silently treated as approval. They should be surfaced again only when
 they block the next planned write or when their external state changes, rather than repeatedly
 interrupting safe work.
+
+### D-040 Shared spreadsheet is a permanently read-only source
+
+The owner explicitly confirmed that the Feishu Bitable is a shared resource and must never be
+modified. JOBAGENT therefore has no spreadsheet write-back mode: application code, tests, operator
+commands, recovery procedures, and later gates may not edit cells, views, filters, sorting, comments,
+sharing, permissions, or any other source state. This restriction is independent of provider
+permissions and remains in force even if broader credentials become available later.
 
 ## 3. Active work history
 
@@ -844,6 +854,18 @@ interrupting safe work.
 - Documentation verification passed: paired plan, backlog, WORKLOG, manual queue, and spreadsheet-contract heading counts match at 47/47, 76/76, 87/87, 11/11, and 9/9; both backlogs contain the same 59 Issue headings in the same order; all relative links in changed Markdown resolve; `git diff --check` passes.
 - No workbook link has been supplied. No workbook access, field guess, credential handling, database migration/write, Docker start, scheduler change, live-source/provider request, dependency installation, or product-code implementation occurred. `M-004/G1` asks only for the link and read-only authorization; exact mapping and identity still require `A-007/G2` before implementation.
 
+### 2026-09-23 — JAI-052 G1 read-only Feishu source audit completed
+
+- The owner supplied the shared Feishu Bitable link, authorized read-only inspection, and explicitly prohibited any direct modification. `M-004` is complete. D-040 makes the no-write/no-write-back boundary permanent and independent of later provider permissions.
+- Anonymous share evidence allows view/preview and denies edit, comment, export, print, metadata/collaborator management, duplication, and operation-history access. The exact shared URL, internal object identifiers, query tokens, and raw rows were not written to Git, logs, fixtures, files, or the database.
+- The main `❤秋招+春招汇总表` reports 10,082 records, ten views, and 18 fields. Auxiliary tables report 200, 321, and 12 records; their record contents and full schemas were not inspected and are excluded from the first proposed source scope.
+- The initial response exposed a 2,000-record value window only. Structural profiling found mixed rich-text and scalar/array multi-select representations, URL duplicate groups, and no exact duplicate of `(公司名称, 招聘岗位, 投递链接)` in that window. These are explicitly sample-window observations, not population claims.
+- Metadata across all 10,082 records shows modifications on every date from 2026-09-18 through 2026-09-23. This confirms ongoing daily changes but does not prove append-only behavior or a future refresh schedule.
+- The G2 recommendation uses provider/workbook/table/record identity, reuses the existing source/crawl-run/raw-document/job-post/job-position domain, adds a provider-neutral read-only snapshot-reader boundary, versions normalization as `feishu-rollup-v1`, treats missing records as `not_observed`, and permits only synthetic fixtures plus `_test` database tests. Official Feishu OpenAPI is preferred if owner-authorized read scope later becomes available; recurring public-share acquisition remains behind G4 review.
+- Browser automation and static web access could not reliably read the shared application page. A bounded public read-only HTTP response succeeded; structural data was decoded in memory only and no export/download was created. Three exploratory PowerShell parsing commands had syntax errors before execution and were corrected; they caused no external or repository state change.
+- No application code, dependency, migration, business-data import, scheduler change, Agent/UI implementation, credential handling, or source write occurred. `A-007/G2` is the next gate.
+- Documentation checks passed: the five modified bilingual pairs have matching heading counts at 47/47, 76/76, 89/89, 11/11, and 13/13; both backlogs contain the same 53 Issue headings in the same order; all relative links in the ten changed Markdown files resolve; the shared URL/query identifiers are absent from repository text; and `git diff --check` passes.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -870,8 +892,8 @@ interrupting safe work.
 
 ## 5. Next actions
 
-1. Complete `M-004`: the owner supplies only the daily-updated workbook link and authorizes JAI-052 G1 read-only inspection; credentials must not be sent. Record observed structure/update facts without importing or writing data.
-2. Present the evidence-based field/identity/refresh/access proposal for `A-007/G2`. Do not implement an importer, migration, recurring fetch, Agent, or UI before that approval.
+1. Obtain the owner's explicit `A-007/G2` decision on the recorded source scope, identity, canonical-domain reuse, normalization, missing-row semantics, and offline-only implementation boundary.
+2. If approved, implement only the provider-neutral read-only snapshot reader, `feishu-rollup-v1` deterministic mapping, synthetic fixtures, and `_test` database tests. Do not start a migration, real recurring fetch, business import, Agent, UI, or any Feishu write.
 3. When Docker is manually available again, perform the expired `A-006` read-only Compose/database audit before any scheduler decision. No makeup is authorized. Keep `M-001`, `M-002`, `A-001/G5`, and `M-003` deferred and leave archived JAI-027/JAI-050 branches unchanged.
 
 ## 6. Update template
