@@ -4,9 +4,9 @@
 
 ## 1. Purpose and status
 
-This document defines the design gate for JAI-052. The owner has approved an incremental acceleration track in which a daily updated Excel workbook becomes the first information source for a read-only Agent. The existing crawler, scheduling, delivery, and frontend work is preserved and is not replaced or declared complete.
+This document preserves the withdrawn JAI-052 design audit. The owner withdrew the spreadsheet-Agent acceleration proposal on 2026-09-23 and restored the original project plan. This document is historical evidence, not an active implementation contract.
 
-The owner supplied the shared Feishu Bitable link and authorized G1 read-only inspection on 2026-09-23. G1 is complete; no data was written, exported, downloaded to disk, or persisted. Exact implementation remains closed until `A-007/G2` approval.
+The owner supplied the shared Feishu Bitable link and authorized G1 read-only inspection on 2026-09-23. G1 completed without writing, exporting, downloading, or persisting source data. `A-007/G2` was then cancelled; no implementation may begin and the source must not be accessed again.
 
 ## 2. Source boundary
 
@@ -119,4 +119,8 @@ Approval is requested for the following bounded implementation contract:
 9. Canonicalize record provenance as an `https` source URL containing only stable table/record identity; strip share/user/tracking parameters. Keep the exact shared URL outside Git as runtime configuration.
 10. All tests use synthetic response shapes and, where PostgreSQL is needed, a database ending in `_test`. No real Feishu row, share URL, token, cookie, personal data, or response body enters Git, fixtures, logs, or error storage.
 
-G2 approval permits only the offline reader/parser, deterministic mapping, and tests described above. It does not authorize a database migration, business-database import, recurring Feishu request, scheduler change, Agent/UI implementation, external write, or source write-back. Those actions remain behind G3/G4 and their original downstream Issue gates.
+The recommendation above was never approved and is retained only to explain the archived branch. The route is withdrawn: there will be no reader/parser, migration, business import, recurring request, scheduler change, Agent/UI implementation, or source write-back. The project continues on its original critical path.
+
+## 11. Withdrawal record
+
+The owner withdrew JAI-052 after confirming that the shared resource disallows download, export, and copy. JAI-052 is not complete and will not merge into the product line. JAI-053 never started and is also withdrawn. The remote audit commits remain immutable evidence; no source link or source data is stored in Git.

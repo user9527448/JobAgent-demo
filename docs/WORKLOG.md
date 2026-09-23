@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | D-037/G1–G4 approved and complete; G5 pending | `feature/jai-027-wechat-delivery-idempotency` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration, credentials, and live delivery remain unauthorized |
 | JAI-050 | Implemented checkpoint archived; incomplete and unmerged | `feature/jai-050-production-ui-foundation` / `96fe798...` | Production UI shell is preserved for JAI-053; container verification and ordered integration remain pending |
-| JAI-052 | G1 read-only audit complete; G2 approval pending | `feature/jai-052-spreadsheet-source-contract` | Main Feishu jobs table evidence is recorded; source write-back is permanently forbidden; no implementation has started |
+| JAI-052 | Withdrawn after G1; not complete and never implemented | `feature/jai-052-spreadsheet-source-contract` | Remote audit history only; cancelled from the product path and the shared table must not be accessed again |
 
 ## 2. Current decisions
 
@@ -276,6 +276,15 @@ modified. JOBAGENT therefore has no spreadsheet write-back mode: application cod
 commands, recovery procedures, and later gates may not edit cells, views, filters, sorting, comments,
 sharing, permissions, or any other source state. This restriction is independent of provider
 permissions and remains in force even if broader credentials become available later.
+
+### D-041 Withdraw the spreadsheet acceleration route and restore the original plan
+
+On 2026-09-23 the owner explicitly withdrew JAI-052/JAI-053 after confirming that the shared
+resource disallows download, export, and copy. Preserve the published audit commits as immutable
+history, but do not merge them into the product line, access the source again, request credentials,
+or implement any spreadsheet reader, synchronization, Agent, or conversation UI from this route.
+The active critical path is restored to JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029. Existing
+G5, `M-003`, U3, five-run, release, and ordered-integration gates remain unchanged.
 
 ## 3. Active work history
 
@@ -866,6 +875,14 @@ permissions and remains in force even if broader credentials become available la
 - No application code, dependency, migration, business-data import, scheduler change, Agent/UI implementation, credential handling, or source write occurred. `A-007/G2` is the next gate.
 - Documentation checks passed: the five modified bilingual pairs have matching heading counts at 47/47, 76/76, 89/89, 11/11, and 13/13; both backlogs contain the same 53 Issue headings in the same order; all relative links in the ten changed Markdown files resolve; the shared URL/query identifiers are absent from repository text; and `git diff --check` passes.
 
+### 2026-09-23 — Spreadsheet acceleration withdrawn; original plan restored
+
+- The owner instructed the project to forget the spreadsheet-source proposal and continue the original design and plan after confirming there is no download, export, or copy permission. D-041 records the decision without deleting or rewriting earlier facts.
+- JAI-052 contains documentation/audit only and is withdrawn rather than complete. JAI-053 never started and is also withdrawn. `A-007/G2` is cancelled; no credential request, owner contact, API/mirror attempt, importer, migration, synchronization, Agent, or UI work will continue from this route.
+- Restore the original JAI-032 through JAI-035 dependencies and scope. The active MVP path is JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029; JAI-050 remains the only approved stacked exception and still cannot integrate before JAI-027.
+- The JAI-052 branch and its normal remote history remain as evidence of an unimplemented proposal. The shared link was never committed and the source will not be accessed again. No application code, dependency, database, Docker, scheduler, provider, business data, or original feature branch was changed by this withdrawal record.
+- Withdrawal-document checks passed: the five modified bilingual pairs have matching heading counts at 47/47, 76/76, 91/91, 11/11, and 14/14; both backlogs retain the same 53 Issue headings in order; all relative links in the ten changed Markdown files resolve; no shared-link/query identifier exists in repository text; and `git diff --check` passes.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -892,9 +909,9 @@ permissions and remains in force even if broader credentials become available la
 
 ## 5. Next actions
 
-1. Obtain the owner's explicit `A-007/G2` decision on the recorded source scope, identity, canonical-domain reuse, normalization, missing-row semantics, and offline-only implementation boundary.
-2. If approved, implement only the provider-neutral read-only snapshot reader, `feishu-rollup-v1` deterministic mapping, synthetic fixtures, and `_test` database tests. Do not start a migration, real recurring fetch, business import, Agent, UI, or any Feishu write.
-3. When Docker is manually available again, perform the expired `A-006` read-only Compose/database audit before any scheduler decision. No makeup is authorized. Keep `M-001`, `M-002`, `A-001/G5`, and `M-003` deferred and leave archived JAI-027/JAI-050 branches unchanged.
+1. Commit and normally push the JAI-052 withdrawal record, verify local/tracking/GitHub consistency, then return to the unchanged JAI-050 remote checkpoint without merging JAI-052.
+2. Perform the expired `A-006` read-only Compose/database audit now that Docker was reported available. Do not infer or perform makeup, migration, delivery, or live-source work.
+3. Continue the original manual gates: JAI-027 waits on deferred `M-001`, `M-002`, and `A-001/G5`; JAI-050 waits on `M-003` container verification. Do not start JAI-028/JAI-051/JAI-029 early.
 
 ## 6. Update template
 

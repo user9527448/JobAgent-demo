@@ -19,8 +19,8 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `M-003` | Pending | Restore Docker Hub access or pre-pull `node:24-alpine` | JAI-050 container-build verification |
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
 | `A-006` | Expired unresolved; runtime unavailable 2026-09-23 | After Docker returns, review the read-only ledger audit before deciding whether the scheduler remains enabled | Current operating state; no retrospective inference or makeup |
-| `M-004` | Completed: 2026-09-23 | Supplied the shared Feishu Bitable link and authorized read-only G1 inspection | JAI-052 G1 structural/source audit |
-| `A-007` | Pending after completed G1 | Approve the bounded JAI-052 G2 source scope, identity, canonical reuse, normalization, disappearance, and offline implementation rules | Offline importer implementation against synthetic fixtures |
+| `M-004` | Historical completion; route withdrawn | Supplied the shared Feishu Bitable link for the completed G1 audit | Historical evidence only |
+| `A-007` | Cancelled by owner: 2026-09-23 | No spreadsheet implementation approval is requested | Nothing; original plan restored |
 
 No current queue item authorizes a makeup run, a live recruitment-source request, a second live
 notification, JAI-028's five unattended runs, or JAI-029 release work.
@@ -62,19 +62,12 @@ must first read Compose, Alembic, APScheduler, `pipeline_runs`, and `pipeline_st
 The owner then decides the scheduler state; no makeup, migration, delivery, or source command is
 authorized by A-006.
 
-## M-004/A-007 — Supply and approve the spreadsheet source
+## M-004/A-007 — Withdrawn spreadsheet-source route
 
-For `M-004`, send only the workbook link and state that read-only G1 inspection is authorized. If
-the link requires a login, token, cookie, password, or private sharing grant, do not paste it into
-chat or commit it. State only that authentication is required; G1 will record the provider boundary
-and propose an environment-variable or approved connector approach for separate approval.
-
-G1 may inspect workbook structure and update semantics only. It does not authorize a database
-migration, production import, recurring fetch, workbook write, Agent implementation, crawler
-change, or access-control bypass. After G1, the agent will present an evidence-based mapping for
-`A-007/G2`, including row identity, missing-row semantics, refresh frequency, and credential
-boundary. Approving G2 permits implementation with synthetic fixtures only; production activation
-remains behind later JAI-052 gates.
+`M-004` formerly authorized only the completed read-only G1 inspection. It never authorized a
+database migration, production import, recurring fetch, workbook write, Agent implementation,
+crawler change, credential handling, or access-control bypass. The route is now closed and no
+further owner action is requested.
 
 `M-004/G1` completed on 2026-09-23. The public share proved view/preview-only access, a 10,082-record
 main jobs table, 18 fields, and daily modification metadata. No source state, database, file, or
@@ -82,7 +75,7 @@ scheduler was changed. The exact shared URL and response data remain outside Git
 is permanently non-writable from JOBAGENT: no later gate may authorize cell, view, filter, sort,
 comment, sharing, or permission changes.
 
-The recommended `A-007/G2` approval statement is:
+The former recommended `A-007/G2` approval statement is retained below as historical evidence only and must not be used:
 
 ```text
 Approve JAI-052 A-007/G2: ingest only the main jobs table initially; use provider/workbook/table/record
@@ -92,6 +85,11 @@ fixtures, and _test-database tests; treat missing records as not_observed withou
 back to Feishu. Real recurring retrieval, business-database changes, Agent/UI work, and all source
 writes remain unauthorized.
 ```
+
+On 2026-09-23 the owner withdrew this route after confirming that the shared resource disallows
+download, export, and copy. `A-007` is cancelled. No credential, API permission, mirror, importer,
+database migration, synchronization, Agent, or UI is requested or authorized. Do not access the
+shared table again. Resume the original JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 path.
 
 ## M-001 — Prepare PushPlus
 

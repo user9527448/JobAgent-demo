@@ -28,7 +28,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 | M4 Intelligence | W7 | JAI-022–JAI-025 |
 | M5 MVP Release | W8 | JAI-026–JAI-029 |
 | M6 Agent | W9–W10 | JAI-030–JAI-035 |
-| M5A Spreadsheet-Agent acceleration | Evidence-gated from 2026-09-23 | JAI-052, JAI-032–JAI-034, JAI-053 |
+| M5A Spreadsheet-Agent acceleration | Withdrawn after audit on 2026-09-23 | JAI-052, JAI-053 (both withdrawn) |
 | Cross-cutting documentation | Ongoing | JAI-036, JAI-046–JAI-048 |
 
 ---
@@ -420,13 +420,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ---
 
-## M5A Spreadsheet-Agent acceleration track (approved 2026-09-23)
+## M5A Spreadsheet-Agent acceleration track (withdrawn after audit 2026-09-23)
 
 ### JAI-052 Integrate the daily-updated spreadsheet and define the canonical source contract
 
 - **Labels**: `type:feature` `area:collection` `area:data` `priority:P0` `size:L`
 - **Dependencies**: JAI-023; pre-pivot remote checkpoint `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23`
-- **Status**: `M-004/G1` read-only audit completed on independent branch `feature/jai-052-spreadsheet-source-contract`; source write-back is permanently forbidden and offline implementation awaits `A-007/G2` approval.
+- **Status**: the owner withdrew the proposal after the `M-004/G1` read-only audit. There is no product implementation, it is not complete, and it will not merge into the product line. The independent remote branch retains historical evidence only.
+- **Closure reason**: the shared resource disallows download, export, and copy; the project must not bypass that boundary. `A-007/G2` is cancelled and the table will no longer be accessed or used.
 - **Goal**: use the owner's daily updated Excel workbook as a traceable, idempotent, read-only source mapped into the crawler-compatible canonical job boundary.
 - **Scope**: workbook/sheet audit, raw-snapshot metadata, deterministic cleaning/classification, stable identity/content hashes, rejected-row records, refresh-run ledger, canonical mapping, and read-only operational evidence. Exact rules require `SPREADSHEET_SOURCE.md` and G2 approval.
 - **Non-goals**: guessed columns, real workbook writes, unapproved authentication, access-control bypass, Agent orchestration, UI, crawler deletion, JAI-028 trials, or JAI-029 release.
@@ -468,9 +469,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 ### JAI-032 Implement stable job-query and explanation services
 
 - **Labels**: `type:feature` `area:api` `area:matching` `priority:P0` `size:L`
-- **Dependencies**: read-only first slice depends on JAI-023 and JAI-052; write/run expansion still depends on JAI-030
+- **Dependencies**: JAI-023, JAI-030
 - **Goal**: let Agent and UI share business services instead of direct database access.
-- **Scope**: the first slice includes canonical-job search, detail, filters, source evidence, and score explanation only. Report generation/reading and controlled collection remain in the resumed original-plan expansion.
+- **Scope**: search, detail, score explanation, generate/read report, controlled source collection.
 - **Acceptance**:
   - [ ] Inputs/outputs use explicit Schemas.
   - [ ] Search supports region, organization type, keywords, deadline state, and minimum score.
@@ -481,7 +482,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Labels**: `type:feature` `area:agent` `priority:P0` `size:L`
 - **Dependencies**: JAI-032
 - **Goal**: expose a minimal, controlled, auditable tool set.
-- **Scope**: first expose only `search_jobs`, `get_job_detail`, and `explain_match`, with parameter Schemas, timeouts, result limits, and audit. Defer `generate_report`, `run_crawl`, and other write/run tools until original dependencies resume.
+- **Scope**: `search_jobs`, `get_job_detail`, `explain_match`, `generate_report`, `run_crawl`; parameter Schemas, timeouts, result limits, audit.
 - **Acceptance**:
   - [ ] The Agent cannot run arbitrary SQL/code or unregistered tools.
   - [ ] Write/run tools have confirmation and idempotency keys.
@@ -491,8 +492,8 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `type:test` `area:agent` `priority:P1` `size:L`
 - **Dependencies**: JAI-033
-- **Goal**: reliably query, filter, and explain from natural language; controlled operations wait for the original plan to resume.
-- **Scope**: system instructions, read-only tool selection, step limits, failure fallback, source-evidence citations, and at least 30 evaluation tasks.
+- **Goal**: reliably query, explain, and perform controlled operations from natural language.
+- **Scope**: system instructions, tool selection, step limits, failure fallback, at least 30 evaluation tasks.
 - **Acceptance**:
   - [ ] Query/explanation tasks never trigger writes.
   - [ ] Ambiguous run requests require confirmation.
@@ -501,6 +502,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 ### JAI-053 Add Agent conversation and filtering to the production UI foundation
 
 - **Labels**: `type:feature` `area:ui` `area:agent` `priority:P0` `size:L`
+- **Status**: withdrawn with the spreadsheet-Agent acceleration proposal. No branch, design, or implementation started, and the Issue is not complete. Any future conversation UI must be proposed and approved under the original Agent plan.
 - **Dependencies**: JAI-034, JAI-050
 - **Goal**: let users query, combine filters, inspect details, and review explanations in the production UI foundation so functional testing and feedback can start early.
 - **Scope**: reuse JAI-050 React, Tailwind CSS v4, and shadcn/ui shell; conversation flow, structured filters, result cards, source evidence, loading/empty/error states, and narrow-screen behavior; call approved read-only Agent/APIs only.
@@ -514,7 +516,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 ### JAI-035 Stabilize and release v0.2.0-agent
 
 - **Labels**: `type:chore` `area:agent` `priority:P1` `size:M`
-- **Dependencies**: JAI-031, JAI-034, JAI-053; the resumed MVP line must also be complete
+- **Dependencies**: JAI-031, JAI-034
 - **Goal**: finish and document the Agent release.
 - **Scope**: regression, performance/cost review, limitations, upgrade guidance, demo script.
 - **Acceptance**:
@@ -704,6 +706,6 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-001 through JAI-026 are integrated at `develop=a9e9b643...`. JAI-027 and JAI-050 remain incomplete and unmerged, but their actual progress is normally pushed at `ff423f1...` and `96fe798...`, with `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23` preserving the pre-pivot tip. The approved critical path is now JAI-052 → JAI-032 read-only slice → JAI-033 read-only tools → JAI-034 single Agent/evaluation → JAI-053 conversation/filter UI. JAI-052 `M-004/G1` read-only audit is complete and source write-back is permanently forbidden; exact mapping and the offline implementation boundary still require A-007/G2 approval before coding.
+JAI-001 through JAI-026 are integrated at `develop=a9e9b643...`. JAI-027 and JAI-050 remain incomplete and unmerged, but their actual progress is normally pushed at `ff423f1...` and `96fe798...`, with `checkpoint/pre-spreadsheet-agent-pivot-2026-09-23` preserving the pre-pivot tip. The owner withdrew the JAI-052/JAI-053 spreadsheet-Agent proposal; neither has product implementation or completion status, and the audit branch remains historical evidence only. The original critical path is active again: JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029.
 
-After the spreadsheet-Agent slice is accepted, the owner confirms resumption of JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029. All existing G5, M-003, U3, five-unattended-run, and release gates remain. JAI-030/JAI-031 write-capable operations and the JAI-035 formal Agent release remain after the resumed line; the read-only acceleration track does not pull them forward. Never rebase, force push, rewrite history, or delete crawler work. Source expansion and JAI-048 remain independent, and restricted portals still must not be forced through login, CAPTCHA, Playwright, or evasion.
+All existing G5, M-003, U3, five-unattended-run, and release gates remain. JAI-030 through JAI-035 retain their original post-MVP dependencies and do not move forward. Never rebase, force push, rewrite history, or delete crawler work. Source expansion and JAI-048 remain independent, and restricted portals still must not be forced through login, CAPTCHA, Playwright, or evasion.
