@@ -10,15 +10,16 @@ Update the paired files whenever an item is added, completed, deferred, or super
 
 | ID | Status | Owner action | Unblocks |
 |---|---|---|---|
-| `M-001` | Deferred by owner | Prepare the PushPlus account and OpenAPI settings | JAI-027 G5 credential validation |
-| `M-002` | Deferred by owner | Create the local `.env` and enter both PushPlus secrets | JAI-027 G5 controlled live test |
-| `A-001` | Pending after `M-001`/`M-002` | Explicitly approve JAI-027 G5 | Business migration `0010` and one named live test |
+| `M-001` | Completed: 2026-09-25 | Prepare the PushPlus account and OpenAPI settings | JAI-027 G5 credential validation |
+| `M-002` | Completed: 2026-09-25 | Create the local `.env` and enter both PushPlus secrets | JAI-027 G5 controlled live test |
+| `A-001` | Approved and executed once: 2026-09-25 | Explicitly approve JAI-027 G5 | Business migration `0010` and one named live test |
 | `A-002` | Approved: 2026-09-14 | Approve D-038/U1-R, stacked-branch order, and append-only persisted-feedback direction | Bilingual plan update and independent JAI-050 design/implementation |
 | `A-003` | Completed: option 1 | Selected the “Morning Briefing” direction from three U2 options | Visual baseline for JAI-050 after A-002/U1-R |
 | `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
 
 No current queue item authorizes a makeup run, a live recruitment-source request, a second live
-notification, JAI-028's five unattended runs, or JAI-029 release work.
+notification, JAI-028's five unattended runs, or JAI-029 release work. The one approved live
+notification has been consumed and must not be repeated.
 
 ## M-001 — Prepare PushPlus
 

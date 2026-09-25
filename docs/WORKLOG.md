@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-10
+> Last updated: 2026-09-25
 >
 > Active branch: `feature/jai-027-wechat-delivery-idempotency`
 
@@ -35,7 +35,7 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | D-037/G1–G4 approved and complete; G5 pending | `feature/jai-027-wechat-delivery-idempotency` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration, credentials, and live delivery remain unauthorized |
+| JAI-027 | G5 executed once; conservative ledger correction pending approval | `feature/jai-027-wechat-delivery-idempotency` | Business schema is at `0010`; snapshot 2 was submitted once, but final confirmation was blocked by AccessKey rejection and must remain non-resendable |
 
 ## 2. Current decisions
 
@@ -800,6 +800,43 @@ interrupting safe work.
 - Next, verify bilingual structure and links and commit the planning revision; then create `feature/jai-050-production-ui-foundation` from that commit, record Issue startup, and capture option 1 in paired DESIGN.md files before any UI implementation.
 - Planning-document checks passed: development-plan, backlog, WORKLOG, and manual-queue heading counts matched at 45/45, 73/73, 82/82, and 8/8; both backlogs exposed the same 51 Issue headings in the same order, 251 Markdown files had no broken relative links, and `git diff --check` passed. The first ad hoc link-check command hit a Python `SyntaxError` from mismatched list-comprehension parentheses; the corrected checker passed and no repository file required repair.
 
+### 2026-09-25 — JAI-027 G5 migration and single live PushPlus test
+
+- The project owner reported `M-001` and `M-002` complete, approved stopping only the scheduler,
+  then explicitly approved G5: apply business migration `0010` and perform exactly one live
+  PushPlus test for immutable report snapshot `2`. The scheduler remained stopped throughout; no
+  makeup, source collection, unattended run, or second notification was authorized or executed.
+- Preflight verified the feature branch at `ff423f1ec3b622b6bb934519f57ccf5d08cac885`, correct
+  repository-local authorship, both ignored credentials present exactly once and non-empty, healthy
+  `db`/`api`, a stopped scheduler, business Alembic `0009_pipeline_scheduling`, no notification
+  tables, and unchanged snapshot `2` identity. Generated JAI-050 build caches exposed by switching
+  branches were removed only from the JAI-027 worktree; a partial cross-volume backup remains in the
+  local temporary directory and no source file or Git history was changed.
+- Built the approved scheduler image, verified the delivery CLI, and applied the additive migration
+  once. Business Alembic reached `0010_notification_delivery`; `alembic check` reported no pending
+  operations; all pre-existing business-table counts and snapshot `2` remained unchanged; both new
+  delivery tables initially contained zero rows.
+- Executed `jobagent-delivery send --snapshot-id 2` exactly once. PushPlus returned HTTP 200 for
+  submission and a durable provider message identity, so the external message may have been
+  accepted. Final-result authentication then returned `pushplus.access_key_rejected`; the CLI
+  exited non-zero and the original implementation recorded delivery `1` and attempt `1` as
+  `failed`. No retry or second submission was made, and the approved live-send allowance is consumed.
+- The live result exposed a conservative-state defect: after a durable provider identity exists, a
+  final-result lookup error cannot prove final delivery failure. The service now maps every such
+  non-final lookup error to `unknown`; only an explicit provider final status of failed remains
+  `failed`. PostgreSQL regression coverage proves the accepted identity is queried once, the
+  resulting `unknown` delivery is reused without resubmission, and explicit final failure is still
+  preserved. All 35 targeted delivery/notification tests passed.
+- The first complete gate after local credential activation found 348 passing tests and two
+  configuration-test failures because those tests unintentionally read the real ignored `.env`.
+  The tests now change to an isolated temporary working directory and therefore read only their
+  synthetic environment. The rerun passed Ruff format across 251 files, Ruff lint, Mypy across 168
+  source files, all 350 PostgreSQL-enabled tests with no skips, and 85.53% coverage.
+- The existing business rows still retain the old `failed` classification. Correcting exactly the
+  parent and attempt rows to `unknown`, without deleting history, changing the provider identity, or
+  contacting PushPlus, requires project-owner approval before JAI-027 G5 can close. Scheduler restart
+  and JAI-028 remain separately gated.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -826,9 +863,13 @@ interrupting safe work.
 
 ## 5. Next actions
 
-1. Keep `M-001`, `M-002`, and `A-001` deferred in the manual-action queue. Do not apply `0010`, inject credentials, restart the scheduler for JAI-027, or perform the named live snapshot test until the owner completes and approves those items.
-2. `A-002/U1-R` and `A-003/U2` are approved and recorded in the bilingual plans. After committing this planning revision, create the independent stacked `feature/jai-050-production-ui-foundation` branch from the current JAI-027 tip, record startup, and commit paired DESIGN.md files before implementing the read-only page. The branch must not merge into `develop` before JAI-027.
-3. Report 2026-09-07 onward only from ledger evidence; do not infer failure or run makeup without date-specific approval. JAI-028 unattended acceptance and JAI-029 release remain separate Issues.
+1. Obtain owner approval to correct only business delivery `1` and attempt `1` from `failed` to
+   `unknown`; do not change their identities, delete rows, query PushPlus, or submit another message.
+2. Run the proportional and complete PostgreSQL gates, update the final bilingual evidence, and
+   close/integrate JAI-027 only after the persisted ambiguity is safely classified.
+3. Keep the scheduler stopped. Report missing scheduled dates only from ledger evidence; do not run
+   makeup, start JAI-028 unattended acceptance, or perform JAI-029 release work without their
+   separate approvals. JAI-050 remains stacked and cannot integrate before JAI-027.
 
 ## 6. Update template
 

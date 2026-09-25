@@ -6,7 +6,7 @@
 > [`../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](../archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)，
 > SHA-256 为 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`。
 >
-> 最后更新：2026-09-10
+> 最后更新：2026-09-25
 >
 > 当前分支：`feature/jai-027-wechat-delivery-idempotency`
 
@@ -35,7 +35,7 @@
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
 | JAI-025 | 按获批流程优先例外完成、合并并推送到 `develop` | `develop` / `a070030` | 合并后 PostgreSQL 门禁以 295 项测试和 87.82% 覆盖率通过；真实人工评审样本量仍延期到 JAI-049 |
 | JAI-026 | 已完成；G1～G4 后合入 `develop` | `develop` / 当前非快进合并 | 业务迁移、唯一真实 scheduler、受控补跑/复用及合并后完整门禁均通过 |
-| JAI-027 | D-037/G1～G4 已批准并完成；G5 待审批 | `feature/jai-027-wechat-delivery-idempotency` | PostgreSQL 完整门禁以 350 项测试和 85.37% 覆盖率通过；业务迁移、凭据和真实投递仍未授权 |
+| JAI-027 | G5 已执行一次；等待批准保守修正台账 | `feature/jai-027-wechat-delivery-idempotency` | 业务 Schema 已到 `0010`；快照 2 已提交一次，但最终确认被 AccessKey 拒绝阻断，必须保持不可重发 |
 
 ## 2. 当前决策
 
@@ -775,6 +775,35 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 顺序；U3、真实外�
 - 下一步先验证双语结构与链接并提交计划变更，再从该提交创建 `feature/jai-050-production-ui-foundation`，登记 Issue 启动并把方案 1 固化为成对 DESIGN.md；只有该设计基线提交后才实现页面。
 - 计划文档检查通过：开发计划、Backlog、WORKLOG 和人工队列标题数分别为 45/45、73/73、82/82、8/8；两份 Backlog 的 51 个 Issue 标题顺序一致，251 份 Markdown 无失效相对链接，`git diff --check` 通过。首次临时链接检查命令因列表推导式括号错误触发 Python `SyntaxError`；修正检查器后通过，仓库文件无需修复。
 
+### 2026-09-25 — JAI-027 G5 业务迁移与唯一一次 PushPlus 真实测试
+
+- 项目负责人确认 `M-001`、`M-002` 已完成，批准只停止 scheduler，随后明确批准 G5：把业务库迁移
+  到 `0010`，并且只对不可变日报快照 `2` 执行一次真实 PushPlus 测试。全过程 scheduler 保持停止；
+  未授权或执行补跑、来源采集、无人值守运行或第二次通知。
+- 前置核验确认 feature 分支位于 `ff423f1ec3b622b6bb934519f57ccf5d08cac885`，仓库级作者正确，
+  两项被忽略的凭据各只配置一次且非空，`db`/`api` 健康、scheduler 已停止，业务 Alembic 为
+  `0009_pipeline_scheduling`，通知表不存在，快照 `2` 身份不变。切换分支时暴露的 JAI-050 生成式
+  构建缓存只从 JAI-027 工作区移除；跨卷移动产生的部分备份仍在本机临时目录，没有改动源码或 Git
+  历史。
+- 已构建获批 scheduler 镜像并核验投递 CLI，随后只执行一次追加式迁移。业务 Alembic 到达
+  `0010_notification_delivery`；`alembic check` 无待执行操作；全部既有业务表计数和快照 `2` 保持
+  不变；两张新投递表初始均为零行。
+- `jobagent-delivery send --snapshot-id 2` 恰好执行一次。PushPlus 对提交返回 HTTP 200，并返回可持久
+  化的 provider 消息身份，因此外部消息可能已被受理。随后最终结果鉴权返回
+  `pushplus.access_key_rejected`；CLI 非零退出，原实现把投递 `1` 与尝试 `1` 记成 `failed`。没有重试
+  或第二次提交，获批的真实发送额度已经使用完毕。
+- 真实结果暴露了保守状态缺陷：provider 身份已持久化后，最终结果查询错误无法证明投递最终失败。
+  服务现已把所有这类非最终查询错误映射为 `unknown`；只有 provider 明确返回最终失败时才保留
+  `failed`。PostgreSQL 回归测试证明已受理身份只查询一次，`unknown` 会被复用且不重新提交，明确最终
+  失败仍会保留；35 项定向投递/通知测试全部通过。
+- 本地凭据启用后的首次完整门禁有 348 项测试通过，另有两项配置测试因意外读取真实且被忽略的
+  `.env` 而失败。测试现会切换到隔离的临时工作目录，只读取自身合成环境。重新运行后，Ruff format
+  检查 251 个文件、Ruff lint、168 个源文件的 Mypy、350 项启用 PostgreSQL 且无跳过的测试均通过，
+  覆盖率 85.53%。
+- 现有业务行仍保留旧的 `failed` 分类。把父记录与尝试记录各一行原位修正为 `unknown`，且不删除
+  历史、不改变 provider 身份、不访问 PushPlus，仍需项目负责人批准后才能关闭 JAI-027 G5。
+  scheduler 重启与 JAI-028 继续受独立闸门约束。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -801,9 +830,12 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 顺序；U3、真实外�
 
 ## 5. 下一步
 
-1. 在手动操作队列中保持 `M-001`、`M-002` 与 `A-001` 延期；负责人完成并批准前，不应用 `0010`、不注入凭据、不为 JAI-027 重启 scheduler，也不执行指定快照的真实测试。
-2. `A-002/U1-R` 与 `A-003/U2` 已批准并写入双语计划。提交本次计划变更后，从当前 JAI-027 末端创建独立堆叠 `feature/jai-050-production-ui-foundation`，先登记启动并提交成对 DESIGN.md，再实现只读页面；该分支不得先于 JAI-027 合入 `develop`。
-3. 2026-09-07 之后只按台账证据报告；未经日期级批准不得推断失败或补跑。JAI-028 无人值守验收与 JAI-029 发布仍保持独立。
+1. 取得负责人批准，只把业务投递 `1` 与尝试 `1` 从 `failed` 原位修正为 `unknown`；不得改变身份、
+   删除记录、查询 PushPlus 或再次提交消息。
+2. 执行相称检查和 PostgreSQL 完整门禁，补齐最终双语证据；只有持久化歧义得到安全分类后，才关闭
+   并集成 JAI-027。
+3. scheduler 继续停止。缺失调度日期只按台账证据报告；未经独立批准，不得补跑、启动 JAI-028
+   无人值守验收或执行 JAI-029 发布工作。JAI-050 继续作为堆叠分支，不能先于 JAI-027 集成。
 
 ## 6. 更新模板
 
