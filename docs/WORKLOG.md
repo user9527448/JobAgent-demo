@@ -35,8 +35,8 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | D-037/G1–G4 approved and complete; G5 pending | remote feature tip `ff423f1` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration, credentials, and live delivery remain unauthorized |
-| JAI-050 | Implementation/design QA/full gate complete; `M-003` pending | implementation checkpoint `96fe798` | 357 tests and 85.65% coverage passed; later commits only synchronize status documentation; container build verification and ordered integration remain open |
+| JAI-027 | D-037/G1–G4 complete; M-001/M-002 validated; G5 approval pending | remote feature tip `ff423f1` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration and live delivery remain unauthorized until A-001 |
+| JAI-050 | Technical acceptance complete; ordered integration pending | implementation checkpoint `96fe798` | 357 tests, 85.65% coverage, design QA, and container build passed; JAI-027 must integrate first |
 
 ## 2. Current decisions
 
@@ -855,6 +855,9 @@ as part of this proposal.
 - Pipeline evidence remains two succeeded runs: the 2026-09-06 makeup and 2026-09-15 scheduled run, each with exactly four first-attempt succeeded stages. There are no run rows for 2026-09-16 through 2026-09-25. Startup logs show job registration and scheduler start but no explicit misfire event, so the ten missing dates are not classified as success, failure, or misfire. Business counts remain 13/43/52/11/15/3, matching the last recorded state.
 - `node:24-alpine` is still absent locally, so `M-003` remains pending. No image pull, container build/recreation, scheduler change, makeup, migration, delivery, source request, or database write was performed by this audit.
 - The owner then explicitly approved “stop only scheduler.” `docker compose stop scheduler` stopped that single service with exit code 143; one healthy `db` and one healthy `api` remained running. Post-stop read-only SQL confirmed `0009_pipeline_scheduling`, the retained fixed job row with its stored 2026-09-26 08:00 time, two succeeded pipeline runs, and eight succeeded stage rows. No makeup, migration, delivery, source request, or business write occurred. Any scheduler restart now requires fresh explicit approval.
+- The owner completed M-001/M-002/M-003. Safe validation read only key presence: each required PushPlus variable occurs exactly once with a non-empty value, `.env` is ignored by Git, and neither value was printed or persisted elsewhere. No provider request was made.
+- Verified local `node:24-alpine` digest `ebfe2f9...` and ran `docker compose build api`. The build completed frozen-lockfile pnpm installation, the Vite production bundle, the Python wheel, and final `jobagent-api:latest` image `d9299ba...`. A no-network ephemeral check confirmed one index, one JavaScript asset, and one CSS asset under `/app/frontend-dist`.
+- Existing `api` and `db` container identities did not change and remained healthy; scheduler remained `Exited (143)`. This closes M-003 and all JAI-050 technical acceptance. JAI-050 remains unintegrated until JAI-027 G5 completes and JAI-027 integrates first. No service recreation, scheduler start, migration, delivery, source request, or business-data write occurred.
 
 ## 4. Verification and blockers
 
@@ -882,11 +885,12 @@ as part of this proposal.
 - 2026-09-25 runtime recheck: Docker client 29.6.2 is installed, but `npipe:////./pipe/docker_engine` does not exist; A-006 ledger verification and `M-003` container-build verification remain blocked on a manually restored Docker daemon.
 - 2026-09-25 post-recovery A-006 audit: Compose exposes exactly one `db`, `api`, and `scheduler`; Alembic is `0009_pipeline_scheduling`; one fixed job next runs at 2026-09-26 08:00; two runs/eight stages are all succeeded; ten dates from 2026-09-16 through 2026-09-25 have no run rows; startup logs contain no explicit misfire event; `node:24-alpine` is absent.
 - A-006 closure verification: only `scheduler` is stopped (`Exited (143)`); `db`/`api` remain healthy. The retained APScheduler row and unchanged two-run/eight-stage ledger were verified read-only after the stop.
+- M-001/M-002 validation: both required variable names appeared exactly once with non-empty values; `.env` remained Git-ignored; no secret value was emitted. M-003 validation: `docker compose build api` succeeded, the image contained the frontend index/JS/CSS artifacts, existing service container IDs were unchanged, and scheduler remained stopped.
 
 ## 5. Next actions
 
-1. The owner completes `M-003` by pre-pulling `node:24-alpine`; the agent then reruns the JAI-050 container build without recreating current services and closes its remaining technical acceptance item.
-2. The owner completes `M-001` and `M-002` when ready, then separately approves `A-001/G5`. Only after JAI-027 G5 closes may JAI-027 integrate first; then normally synchronize/reverify JAI-050 and integrate it.
+1. The owner separately approves `A-001/G5` when ready. Only that approval authorizes business migration `0010` and exactly one live PushPlus test of report snapshot 2.
+2. After G5 evidence and the full gate pass, integrate JAI-027 first. Then normally synchronize/reverify JAI-050 and integrate it in order.
 3. Keep the scheduler stopped unless a fresh explicit approval changes that state. Do not perform missing-date makeups or start JAI-028, JAI-051, or JAI-029 early.
 
 ## 6. Update template

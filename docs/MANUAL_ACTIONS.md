@@ -10,13 +10,13 @@ Update the paired files whenever an item is added, completed, deferred, or super
 
 | ID | Status | Owner action | Unblocks |
 |---|---|---|---|
-| `M-001` | Deferred by owner | Prepare the PushPlus account and OpenAPI settings | JAI-027 G5 credential validation |
-| `M-002` | Deferred by owner | Create the local `.env` and enter both PushPlus secrets | JAI-027 G5 controlled live test |
-| `A-001` | Pending after `M-001`/`M-002` | Explicitly approve JAI-027 G5 | Business migration `0010` and one named live test |
+| `M-001` | Completed and safely validated | PushPlus account and OpenAPI settings prepared | JAI-027 G5 credential validation |
+| `M-002` | Completed and safely validated | Ignored local `.env` contains both non-empty PushPlus secrets | JAI-027 G5 controlled live test |
+| `A-001` | Ready for explicit approval | Explicitly approve JAI-027 G5 | Business migration `0010` and one named live test |
 | `A-002` | Approved: 2026-09-14 | Approve D-038/U1-R, stacked-branch order, and append-only persisted-feedback direction | Bilingual plan update and independent JAI-050 design/implementation |
 | `A-003` | Completed: option 1 | Selected the “Morning Briefing” direction from three U2 options | Visual baseline for JAI-050 after A-002/U1-R |
 | `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
-| `M-003` | Pending | Restore Docker Hub access or pre-pull `node:24-alpine` | JAI-050 container-build verification |
+| `M-003` | Completed and verified | `node:24-alpine` pulled and `docker compose build api` passed | JAI-050 technical acceptance complete |
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
 | `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
 
@@ -36,8 +36,10 @@ When Docker Hub access is available, run this from any directory:
 docker pull node:24-alpine
 ```
 
-Report only `M-003 complete`. The agent will rerun `docker compose build api`; do not recreate or
-restart the current Compose services as part of this item.
+M-003 completed on 2026-09-25. The local `node:24-alpine` digest was verified, and
+`docker compose build api` completed the locked pnpm install, Vite production build, Python wheel
+build, and final image export. An ephemeral image check found the built index plus JavaScript and CSS
+assets. Existing `api`/`db` container IDs remained unchanged and healthy; scheduler stayed stopped.
 
 ## A-005/A-006 — Decide the restored scheduler state
 
