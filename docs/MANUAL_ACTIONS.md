@@ -21,7 +21,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
 | `A-007` | Partially executed: 2026-09-25 | Deploy the JAI-050 API image and approve the JAI-028 operating window | JAI-050 `/app/` is live; scheduler start is now gated by A-008 |
 | `A-008` | Approved and activated: 2026-09-25 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | Sole scheduler is running; count the five live trials |
-| `A-009` | Approved: 2026-09-25 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Unattended daily verification and durable JAI-028 evidence |
+| `A-009` | Approved and activated: 2026-09-25 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Automation `jai-028` is active for five daily checks |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -72,6 +72,12 @@ branch. On failure, duplicate, non-terminal timeout, ambiguous delivery, multipl
 anomaly it must immediately stop the scheduler and notify the owner, with no makeup or resend. After
 the fifth success it must stop the scheduler, run final JAI-028 gates, and push closure evidence, but
 must not merge `develop` or start a later Issue.
+
+The thread heartbeat was created successfully as automation `jai-028`, active for five daily checks
+at 08:15 `Asia/Shanghai`. Because creation occurred after the 2026-09-25 check time, its five
+occurrences cover 2026-09-26 through 2026-09-30. Viewing the saved automation confirmed it remains
+active. The first two creation attempts made no automation or runtime change: one had a local call
+syntax error, and one was rejected because immediate creation must omit an explicit DTSTART.
 
 ## M-003 — Restore the Docker build prerequisite
 

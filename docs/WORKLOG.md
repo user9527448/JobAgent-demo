@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Active; sole verified scheduler running under `A-008`, five-day audit approved by `A-009` | `feature/jai-028-e2e-unattended-trials` | Next slot 2026-09-26 08:00; automatic evidence audit is authorized; no makeup |
+| JAI-028 | Active; sole verified scheduler running and `A-009/jai-028` heartbeat active | `feature/jai-028-e2e-unattended-trials` | Next slot 2026-09-26 08:00; five checks run daily at 08:15 through September 30; no makeup |
 
 ## 2. Current decisions
 
@@ -983,6 +983,12 @@ as part of this proposal.
   Docker/business-ledger reads, anomaly-triggered scheduler stop and notification, successful-run
   paired documentation checks and normal feature-branch commit/push, and fifth-success shutdown plus
   final JAI-028 gates. Makeup, resend, `develop` merge, and later-Issue work remain forbidden.
+- Created active thread automation `jai-028` for five daily 08:15 `Asia/Shanghai` checks, covering
+  September 26 through 30 because creation occurred after the September 25 check time. A saved-state
+  view confirmed it is active. The first local invocation had a quotation syntax error, and the next
+  was rejected because immediate creation cannot include DTSTART; neither created an automation or
+  changed runtime state. The accepted recurrence omits DTSTART while retaining exactly five future
+  occurrences.
 
 ## 4. Verification and blockers
 
@@ -1016,8 +1022,7 @@ as part of this proposal.
 
 1. Under `A-007`, recreate only `api` from the verified image while scheduler remains stopped; verify
    health, `/app/`, and container identity.
-2. Create the approved five-day verification heartbeat; at and after each slot,
-   verify the single-scheduler invariant and record terminal run,
+2. Let automation `jai-028` verify the single-scheduler invariant after each slot and record terminal run,
    stage, report, delivery, availability, completeness, parsing, duration, and duplicate evidence.
 3. Record each of five actual automatic runs only after database evidence exists. Do not start
    JAI-051 or JAI-029 before JAI-028 closes.
