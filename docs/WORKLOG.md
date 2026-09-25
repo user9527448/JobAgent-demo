@@ -989,6 +989,12 @@ as part of this proposal.
   was rejected because immediate creation cannot include DTSTART; neither created an automation or
   changed runtime state. The accepted recurrence omits DTSTART while retaining exactly five future
   occurrences.
+- After the owner restarted Docker Desktop at approximately 23:40 `Asia/Shanghai`, a read-only audit
+  found healthy `db`/`api`, exactly one scheduler using the same verified
+  `sha256:7138bffe...` image, and restart count zero. The fixed job still points to 2026-09-26 08:00;
+  ledgers remain two succeeded runs, eight succeeded stages, three reports, and the prior one
+  `unknown` delivery/attempt. `/app/` and both health endpoints returned HTTP 200. The restart caused
+  no makeup, early pipeline row, or notification attempt.
 
 ## 4. Verification and blockers
 
