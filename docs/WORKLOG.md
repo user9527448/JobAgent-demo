@@ -36,7 +36,8 @@
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
-| JAI-050 | Latest `develop` synchronized and reverified; ready for ordered integration | implementation checkpoint `96fe798` plus ordinary merge | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed; JAI-027 integrated first |
+| JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
+| JAI-028 | Started under approved live gate `A-007` | `feature/jai-028-e2e-unattended-trials` | Deploy `/app/`, then count five automatic runs from database evidence only; no makeup |
 
 ## 2. Current decisions
 
@@ -932,6 +933,28 @@ as part of this proposal.
   JAI-028 trial, JAI-051 work, or JAI-029 release action occurred. JAI-050 is ready for its scoped
   merge commit, normal push, and ordered non-fast-forward integration into `develop`.
 
+### 2026-09-25 — JAI-050 integrated and JAI-028 started
+
+- JAI-050 feature tip `8c856b1af39b8d9ac9f199110cec925905faa8a8` was normally pushed and
+  integrated through non-fast-forward `develop` commit
+  `dcdd697f6374e6c9d9dee65acf67dfb0aaf281f3`. The post-merge frontend gate and the complete
+  PostgreSQL gate passed again with 357 tests, no skips, and 85.80% coverage. Local `develop`,
+  `origin/develop`, and GitHub matched; both JAI-027 and JAI-050 feature tips are ancestors.
+- The version-control audit found one bounded historical divergence: GitHub `main` has README-only
+  commit `8a9a3235956e3b8811052e8cf025cad088e98619` from 2026-08-27 on top of the local `main`
+  baseline. It contains no product code and is not merged or rewritten during JAI-028; JAI-029 must
+  explicitly reconcile it before release. The active `develop` line and scoped feature refs remain
+  clean, published, and auditable.
+- Created `feature/jai-028-e2e-unattended-trials` from `dcdd697f...`. The owner approved `A-007`:
+  recreate only `api` from the verified JAI-050 image, verify `/app/`, then start exactly one
+  scheduler for five consecutive automatic runs. Approved effects are public-source requests,
+  resulting business writes, and idempotent pipeline delivery. Makeup, manual resend, scaling,
+  JAI-051, and JAI-029 remain out of scope.
+- Trial results are never prefilled. A run counts only after read-only database evidence confirms its
+  scheduled identity, terminal pipeline/stage states, immutable report, delivery ledger, metrics, and
+  absence of duplicate announcements/notifications. Any failure, duplicate, non-terminal state,
+  ambiguous delivery, or multiple scheduler instance pauses acceptance for diagnosis.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -962,11 +985,12 @@ as part of this proposal.
 
 ## 5. Next actions
 
-1. Commit and normally push the verified ordinary merge on JAI-050, then non-fast-forward merge it
-   into `develop` in the recorded order.
-2. Repeat the complete post-merge gate on `develop` and verify local, tracking, and GitHub equality.
-3. Keep the scheduler stopped unless a fresh explicit approval changes that state. Do not perform
-   missing-date makeups or start JAI-028, JAI-051, or JAI-029 early.
+1. Under `A-007`, recreate only `api` from the verified image while scheduler remains stopped; verify
+   health, `/app/`, and container identity.
+2. Record a pre-start business-ledger snapshot, then start exactly one scheduler and verify its next
+   automatic run. Do not run a makeup or manually invoke delivery.
+3. Record each of five actual automatic runs only after database evidence exists. Do not start
+   JAI-051 or JAI-029 before JAI-028 closes.
 
 ## 6. Update template
 

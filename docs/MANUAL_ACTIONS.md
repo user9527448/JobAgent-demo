@@ -19,10 +19,26 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `M-003` | Completed and verified | `node:24-alpine` pulled and `docker compose build api` passed | JAI-050 technical acceptance complete |
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
 | `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
+| `A-007` | Approved: 2026-09-25 | Deploy the JAI-050 API image and start JAI-028's sole scheduler for five unattended trials | JAI-050 `/app/` runtime and JAI-028 live acceptance |
 
-No current queue item authorizes a makeup run, a live recruitment-source request, a second live
-notification, JAI-028's five unattended runs, or JAI-029 release work. The one approved live
-notification has been consumed and must not be repeated.
+`A-007` authorizes only the normal scheduled JAI-028 window: one scheduler, approved public-source
+requests, resulting business writes, and the pipeline's idempotent PushPlus delivery. It does not
+authorize a makeup run, manual delivery/resend, scheduler scaling, JAI-051, or JAI-029 release work.
+The earlier JAI-027 one-off live notification allowance remains consumed and is not reused.
+
+## A-007 — Deploy JAI-050 and run JAI-028 unattended acceptance
+
+The owner approved recreating only the `api` service from the verified JAI-050 image, accepting a
+brief API interruption while keeping the scheduler stopped. After `/app/`, health, and container
+identity are verified, the owner also approved starting exactly one scheduler for JAI-028's five
+consecutive automatic trials. Only actual scheduled runs evidenced by `pipeline_runs`, all required
+stage rows, report identity, and notification ledgers count. Missing dates are not inferred, and no
+manual makeup is authorized. A failure, duplicate, non-terminal run, ambiguous delivery, or loss of
+the single-scheduler invariant pauses acceptance for read-only diagnosis before any further action.
+
+If uninterrupted, the retained job row currently makes 2026-09-26 through 2026-09-30 the expected
+five-run observation window. This is an expectation, not a pre-recorded result; each day is recorded
+only after database evidence exists.
 
 ## M-003 — Restore the Docker build prerequisite
 
