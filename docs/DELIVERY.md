@@ -70,6 +70,9 @@ users. See the official [send API](https://www.pushplus.plus/doc/guide/api.html)
 - A part receives at most three submissions with 30- and 60-second delays.
 - A durable accepted `shortCode` is queried in a bounded window without resubmission. A later
   pipeline retry resumes that query.
+- After a `shortCode` is durable, any error that prevents final-result lookup is recorded as
+  `unknown`, even when that lookup error itself is permanent. Only an explicit provider final
+  status of failed may terminate the accepted attempt as `failed`.
 - A write/read timeout, malformed accepted submission response, cancellation during submission,
   or stale `submitting` attempt becomes `unknown` because external acceptance may already exist.
 - A PostgreSQL session advisory lock serializes scheduler and operator work for one report/channel.

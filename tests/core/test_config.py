@@ -9,8 +9,9 @@ from jobagent.core.exceptions import ConfigurationError
 
 
 @pytest.fixture(autouse=True)
-def clear_cached_settings(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Ensure each test reads its own environment variables."""
+def clear_cached_settings(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Ensure each test reads only its own environment variables."""
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setenv(
         "JOBAGENT_DATABASE_URL",
         "postgresql+psycopg://jobagent:test-only@localhost:5432/jobagent_test",

@@ -35,8 +35,8 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | D-037/G1–G4 complete; M-001/M-002 validated; G5 approval pending | remote feature tip `ff423f1` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration and live delivery remain unauthorized until A-001 |
-| JAI-050 | Technical acceptance complete; ordered integration pending | implementation checkpoint `96fe798` | 357 tests, 85.65% coverage, design QA, and container build passed; JAI-027 must integrate first |
+| JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
+| JAI-050 | Latest `develop` synchronized and reverified; ready for ordered integration | implementation checkpoint `96fe798` plus ordinary merge | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed; JAI-027 integrated first |
 
 ## 2. Current decisions
 
@@ -859,6 +859,79 @@ as part of this proposal.
 - Verified local `node:24-alpine` digest `ebfe2f9...` and ran `docker compose build api`. The build completed frozen-lockfile pnpm installation, the Vite production bundle, the Python wheel, and final `jobagent-api:latest` image `d9299ba...`. A no-network ephemeral check confirmed one index, one JavaScript asset, and one CSS asset under `/app/frontend-dist`.
 - Existing `api` and `db` container identities did not change and remained healthy; scheduler remained `Exited (143)`. This closes M-003 and all JAI-050 technical acceptance. JAI-050 remains unintegrated until JAI-027 G5 completes and JAI-027 integrates first. No service recreation, scheduler start, migration, delivery, source request, or business-data write occurred.
 
+### 2026-09-25 — JAI-027 G5 migration and single live PushPlus test
+
+- The project owner reported `M-001` and `M-002` complete, approved stopping only the scheduler,
+  then explicitly approved G5: apply business migration `0010` and perform exactly one live
+  PushPlus test for immutable report snapshot `2`. The scheduler remained stopped throughout; no
+  makeup, source collection, unattended run, or second notification was authorized or executed.
+- Preflight verified the feature branch at `ff423f1ec3b622b6bb934519f57ccf5d08cac885`, correct
+  repository-local authorship, both ignored credentials present exactly once and non-empty, healthy
+  `db`/`api`, a stopped scheduler, business Alembic `0009_pipeline_scheduling`, no notification
+  tables, and unchanged snapshot `2` identity. Generated JAI-050 build caches exposed by switching
+  branches were removed only from the JAI-027 worktree; a partial cross-volume backup remains in the
+  local temporary directory and no source file or Git history was changed.
+- Built the approved scheduler image, verified the delivery CLI, and applied the additive migration
+  once. Business Alembic reached `0010_notification_delivery`; `alembic check` reported no pending
+  operations; all pre-existing business-table counts and snapshot `2` remained unchanged; both new
+  delivery tables initially contained zero rows.
+- Executed `jobagent-delivery send --snapshot-id 2` exactly once. PushPlus returned HTTP 200 for
+  submission and a durable provider message identity, so the external message may have been
+  accepted. Final-result authentication then returned `pushplus.access_key_rejected`; the CLI
+  exited non-zero and the original implementation recorded delivery `1` and attempt `1` as
+  `failed`. No retry or second submission was made, and the approved live-send allowance is consumed.
+- The live result exposed a conservative-state defect: after a durable provider identity exists, a
+  final-result lookup error cannot prove final delivery failure. The service now maps every such
+  non-final lookup error to `unknown`; only an explicit provider final status of failed remains
+  `failed`. PostgreSQL regression coverage proves the accepted identity is queried once, the
+  resulting `unknown` delivery is reused without resubmission, and explicit final failure is still
+  preserved. All 35 targeted delivery/notification tests passed.
+- The first complete gate after local credential activation found 348 passing tests and two
+  configuration-test failures because those tests unintentionally read the real ignored `.env`.
+  The tests now change to an isolated temporary working directory and therefore read only their
+  synthetic environment. The rerun passed Ruff format across 251 files, Ruff lint, Mypy across 168
+  source files, all 350 PostgreSQL-enabled tests with no skips, and 85.53% coverage.
+- The project owner explicitly approved correcting only business delivery `1` and attempt `1` from
+  `failed` to `unknown`, preserving the provider identity, safe error metadata, and all history while
+  forbidding any provider request or resend. A guarded single transaction locked and matched both
+  exact rows before changing only their `status` fields. Read-only verification found one delivery
+  and one attempt, both `unknown`, the accepted provider identity still present, snapshot `2`
+  unchanged, Alembic at `0010`, one scheduler job, two succeeded pipeline runs, and eight succeeded
+  stage runs. The scheduler remained `Exited (143)`; `db` and `api` were healthy.
+- Commit `680fa04` preserves the conservative-state fix, regression coverage, G5 evidence, and
+  paired documentation on the JAI-027 feature branch. A direct GitHub push timed out on port 443;
+  the normal push then succeeded with the previously approved command-scoped proxy. Local HEAD,
+  `origin/feature/jai-027-wechat-delivery-idempotency`, and GitHub matched, while `origin` remained
+  the existing HTTPS URL and no persistent proxy setting was created. A later Compose status query
+  was blocked by the current Windows Docker-config/pipe permissions; no container command was run,
+  the PostgreSQL gate still reached the existing test database, and no scheduler-state inference was
+  made from that failed query.
+
+### 2026-09-25 — JAI-050 synchronized with JAI-027 and reverified
+
+- Normally merged the published JAI-027 `develop` baseline `5c56af363066c9bf6d1909e274f83c430b4159b2`
+  into `feature/jai-050-production-ui-foundation`. The only conflicts were in eight paired planning,
+  backlog, manual-action, and WORKLOG files; they were resolved by retaining both histories and the
+  formal JAI-050 → JAI-028 → JAI-051 → JAI-029 order. No application or frontend conflict occurred,
+  and no history was rebased or rewritten.
+- The first frozen-lockfile offline install could not resolve missing local metadata for
+  `@testing-library/dom`; a subsequent normal frozen-lockfile install restored all 288 packages from
+  the existing pnpm store with zero downloads. Prettier, ESLint, strict TypeScript, three Vitest
+  cases, the Vite production build, and all four Sites package/worker checks passed. The first Sites
+  check was mistakenly run before the production build and failed only because `dist/client/index.html`
+  did not yet exist; rerunning build before that check passed without a product change.
+- The PostgreSQL-enabled complete gate passed Ruff format across 265 files, Ruff lint, Mypy across
+  176 source files, all 357 tests without skips, and 85.80% coverage. `docker compose config --quiet`
+  passed. A first image build was safely interrupted after its dependency download stopped producing
+  progress; the bounded retry completed and produced `jobagent-api:latest` image
+  `sha256:1662d4ec25639fa7657ee34ca95b906389df51535c28e29bb90118af76c48292`.
+  A no-network ephemeral check found the frontend index, JavaScript, and CSS artifacts under
+  `/app/frontend-dist`.
+- Existing `db` and `api` containers remained healthy and were not recreated; scheduler remained
+  `Exited (143)`. No migration, business-data write, provider/source request, makeup, unattended
+  JAI-028 trial, JAI-051 work, or JAI-029 release action occurred. JAI-050 is ready for its scoped
+  merge commit, normal push, and ordered non-fast-forward integration into `develop`.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -889,9 +962,11 @@ as part of this proposal.
 
 ## 5. Next actions
 
-1. The owner separately approves `A-001/G5` when ready. Only that approval authorizes business migration `0010` and exactly one live PushPlus test of report snapshot 2.
-2. After G5 evidence and the full gate pass, integrate JAI-027 first. Then normally synchronize/reverify JAI-050 and integrate it in order.
-3. Keep the scheduler stopped unless a fresh explicit approval changes that state. Do not perform missing-date makeups or start JAI-028, JAI-051, or JAI-029 early.
+1. Commit and normally push the verified ordinary merge on JAI-050, then non-fast-forward merge it
+   into `develop` in the recorded order.
+2. Repeat the complete post-merge gate on `develop` and verify local, tracking, and GitHub equality.
+3. Keep the scheduler stopped unless a fresh explicit approval changes that state. Do not perform
+   missing-date makeups or start JAI-028, JAI-051, or JAI-029 early.
 
 ## 6. Update template
 

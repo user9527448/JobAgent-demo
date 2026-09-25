@@ -285,26 +285,20 @@ class SqlAlchemyNotificationDeliveryService:
                         code="notification.result_temporarily_unavailable",
                         details={"delivery_id": delivery_id, "attempt_id": attempt.id},
                     ) from None
-                status = (
-                    DeliveryAttemptStatus.UNKNOWN
-                    if error.kind is DeliveryFailureKind.UNKNOWN
-                    else DeliveryAttemptStatus.FAILED
-                )
-                delivery_status = (
-                    DeliveryStatus.UNKNOWN
-                    if error.kind is DeliveryFailureKind.UNKNOWN
-                    else DeliveryStatus.FAILED
-                )
+                # Submission already returned a durable provider identity. A lookup
+                # error cannot prove final delivery failure, even when its immediate
+                # cause (for example an AccessKey rejection) is permanent. Keep the
+                # logical outcome unknown so no later operator action can resubmit it.
                 message = "Provider final status could not be safely confirmed."
                 await self._repository.finish_attempt(
                     attempt.id,
-                    status=status,
+                    status=DeliveryAttemptStatus.UNKNOWN,
                     error_code=error.code,
                     error_message=message,
                 )
                 return await self._repository.finish_delivery(
                     delivery_id,
-                    status=delivery_status,
+                    status=DeliveryStatus.UNKNOWN,
                     error_code=error.code,
                     error_message=message,
                 )

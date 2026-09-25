@@ -35,8 +35,8 @@
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
 | JAI-025 | 按获批流程优先例外完成、合并并推送到 `develop` | `develop` / `a070030` | 合并后 PostgreSQL 门禁以 295 项测试和 87.82% 覆盖率通过；真实人工评审样本量仍延期到 JAI-049 |
 | JAI-026 | 已完成；G1～G4 后合入 `develop` | `develop` / 当前非快进合并 | 业务迁移、唯一真实 scheduler、受控补跑/复用及合并后完整门禁均通过 |
-| JAI-027 | D-037/G1～G4 完成；M-001/M-002 已验证；G5 待审批 | 远程 feature 末端 `ff423f1` | PostgreSQL 完整门禁以 350 项测试和 85.37% 覆盖率通过；A-001 前仍未授权业务迁移与真实投递 |
-| JAI-050 | 技术验收完成；等待按序集成 | 实现检查点 `96fe798` | 357 项测试、85.65% 覆盖率、design QA 和容器构建均通过；必须先集成 JAI-027 |
+| JAI-027 | D-037/G1～G5 后完成、合并并推送到 `develop` | `develop` / `5c56af3` | 业务 Schema 已到 `0010`；快照 2 只提交一次，未确认的已受理结果持久保存为 `unknown`，合并后完整门禁通过 |
+| JAI-050 | 已同步最新 `develop` 并复验；可按序集成 | 实现检查点 `96fe798` 加普通 merge | 357 项测试、85.80% 覆盖率、design QA 和重建容器镜像均通过；JAI-027 已先行集成 |
 
 ## 2. 当前决策
 
@@ -831,6 +831,62 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 关键路径；本提案
 - 已核验本地 `node:24-alpine` 摘要 `ebfe2f9...` 并执行 `docker compose build api`。构建按 frozen lockfile 完成 pnpm 安装、Vite 生产包、Python wheel 和最终 `jobagent-api:latest` 镜像 `d9299ba...`；无网络临时检查确认 `/app/frontend-dist` 中存在一个入口、一个 JavaScript 和一个 CSS 资源。
 - 既有 `api` 与 `db` 容器身份未变化且保持健康，scheduler 继续为 `Exited (143)`。M-003 与 JAI-050 全部技术验收至此关闭；JAI-050 仍等待 JAI-027 G5 完成并先行集成。本阶段没有重建服务、启动 scheduler、迁移、投递、来源请求或业务数据写入。
 
+### 2026-09-25 — JAI-027 G5 业务迁移与唯一一次 PushPlus 真实测试
+
+- 项目负责人确认 `M-001`、`M-002` 已完成，批准只停止 scheduler，随后明确批准 G5：把业务库迁移
+  到 `0010`，并且只对不可变日报快照 `2` 执行一次真实 PushPlus 测试。全过程 scheduler 保持停止；
+  未授权或执行补跑、来源采集、无人值守运行或第二次通知。
+- 前置核验确认 feature 分支位于 `ff423f1ec3b622b6bb934519f57ccf5d08cac885`，仓库级作者正确，
+  两项被忽略的凭据各只配置一次且非空，`db`/`api` 健康、scheduler 已停止，业务 Alembic 为
+  `0009_pipeline_scheduling`，通知表不存在，快照 `2` 身份不变。切换分支时暴露的 JAI-050 生成式
+  构建缓存只从 JAI-027 工作区移除；跨卷移动产生的部分备份仍在本机临时目录，没有改动源码或 Git
+  历史。
+- 已构建获批 scheduler 镜像并核验投递 CLI，随后只执行一次追加式迁移。业务 Alembic 到达
+  `0010_notification_delivery`；`alembic check` 无待执行操作；全部既有业务表计数和快照 `2` 保持
+  不变；两张新投递表初始均为零行。
+- `jobagent-delivery send --snapshot-id 2` 恰好执行一次。PushPlus 对提交返回 HTTP 200，并返回可持久
+  化的 provider 消息身份，因此外部消息可能已被受理。随后最终结果鉴权返回
+  `pushplus.access_key_rejected`；CLI 非零退出，原实现把投递 `1` 与尝试 `1` 记成 `failed`。没有重试
+  或第二次提交，获批的真实发送额度已经使用完毕。
+- 真实结果暴露了保守状态缺陷：provider 身份已持久化后，最终结果查询错误无法证明投递最终失败。
+  服务现已把所有这类非最终查询错误映射为 `unknown`；只有 provider 明确返回最终失败时才保留
+  `failed`。PostgreSQL 回归测试证明已受理身份只查询一次，`unknown` 会被复用且不重新提交，明确最终
+  失败仍会保留；35 项定向投递/通知测试全部通过。
+- 本地凭据启用后的首次完整门禁有 348 项测试通过，另有两项配置测试因意外读取真实且被忽略的
+  `.env` 而失败。测试现会切换到隔离的临时工作目录，只读取自身合成环境。重新运行后，Ruff format
+  检查 251 个文件、Ruff lint、168 个源文件的 Mypy、350 项启用 PostgreSQL 且无跳过的测试均通过，
+  覆盖率 85.53%。
+- 项目负责人明确批准：只把业务投递 `1` 与尝试 `1` 从 `failed` 修正为 `unknown`，保留 provider
+  身份、安全错误元数据和全部历史，且禁止任何 provider 请求或重发。带保护条件的单事务先锁定并
+  精确匹配两行，然后只修改其 `status` 字段。只读复核确认：投递与尝试各一行且均为 `unknown`，
+  已受理 provider 身份仍存在，快照 `2` 未变化，Alembic 为 `0010`，调度作业 1 条，成功流水线运行
+  2 条、成功阶段 8 条。scheduler 保持 `Exited (143)`，`db` 与 `api` 健康。
+- 提交 `680fa04` 已在 JAI-027 feature 分支保存保守状态修复、回归覆盖、G5 证据与成对文档。直接向
+  GitHub 推送时 443 超时，随后使用此前获准的单命令临时代理完成普通推送；本地 HEAD、
+  `origin/feature/jai-027-wechat-delivery-idempotency` 与 GitHub 一致，`origin` 仍为既有 HTTPS 地址，
+  未生成持久代理配置。之后一次 Compose 状态查询受当前 Windows Docker 配置/管道权限阻断；未执行
+  容器操作，PostgreSQL 门禁仍能访问既有测试库，也未根据该失败查询推断 scheduler 状态。
+
+### 2026-09-25 — JAI-050 同步 JAI-027 并完成复验
+
+- 已把发布后的 JAI-027 `develop` 基线 `5c56af363066c9bf6d1909e274f83c430b4159b2` 普通合并到
+  `feature/jai-050-production-ui-foundation`。冲突只出现在八份成对的计划、Backlog、人工操作和
+  WORKLOG 文档；解决时保留双方历史及正式 JAI-050 → JAI-028 → JAI-051 → JAI-029 顺序。应用与
+  前端代码没有冲突，也没有 rebase 或改写历史。
+- 首次 frozen-lockfile 离线安装因本地缺少 `@testing-library/dom` 元数据而无法解析；随后正常的
+  frozen-lockfile 安装从既有 pnpm store 恢复全部 288 个包，下载数为零。Prettier、ESLint、严格
+  TypeScript、3 项 Vitest、Vite 生产构建和 4 项 Sites package/worker 检查全部通过。第一次 Sites
+  检查误在生产构建前执行，仅因 `dist/client/index.html` 尚不存在而失败；改为先 build 再检查后
+  通过，没有产品代码变更。
+- 启用 PostgreSQL 的完整门禁通过：Ruff format 检查 265 个文件、Ruff lint、Mypy 检查 176 个
+  源文件、357 项测试全部通过且无跳过，覆盖率 85.80%。`docker compose config --quiet` 通过。
+  首次镜像构建在依赖下载长时间无进度后被安全中断；有界重试完成并生成 `jobagent-api:latest`
+  镜像 `sha256:1662d4ec25639fa7657ee34ca95b906389df51535c28e29bb90118af76c48292`。无网络临时容器
+  核验确认 `/app/frontend-dist` 中存在前端入口、JavaScript 和 CSS 产物。
+- 既有 `db` 与 `api` 容器保持健康且未重建，scheduler 继续为 `Exited (143)`。未执行迁移、业务
+  数据写入、provider/来源请求、补跑、JAI-028 无人值守验收、JAI-051 工作或 JAI-029 发布操作。
+  JAI-050 已可创建范围内 merge 提交、普通推送并按序非快进合入 `develop`。
+
 ## 4. 检查与阻塞
 
 - JAI-046 最终门禁：Ruff format/lint 通过；56 个源文件的 Mypy 通过；PostgreSQL 启用时 89 项测试全部通过；覆盖率 88.35%。
@@ -861,9 +917,10 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 关键路径；本提案
 
 ## 5. 下一步
 
-1. 负责人准备好后单独批准 `A-001/G5`；只有该批准才授权业务迁移 `0010` 和对日报快照 2 恰好一次的真实 PushPlus 测试。
-2. G5 证据和完整门禁通过后，先集成 JAI-027；随后普通同步、复验并按序集成 JAI-050。
-3. 没有新的明确批准时保持 scheduler 停止；不得补跑缺失日期，也不得提前启动 JAI-028、JAI-051 或 JAI-029。
+1. 提交并普通推送 JAI-050 已复验的普通 merge，再按记录顺序将其非快进合入 `develop`。
+2. 在 `develop` 重跑合并后完整门禁，并核验本地、跟踪与 GitHub 三端一致。
+3. 除非获得新的明确批准，scheduler 继续保持停止；不得补跑缺失日期，也不得提前开始 JAI-028、
+   JAI-051 或 JAI-029。
 
 ## 6. 更新模板
 

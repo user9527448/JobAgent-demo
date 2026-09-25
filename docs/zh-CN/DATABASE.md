@@ -113,3 +113,7 @@ docker compose exec api alembic upgrade head
 迁移 `0009_pipeline_scheduling` 和 `0010_notification_delivery` 都受此保护。迁移 `0010` 新增两张
 投递表，并把流水线约束扩展到第五个 `delivery` 阶段。将它应用到已有数据的业务库、注入 PushPlus
 凭据或发送真实消息均属于需要明确批准的独立 G5 操作。
+
+2026-09-25，负责人批准 G5，已有数据的本地业务库从 `0009_pipeline_scheduling` 升级到
+`0010_notification_delivery`。随后 `alembic check` 显示无待执行操作，既有业务表计数保持不变。
+该事实不授权第二次真实通知、scheduler 重启、补跑或针对业务 Schema 的破坏性测试。

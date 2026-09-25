@@ -172,6 +172,57 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
             assert unknown_reused.dispatch_status is DeliveryDispatchStatus.REUSED
             assert unknown_provider.submit_calls == 1
 
+            confirmation_error_snapshot = await reports.generate(date(2026, 9, 17))
+            confirmation_error_provider = ScriptedProvider(
+                [ProviderSubmission("synthetic-confirmation-error")],
+                results=[
+                    DeliveryProviderError(
+                        "pushplus.access_key_rejected",
+                        kind=DeliveryFailureKind.PERMANENT,
+                    )
+                ],
+            )
+            confirmation_error_service = SqlAlchemyNotificationDeliveryService(
+                reports,
+                repository,
+                lock,
+                confirmation_error_provider,
+                policy=DeliveryServicePolicy(max_result_polls=1),
+            )
+            confirmation_error = await confirmation_error_service.deliver(
+                confirmation_error_snapshot.id
+            )
+            confirmation_error_reused = await confirmation_error_service.deliver(
+                confirmation_error_snapshot.id
+            )
+            assert confirmation_error.delivery is not None
+            assert confirmation_error.delivery.status is DeliveryStatus.UNKNOWN
+            assert confirmation_error.delivery.error_code == "pushplus.access_key_rejected"
+            assert confirmation_error_reused.dispatch_status is DeliveryDispatchStatus.REUSED
+            assert confirmation_error_provider.submit_calls == 1
+            assert confirmation_error_provider.result_calls == ["synthetic-confirmation-error"]
+
+            final_failure_snapshot = await reports.generate(date(2026, 9, 18))
+            final_failure_provider = ScriptedProvider(
+                [ProviderSubmission("synthetic-final-failure")],
+                results=[
+                    ProviderDeliveryResult(
+                        ProviderDeliveryStatus.FAILED,
+                        error_code="pushplus.delivery_failed",
+                    )
+                ],
+            )
+            final_failure = await SqlAlchemyNotificationDeliveryService(
+                reports,
+                repository,
+                lock,
+                final_failure_provider,
+                policy=DeliveryServicePolicy(max_result_polls=1),
+            ).deliver(final_failure_snapshot.id)
+            assert final_failure.delivery is not None
+            assert final_failure.delivery.status is DeliveryStatus.FAILED
+            assert final_failure.delivery.error_code == "pushplus.delivery_failed"
+
             interrupted_snapshot = await reports.generate(date(2026, 9, 12))
             message = DeterministicDeliveryRenderer().render(interrupted_snapshot)
             interrupted_delivery = await repository.get_or_create(message)
@@ -285,8 +336,8 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
                 attempt_count = await session.scalar(
                     select(func.count()).select_from(NotificationDeliveryAttempt)
                 )
-            assert delivery_count == 8
-            assert attempt_count == 12
+            assert delivery_count == 10
+            assert attempt_count == 14
         finally:
             await database.close()
 

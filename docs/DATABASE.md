@@ -114,3 +114,8 @@ Migrations `0009_pipeline_scheduling` and `0010_notification_delivery` are cover
 Migration `0010` adds both delivery tables and extends the pipeline constraint to the fifth
 `delivery` stage. Applying it to the populated business database, injecting PushPlus credentials,
 or sending a live message are separate G5 operations requiring explicit approval.
+
+On 2026-09-25, the owner approved G5 and the populated local business database advanced from
+`0009_pipeline_scheduling` to `0010_notification_delivery`. `alembic check` then reported no pending
+operations and pre-existing business-table counts were unchanged. This does not authorize another
+live notification, a scheduler restart, a makeup run, or destructive business-schema testing.
