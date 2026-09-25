@@ -16,10 +16,58 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-002` | Approved: 2026-09-14 | Approve D-038/U1-R, stacked-branch order, and append-only persisted-feedback direction | Bilingual plan update and independent JAI-050 design/implementation |
 | `A-003` | Completed: option 1 | Selected the “Morning Briefing” direction from three U2 options | Visual baseline for JAI-050 after A-002/U1-R |
 | `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
+| `M-003` | Completed and verified | `node:24-alpine` pulled and `docker compose build api` passed | JAI-050 technical acceptance complete |
+| `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
+| `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
 
 No current queue item authorizes a makeup run, a live recruitment-source request, a second live
 notification, JAI-028's five unattended runs, or JAI-029 release work. The one approved live
 notification has been consumed and must not be repeated.
+
+## M-003 — Restore the Docker build prerequisite
+
+The JAI-050 Dockerfile now builds the locked frontend in a `node:24-alpine` stage. The first
+`docker compose build api` reached Docker Hub but timed out while obtaining its anonymous token over
+IPv6; Compose syntax is valid and no local copy of that image exists. Do not change repository
+remotes, Git proxy settings, or committed Docker configuration to work around this.
+
+When Docker Hub access is available, run this from any directory:
+
+```powershell
+docker pull node:24-alpine
+```
+
+M-003 completed on 2026-09-25. The local `node:24-alpine` digest was verified, and
+`docker compose build api` completed the locked pnpm install, Vite production build, Python wheel
+build, and final image export. An ephemeral image check found the built index plus JavaScript and CSS
+assets. Existing `api`/`db` container IDs remained unchanged and healthy; scheduler stayed stopped.
+
+## A-005/A-006 — Decide the restored scheduler state
+
+Starting Docker Desktop on 2026-09-15 caused Compose's existing `restart: unless-stopped` policy to
+restore the sole scheduler automatically. Read-only evidence shows its next slot is
+2026-09-15 08:00 `Asia/Shanghai`. Leaving it running permits the existing four-stage production
+pipeline to contact approved live sources and write business data at that time. It is not a JAI-028
+trial and does not apply migration `0010`.
+
+The 2026-09-15 slot elapsed before a decision was recorded. Read-only evidence now shows one
+scheduled run for that date, succeeded once across the existing four stages, and the fixed job next
+points to 2026-09-16 08:00. This fact does not retroactively approve the run and is not a JAI-028
+trial.
+
+The 2026-09-16 decision deadline elapsed without a recorded owner decision. Docker was unavailable
+earlier on 2026-09-25 and was later started manually. The completed read-only audit shows one healthy
+database, one healthy API, one scheduler, business Alembic `0009_pipeline_scheduling`, and exactly one
+fixed job next scheduled for 2026-09-26 08:00 `Asia/Shanghai`. The only runs remain the successful
+2026-09-06 makeup and successful 2026-09-15 scheduled run, each with four successful stages. There are
+no run rows for 2026-09-16 through 2026-09-25, and startup logs contain no explicit misfire event.
+
+The owner explicitly approved stopping only the scheduler. `docker compose stop scheduler` completed;
+the scheduler exited with code 143 while `db` and `api` remained healthy. Read-only SQL confirmed
+Alembic `0009_pipeline_scheduling`, one retained fixed job row, two succeeded runs, and eight succeeded
+stage rows. The stored 2026-09-26 08:00 time is durable job state, not an active execution while the
+scheduler container is stopped. Any scheduler restart requires fresh explicit approval. No makeup,
+migration, delivery, or source command was performed.
 
 ## M-001 — Prepare PushPlus
 

@@ -8,7 +8,7 @@
 >
 > Last updated: 2026-09-25
 >
-> Active branch: `feature/jai-027-wechat-delivery-idempotency`
+> Active branch: `feature/jai-050-production-ui-foundation`
 
 ## 1. Current status
 
@@ -35,7 +35,8 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | D-037/G1–G5 complete; ready for non-fast-forward integration | `feature/jai-027-wechat-delivery-idempotency` | Business schema is at `0010`; snapshot 2 was submitted once and its unconfirmed accepted outcome is durably `unknown` and non-resendable |
+| JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
+| JAI-050 | Latest `develop` synchronized and reverified; ready for ordered integration | implementation checkpoint `96fe798` plus ordinary merge | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed; JAI-027 integrated first |
 
 ## 2. Current decisions
 
@@ -266,6 +267,16 @@ later completion while safe repository work continues. The paired `docs/MANUAL_A
 values. Deferred items are not silently treated as approval. They should be surfaced again only when
 they block the next planned write or when their external state changes, rather than repeatedly
 interrupting safe work.
+
+### D-040 Withdraw the temporary spreadsheet proposal and restore the formal path
+
+On 2026-09-23 the project owner withdrew the proposed spreadsheet-backed acceleration path. Its
+independent audit branch is retained remotely as an unmerged documentation record at `53ada588`, but
+neither JAI-052 nor JAI-053 enters the active backlog or completion count. No spreadsheet-derived
+product implementation, business-data import, database change, scheduler change, or source contract
+is adopted. Work resumes on the already approved critical path
+JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029, and the shared resource will not be accessed again
+as part of this proposal.
 
 ## 3. Active work history
 
@@ -800,6 +811,54 @@ interrupting safe work.
 - Next, verify bilingual structure and links and commit the planning revision; then create `feature/jai-050-production-ui-foundation` from that commit, record Issue startup, and capture option 1 in paired DESIGN.md files before any UI implementation.
 - Planning-document checks passed: development-plan, backlog, WORKLOG, and manual-queue heading counts matched at 45/45, 73/73, 82/82, and 8/8; both backlogs exposed the same 51 Issue headings in the same order, 251 Markdown files had no broken relative links, and `git diff --check` passed. The first ad hoc link-check command hit a Python `SyntaxError` from mismatched list-comprehension parentheses; the corrected checker passed and no repository file required repair.
 
+### 2026-09-14 — JAI-050 production frontend foundation started
+
+- Created `feature/jai-050-production-ui-foundation` at planning commit `ff423f1ec3b622b6bb934519f57ccf5d08cac885` under the approved stacked strategy. It inherits JAI-027 G1–G4 but must not merge into `develop` before JAI-027.
+- Re-verified the original option 1 reference and added it as a versioned documentation asset. The image is `1484x1060` with SHA-256 `09D55CFD2B5550E6D4D199004F690992DA90703B73AC38828808F94295AF8DE4`. It governs composition and hierarchy only; its generated business data must not enter implementation.
+- Added paired DESIGN.md files that define information architecture, visual tokens, responsive/accessibility rules, the read-only API list, pre-`0010` delivery-state compatibility, FastAPI same-origin serving, and the design-QA gate. Both indexes and the English/Chinese AGENTS UI-required context are synchronized.
+- No frontend dependency or application code has changed in this stage. Next, verify and commit the design baseline, then audit backend query/static-serving boundaries before implementation.
+- Design-baseline checks passed: DESIGN, AGENTS, index, and WORKLOG heading counts matched at 12/12, 8/8, 5/5, and 83/83; 253 Markdown files had no broken relative links, the reference SHA-256 matched the recorded value, and `git diff --check` passed.
+- The staged pre-commit diff check found one extra EOF blank line in each new DESIGN.md. PowerShell did not stop after the preceding native command returned nonzero and still created commit `86cdf16`. History was not rewritten; the extra lines are removed immediately in a same-scope follow-up commit.
+
+### 2026-09-15 — JAI-050 implementation and design acceptance completed
+
+- Implemented the bounded read-only `GET /dashboard/briefing` contract and SQLAlchemy aggregation for the fixed scheduler job, up to seven recent pipeline runs/latest stage attempts, the latest immutable report with at most 20 ordered items, explicit missing-ledger dates, and delivery capability/status. The service checks `to_regclass` before querying JAI-027 tables, so the populated `0009` database renders `unavailable_schema` rather than a false failure; database errors return fixed sanitized 503 details.
+- Added the production `frontend/` foundation with React 19, strict TypeScript 5.9, Vite, pnpm lockfile, Tailwind CSS v4 semantic tokens, repository-owned shadcn/ui-style Radix components, and Lucide icons. The Morning Briefing implements the selected option 1 hierarchy, loaded/loading/empty/error states, safe `http`/`https` source links, disabled future navigation, responsive evidence placement, and a keyboard-operable mobile sheet. It contains no write action or embedded business fixture.
+- Added FastAPI same-origin `/app/` serving with client-route fallback, a configurable `JOBAGENT_FRONTEND_DIST_PATH`, and a Docker multi-stage build that copies the locked frontend into the Python image. Added paired frontend/configuration documentation, design-QA evidence, and both index entries. No Sites deployment or separate frontend runtime was introduced.
+- npm registry metadata/tarballs were intermittently slow or reset, but the approved dependency installation completed from the public registry. `typescript@7` initially violated the installed `typescript-eslint` peer range and was replaced with compatible `5.9.3`. A pnpm cache rebuild became unresponsive after an architecture-setting change; only the ignored `frontend/node_modules` directory was removed and rebuilt from the lockfile. No repository or business data was deleted.
+- Initial frontend checks found a Vite/Vitest config type mismatch, an ESLint typed-rule scope error, an invalid `Intl.DateTimeFormat` option combination, and Vitest collecting the Node worker test. Corrected their configuration/root causes without suppressing product checks. The added empty-state test first asserted draft copy that the UI does not render; it was aligned with the actual accessible evidence text and then passed. Final frontend gates passed: peer check, Prettier, ESLint, strict typecheck, three Vitest cases, production build, and four worker/package tests. The production bundle is 301.53 kB JavaScript (94.58 kB gzip) plus 27.20 kB CSS (5.74 kB gzip).
+- Browser QA used only a read-only synthetic service. The `1484x1060` reference comparison removed an unsupported eyebrow, compacted the report identity, and restored the summary density; no P0–P2 finding remains. `1440`, `1024`, `720`, and `390` CSS-pixel views had no horizontal overflow; console output was clean; `Tab`/`Enter`/`Escape` operated the mobile sheet; and the same-origin persisted-report link opened. `design-qa.md` records `final result: passed`.
+- After the owner started Docker Desktop, read-only verification found Docker 29.6.2, one healthy `db`, one healthy `api`, and one auto-restored scheduler. The business database remains `0009_pipeline_scheduling`, with one fixed job next scheduled for 2026-09-15 08:00 `Asia/Shanghai`, one succeeded 2026-09-06 run, four succeeded stages, and the original 8/26/35/6/6/2 business counts. There are no 2026-09-07 or 2026-09-08 run rows and no delivery tables; no outcome is inferred for those dates.
+- The 2026-09-15 08:00 slot elapsed before the owner recorded an `A-005` decision. A post-slot read-only audit found one new scheduled run for 2026-09-15; it succeeded from 08:00:00 to 08:00:49 `Asia/Shanghai`, with collection, extraction, matching, and report each succeeding on attempt 1. The fixed job now points to 2026-09-16 08:00; counts are 13/43/52/11/15/3. This is factual evidence only, not retrospective approval or a JAI-028 trial. `A-006` now requests an explicit scheduler-state decision before the next slot.
+- The JAI-050 PostgreSQL integration test passed against `jobagent_test`. The complete gate then passed Ruff format for 265 files, Ruff lint, Mypy across 176 source files, all 357 tests with no skips, and 85.65% coverage. Its first attempt stopped at Ruff because one new test import block and two synthetic Chinese titles violated repository lint rules; both were corrected before the authoritative rerun. The test database returned to zero public tables, while business `0009` counts remained one run/four stages/one job.
+- `docker compose config --quiet` passed, but `docker compose build api` could not obtain the `node:24-alpine` anonymous Docker Hub token over IPv6; no local image is cached and no container was recreated. This is recorded as `M-003`. The automatic scheduler recovery and its 08:00 live-source/write impact are recorded as time-sensitive `A-005`. This JAI-050 work did not manually initiate a migration, makeup, provider request, live-source request, business-database write, push, merge, or JAI-028/JAI-051 implementation, and did not read or write credentials.
+- The first ad hoc final Markdown-link scan accidentally traversed ignored pnpm stores and `node_modules`, so it reported third-party package links outside repository documentation. The corrected project-document scan covered 68 root/`docs` Markdown files with zero missing relative links; bilingual heading counts matched at 45/45, 73/73, 84/84, 10/10, and 5/5, both backlogs exposed the same 57 Issue headings in order, and `git diff --check` passed.
+
+### 2026-09-15 — JAI-050 implementation committed
+
+- Created scoped feature commit `1e66afa` (`feat: add production morning briefing foundation`) with the verified repository-local author `user9527448 <2537759248@qq.com>`. It contains the reviewed application, tests, paired documentation, acceptance-status updates, and the post-08:00 factual ledger record.
+- The branch remains stacked on JAI-027 and has not been pushed or merged. JAI-050 stays incomplete until `M-003` permits container-image build verification; no JAI-028/JAI-051/JAI-029 work starts from this commit.
+
+### 2026-09-15 — MVP plan-to-execution reconciliation
+
+- The owner reported that overall progress no longer felt aligned with the original plan. A read-only audit confirmed `develop` still ends at the integrated JAI-026 baseline, JAI-027 is the next incomplete Issue, JAI-050 is its explicitly approved stacked exception, and JAI-028/JAI-051/JAI-029 have not started. The branch graph is linear: JAI-027 tip `ff423f1` is an ancestor of JAI-050 implementation checkpoint `facbdac`, which is 13 commits ahead of `develop`; no history was rewritten. `git ls-remote --heads` returned no JAI-027 or JAI-050 remote ref, confirming both remain local-only.
+- The loss of clarity came from closure gates being distributed across the backlog, manual queue, and WORKLOG rather than from an unrecorded Issue reorder. Added a paired MVP execution control board to both development plans and expanded JAI-027 acceptance to distinguish completed G1–G4 evidence from pending G5. Issue order and scope are unchanged.
+- The enforced critical path is JAI-027 closure → JAI-050 container verification and ordered integration → JAI-028 five unattended trials → JAI-051 feedback → JAI-029 release. No later branch starts while a predecessor remains open, except an owner-approved and documented stacked exception that preserves integration order; JAI-050 remains the only such exception.
+
+### 2026-09-25 — Original plan resumed after the spreadsheet proposal was withdrawn
+
+- The withdrawn proposal is preserved without history rewriting on its remote audit branch at `53ada5883cc17fe1d2bf3718aa4dceb8e29d6bf7`; it was not merged into JAI-050 or `develop` and introduced no product implementation, source-data copy, business-database write, scheduler change, or new active Issue.
+- Returned to `feature/jai-050-production-ui-foundation`. Local HEAD and the cached remote branch ref both equal `96fe7984d0a46e5f2c94b2bddebee35adcdf1377`; the worktree was clean and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
+- Restored the single formal path JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 in the paired plans, backlogs, manual-action queue, and work logs. Historical entries remain unchanged; only current status and new facts are appended.
+- The 2026-09-25 read-only A-006 audit found Docker client 29.6.2 but no Docker daemon pipe. Compose, Alembic, APScheduler, and pipeline ledgers were therefore unreadable, so no success, failure, or misfire is inferred for 2026-09-16 through 2026-09-25. No Docker start, makeup, migration, delivery, source request, or database write was attempted.
+- After the owner manually started Docker, the elevated read-only audit found Docker Desktop 4.85.0/Engine 29.6.2, one healthy `db`, one healthy `api`, and one scheduler. The business database remains at `0009_pipeline_scheduling`; notification-delivery tables do not exist, and no `0010` migration occurred. Exactly one `jobagent.daily-pipeline.v1` job points to 2026-09-26 08:00 `Asia/Shanghai`.
+- Pipeline evidence remains two succeeded runs: the 2026-09-06 makeup and 2026-09-15 scheduled run, each with exactly four first-attempt succeeded stages. There are no run rows for 2026-09-16 through 2026-09-25. Startup logs show job registration and scheduler start but no explicit misfire event, so the ten missing dates are not classified as success, failure, or misfire. Business counts remain 13/43/52/11/15/3, matching the last recorded state.
+- `node:24-alpine` is still absent locally, so `M-003` remains pending. No image pull, container build/recreation, scheduler change, makeup, migration, delivery, source request, or database write was performed by this audit.
+- The owner then explicitly approved “stop only scheduler.” `docker compose stop scheduler` stopped that single service with exit code 143; one healthy `db` and one healthy `api` remained running. Post-stop read-only SQL confirmed `0009_pipeline_scheduling`, the retained fixed job row with its stored 2026-09-26 08:00 time, two succeeded pipeline runs, and eight succeeded stage rows. No makeup, migration, delivery, source request, or business write occurred. Any scheduler restart now requires fresh explicit approval.
+- The owner completed M-001/M-002/M-003. Safe validation read only key presence: each required PushPlus variable occurs exactly once with a non-empty value, `.env` is ignored by Git, and neither value was printed or persisted elsewhere. No provider request was made.
+- Verified local `node:24-alpine` digest `ebfe2f9...` and ran `docker compose build api`. The build completed frozen-lockfile pnpm installation, the Vite production bundle, the Python wheel, and final `jobagent-api:latest` image `d9299ba...`. A no-network ephemeral check confirmed one index, one JavaScript asset, and one CSS asset under `/app/frontend-dist`.
+- Existing `api` and `db` container identities did not change and remained healthy; scheduler remained `Exited (143)`. This closes M-003 and all JAI-050 technical acceptance. JAI-050 remains unintegrated until JAI-027 G5 completes and JAI-027 integrates first. No service recreation, scheduler start, migration, delivery, source request, or business-data write occurred.
+
 ### 2026-09-25 — JAI-027 G5 migration and single live PushPlus test
 
 - The project owner reported `M-001` and `M-002` complete, approved stopping only the scheduler,
@@ -848,6 +907,31 @@ interrupting safe work.
   the PostgreSQL gate still reached the existing test database, and no scheduler-state inference was
   made from that failed query.
 
+### 2026-09-25 — JAI-050 synchronized with JAI-027 and reverified
+
+- Normally merged the published JAI-027 `develop` baseline `5c56af363066c9bf6d1909e274f83c430b4159b2`
+  into `feature/jai-050-production-ui-foundation`. The only conflicts were in eight paired planning,
+  backlog, manual-action, and WORKLOG files; they were resolved by retaining both histories and the
+  formal JAI-050 → JAI-028 → JAI-051 → JAI-029 order. No application or frontend conflict occurred,
+  and no history was rebased or rewritten.
+- The first frozen-lockfile offline install could not resolve missing local metadata for
+  `@testing-library/dom`; a subsequent normal frozen-lockfile install restored all 288 packages from
+  the existing pnpm store with zero downloads. Prettier, ESLint, strict TypeScript, three Vitest
+  cases, the Vite production build, and all four Sites package/worker checks passed. The first Sites
+  check was mistakenly run before the production build and failed only because `dist/client/index.html`
+  did not yet exist; rerunning build before that check passed without a product change.
+- The PostgreSQL-enabled complete gate passed Ruff format across 265 files, Ruff lint, Mypy across
+  176 source files, all 357 tests without skips, and 85.80% coverage. `docker compose config --quiet`
+  passed. A first image build was safely interrupted after its dependency download stopped producing
+  progress; the bounded retry completed and produced `jobagent-api:latest` image
+  `sha256:1662d4ec25639fa7657ee34ca95b906389df51535c28e29bb90118af76c48292`.
+  A no-network ephemeral check found the frontend index, JavaScript, and CSS artifacts under
+  `/app/frontend-dist`.
+- Existing `db` and `api` containers remained healthy and were not recreated; scheduler remained
+  `Exited (143)`. No migration, business-data write, provider/source request, makeup, unattended
+  JAI-028 trial, JAI-051 work, or JAI-029 release action occurred. JAI-050 is ready for its scoped
+  merge commit, normal push, and ordered non-fast-forward integration into `develop`.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -871,16 +955,18 @@ interrupting safe work.
 - JAI-027 G4 static checks: Ruff format checked 247 files, Ruff lint passed, Mypy passed across 166 source files, the six configuration tests passed, `docker compose config --quiet`, `git diff --check`, bilingual heading parity, and relative Markdown-link checks passed. The first direct `pytest.exe` invocation could not import the repository `scripts` package on Windows; rerunning through `python -m pytest` collected the correct suite and all 325 selected non-integration tests passed, but the process correctly failed the 85% complete-gate threshold at 75.65% because 19 database tests were deselected. The Docker engine is reachable, but `db`, `api`, and `scheduler` all exited about three hours before the check, so the authoritative PostgreSQL gate and current ledger audit remain blocked rather than inferred.
 - JAI-027 G4 final gate after Docker recovery: Ruff format checked 249 files, Ruff lint passed, Mypy passed across 168 source files, all 350 PostgreSQL-enabled tests passed without skips, and coverage reached 85.37%; the test public schema returned to zero tables and the populated business database remained unchanged at `0009` with its one job, one run, and four stages.
 - Manual-action/status documentation checks: paired manual-action and WORKLOG heading counts match at 7 and 79; development-plan and backlog heading counts match at 45 and 71; both backlogs expose the same 55 Issue headings in the same order; all relative Markdown links and `git diff --check` passed.
+- 2026-09-25 runtime recheck: Docker client 29.6.2 is installed, but `npipe:////./pipe/docker_engine` does not exist; A-006 ledger verification and `M-003` container-build verification remain blocked on a manually restored Docker daemon.
+- 2026-09-25 post-recovery A-006 audit: Compose exposes exactly one `db`, `api`, and `scheduler`; Alembic is `0009_pipeline_scheduling`; one fixed job next runs at 2026-09-26 08:00; two runs/eight stages are all succeeded; ten dates from 2026-09-16 through 2026-09-25 have no run rows; startup logs contain no explicit misfire event; `node:24-alpine` is absent.
+- A-006 closure verification: only `scheduler` is stopped (`Exited (143)`); `db`/`api` remain healthy. The retained APScheduler row and unchanged two-run/eight-stage ledger were verified read-only after the stop.
+- M-001/M-002 validation: both required variable names appeared exactly once with non-empty values; `.env` remained Git-ignored; no secret value was emitted. M-003 validation: `docker compose build api` succeeded, the image contained the frontend index/JS/CSS artifacts, existing service container IDs were unchanged, and scheduler remained stopped.
 
 ## 5. Next actions
 
-1. Commit and normally push the final paired G5 evidence, then non-fast-forward merge JAI-027 into
-   the verified `develop` baseline without rewriting history.
-2. Run the complete PostgreSQL gate on merged `develop`, normally push it, and verify local,
-   tracking, and GitHub equality.
-3. Keep the scheduler stopped and do not run makeup or start JAI-028. After JAI-027 integration,
-   reconcile the existing stacked JAI-050 branch with `develop` by merge rather than rebase, then
-   continue its already planned acceptance work before JAI-028.
+1. Commit and normally push the verified ordinary merge on JAI-050, then non-fast-forward merge it
+   into `develop` in the recorded order.
+2. Repeat the complete post-merge gate on `develop` and verify local, tracking, and GitHub equality.
+3. Keep the scheduler stopped unless a fresh explicit approval changes that state. Do not perform
+   missing-date makeups or start JAI-028, JAI-051, or JAI-029 early.
 
 ## 6. Update template
 

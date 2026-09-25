@@ -353,29 +353,31 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:feature` `area:notification` `priority:P0` `size:M`
 - **Dependencies**: JAI-024
+- **Status**: D-037 G1–G5 are complete and integrated into `develop` by non-fast-forward commit `5c56af3`; the business database is at `0010_notification_delivery`, snapshot 2 was submitted only once, and its unconfirmed outcome is conservatively `unknown` and non-resendable. The post-merge PostgreSQL gate passed all 350 tests without skips at 85.53% coverage.
 - **Goal**: reliably deliver through one selected channel.
 - **Scope**: PushPlus or WeCom bot, message length, retries, send records, secret configuration.
 - **Acceptance**:
-  - [x] A successful report/channel pair is not sent again.
-  - [x] Temporary failures retry within limits; permanent failures expose a reason.
-  - [x] Tokens never appear in logs or database records.
+  - [x] Offline and PostgreSQL integration tests prove that a successful report/channel pair is not sent again.
+  - [x] Synthetic-provider tests prove that temporary failures retry within limits and permanent failures retain a safe reason.
+  - [x] Configuration, logging, and database tests prove that tokens are neither persisted nor emitted.
+  - [x] After `A-001/G5` approval, the populated business database migrated to `0010` and the named snapshot was submitted exactly once; an unconfirmed provider outcome is conservatively `unknown`, and no second live send occurred.
 
 ### JAI-050 Establish the production frontend foundation and read-only Morning Briefing
 
 - **Labels**: `type:feature` `area:ui` `area:api` `priority:P0` `size:L`
 - **Dependencies**: JAI-024, JAI-026, JAI-027
-- **Status**: D-038/U1-R and option 1 were approved on 2026-09-14. An independent stacked `feature/jai-050-production-ui-foundation` branch may start from the current JAI-027 tip, but it must not merge into `develop` before JAI-027.
+- **Status**: option 1 implementation, browser design QA, and M-003 container-image build verification passed. Implementation checkpoint `96fe7984d0a46e5f2c94b2bddebee35adcdf1377` has absorbed the latest `develop` through an ordinary merge; reverification passed all 357 tests without skips at 85.80% coverage, so it is ready for ordered integration.
 - **Goal**: provide a durable production UI foundation before the five unattended trials so the owner can inspect run evidence, read the latest report, and give visual/information-architecture feedback.
 - **Scope**: a pnpm-managed React + TypeScript + Vite application under `frontend/`; Tailwind CSS v4, shadcn/ui with Radix, semantic tokens, production routing/layout, and FastAPI same-origin serving; option 1 “Morning Briefing”; API/database health, scheduler last/next evidence, recent pipeline/stage state, latest report preview, safe delivery status, and only the narrow read APIs required by the page.
 - **Non-goals**: run, makeup, retry, send/resend, source toggles, preference writes, recommendation-feedback writes, authentication, multiple users, JAI-028 acceptance, or the JAI-051 migration.
 - **Test method**: frontend format/lint/type/unit/build checks, FastAPI contract tests, loading/empty/error-state tests, common desktop and narrow-screen browser acceptance, design QA at the selected reference viewport, and the unchanged Python full gate.
 - **Acceptance**:
-  - [ ] Paired `docs/DESIGN.md` files are versioned, indexed, and required context for UI changes.
-  - [ ] The page displays backend evidence only; a missing run is never inferred as success, failure, or misfire.
-  - [ ] Latest report, four/five-stage-compatible run history, and delivery state have loading, empty, error, and narrow-screen states.
-  - [ ] No run, makeup, or send action exists; keyboard navigation, focus, contrast, and semantic structure pass acceptance.
-  - [ ] FastAPI serves the production build from the same origin and registered frontend routes survive refresh.
-  - [ ] Automated checks and design QA against the selected visual baseline pass.
+  - [x] Paired `docs/DESIGN.md` files are versioned, indexed, and required context for UI changes.
+  - [x] The page displays backend evidence only; a missing run is never inferred as success, failure, or misfire.
+  - [x] Latest report, four/five-stage-compatible run history, and delivery state have loading, empty, error, and narrow-screen states.
+  - [x] No run, makeup, or send action exists; keyboard navigation, focus, contrast, and semantic structure pass acceptance.
+  - [x] FastAPI serves the production build from the same origin and registered frontend routes survive refresh.
+  - [x] Automated checks and design QA against the selected visual baseline pass.
 
 ### JAI-028 Complete end-to-end tests and five unattended trials
 
@@ -668,4 +670,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-021 through JAI-026 have completed and merged into `develop` in order; the current baseline is the JAI-026 non-fast-forward merge `a9e9b643b629e5632015778549917f44bd658586`. JAI-027 has completed approved D-037 gates G1–G5 on its independent feature branch: the business database safely advanced to `0010_notification_delivery`, and snapshot 2 was submitted exactly once. PushPlus returned an accepted identity, but AccessKey rejection prevented final confirmation; the approved correction conservatively preserves the ledger as `unknown` and forbids resend. The corrected complete PostgreSQL gate passed all 350 tests without skips at 85.53% coverage, so the Issue meets acceptance and awaits a non-fast-forward merge into `develop`. D-038/U1-R and option 1 were approved on 2026-09-14: the independent stacked JAI-050 branch delivers the production read-only “Morning Briefing,” but it must not merge into `develop` before JAI-027. The planned sequence remains JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029; JAI-051 migration still requires U3. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
+JAI-021 through JAI-027 have completed and merged into `develop` in order; the current baseline is the JAI-027 non-fast-forward merge `5c56af363066c9bf6d1909e274f83c430b4159b2`. The JAI-027 business database is at `0010_notification_delivery`; snapshot 2 was submitted only once, and PushPlus accepted it but its final result could not be confirmed, so the ledger conservatively remains `unknown` and non-resendable. The post-merge full gate passed all 350 tests without skips at 85.53% coverage. JAI-050 implementation checkpoint `96fe7984d0a46e5f2c94b2bddebee35adcdf1377` has normally merged the latest `develop`; option 1, browser design QA, the container build, and reverification with all 357 tests passing without skips at 85.80% coverage are complete, so it is ready for ordered integration. The temporary spreadsheet-acceleration proposal was withdrawn and remains only as an unmerged audit record; it is not part of this backlog. The formal sequence is now JAI-050 → JAI-028 → JAI-051 → JAI-029. The scheduler remains stopped under A-006 and `db`/`api` remain healthy; infer no missing-date outcome and run no makeup. JAI-051 migration still requires U3. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.

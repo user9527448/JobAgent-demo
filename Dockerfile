@@ -1,3 +1,15 @@
+FROM node:24-alpine AS frontend-builder
+
+WORKDIR /frontend
+
+RUN corepack enable
+
+COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml frontend/.npmrc ./
+RUN pnpm install --frozen-lockfile
+
+COPY frontend ./
+RUN pnpm build
+
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -12,6 +24,7 @@ COPY pyproject.toml README.md alembic.ini ./
 COPY src ./src
 COPY migrations ./migrations
 COPY config ./config
+COPY --from=frontend-builder /frontend/dist/client /app/frontend-dist
 
 RUN python -m pip install --no-cache-dir .
 

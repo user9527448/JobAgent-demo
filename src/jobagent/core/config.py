@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     timezone: str = "Asia/Shanghai"
     app_name: str = "jobagent"
     database_url: SecretStr
+    frontend_dist_path: Path = Path("frontend/dist/client")
     attachment_storage_path: Path = Path("data/attachments")
     attachment_max_bytes: int = Field(default=25 * 1024 * 1024, gt=0)
     attachment_chunk_bytes: int = Field(default=64 * 1024, gt=0)
