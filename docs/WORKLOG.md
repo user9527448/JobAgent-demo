@@ -851,6 +851,9 @@ as part of this proposal.
 - Returned to `feature/jai-050-production-ui-foundation`. Local HEAD and the cached remote branch ref both equal `96fe7984d0a46e5f2c94b2bddebee35adcdf1377`; the worktree was clean and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
 - Restored the single formal path JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 in the paired plans, backlogs, manual-action queue, and work logs. Historical entries remain unchanged; only current status and new facts are appended.
 - The 2026-09-25 read-only A-006 audit found Docker client 29.6.2 but no Docker daemon pipe. Compose, Alembic, APScheduler, and pipeline ledgers were therefore unreadable, so no success, failure, or misfire is inferred for 2026-09-16 through 2026-09-25. No Docker start, makeup, migration, delivery, source request, or database write was attempted.
+- After the owner manually started Docker, the elevated read-only audit found Docker Desktop 4.85.0/Engine 29.6.2, one healthy `db`, one healthy `api`, and one scheduler. The business database remains at `0009_pipeline_scheduling`; notification-delivery tables do not exist, and no `0010` migration occurred. Exactly one `jobagent.daily-pipeline.v1` job points to 2026-09-26 08:00 `Asia/Shanghai`.
+- Pipeline evidence remains two succeeded runs: the 2026-09-06 makeup and 2026-09-15 scheduled run, each with exactly four first-attempt succeeded stages. There are no run rows for 2026-09-16 through 2026-09-25. Startup logs show job registration and scheduler start but no explicit misfire event, so the ten missing dates are not classified as success, failure, or misfire. Business counts remain 13/43/52/11/15/3, matching the last recorded state.
+- `node:24-alpine` is still absent locally, so `M-003` remains pending. No image pull, container build/recreation, scheduler change, makeup, migration, delivery, source request, or database write was performed by this audit.
 
 ## 4. Verification and blockers
 
@@ -876,10 +879,11 @@ as part of this proposal.
 - JAI-027 G4 final gate after Docker recovery: Ruff format checked 249 files, Ruff lint passed, Mypy passed across 168 source files, all 350 PostgreSQL-enabled tests passed without skips, and coverage reached 85.37%; the test public schema returned to zero tables and the populated business database remained unchanged at `0009` with its one job, one run, and four stages.
 - Manual-action/status documentation checks: paired manual-action and WORKLOG heading counts match at 7 and 79; development-plan and backlog heading counts match at 45 and 71; both backlogs expose the same 55 Issue headings in the same order; all relative Markdown links and `git diff --check` passed.
 - 2026-09-25 runtime recheck: Docker client 29.6.2 is installed, but `npipe:////./pipe/docker_engine` does not exist; A-006 ledger verification and `M-003` container-build verification remain blocked on a manually restored Docker daemon.
+- 2026-09-25 post-recovery A-006 audit: Compose exposes exactly one `db`, `api`, and `scheduler`; Alembic is `0009_pipeline_scheduling`; one fixed job next runs at 2026-09-26 08:00; two runs/eight stages are all succeeded; ten dates from 2026-09-16 through 2026-09-25 have no run rows; startup logs contain no explicit misfire event; `node:24-alpine` is absent.
 
 ## 5. Next actions
 
-1. The owner manually starts Docker Desktop when convenient. The agent then performs the overdue A-006 read-only Compose/Alembic/APScheduler/pipeline-ledger audit before any runtime decision; no makeup is authorized.
+1. Before 2026-09-26 08:00 `Asia/Shanghai`, the owner decides A-006: keep ordinary daily business runs enabled, or explicitly approve stopping only the scheduler. The ten missing dates are not makeup-authorized and are not JAI-028 trials.
 2. Complete `M-003` later by pre-pulling `node:24-alpine`; then rerun the JAI-050 container build without recreating current services and close its remaining technical acceptance item.
 3. Keep `M-001`, `M-002`, and `A-001/G5` deferred until the owner is ready. Only after JAI-027 G5 closes may JAI-027 integrate first; then normally synchronize/reverify JAI-050 and integrate it. Do not start JAI-028, JAI-051, or JAI-029 early.
 
