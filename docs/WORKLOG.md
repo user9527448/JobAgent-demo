@@ -35,7 +35,7 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | G5 executed once; conservative ledger correction pending approval | `feature/jai-027-wechat-delivery-idempotency` | Business schema is at `0010`; snapshot 2 was submitted once, but final confirmation was blocked by AccessKey rejection and must remain non-resendable |
+| JAI-027 | D-037/G1–G5 complete; ready for non-fast-forward integration | `feature/jai-027-wechat-delivery-idempotency` | Business schema is at `0010`; snapshot 2 was submitted once and its unconfirmed accepted outcome is durably `unknown` and non-resendable |
 
 ## 2. Current decisions
 
@@ -832,10 +832,13 @@ interrupting safe work.
   The tests now change to an isolated temporary working directory and therefore read only their
   synthetic environment. The rerun passed Ruff format across 251 files, Ruff lint, Mypy across 168
   source files, all 350 PostgreSQL-enabled tests with no skips, and 85.53% coverage.
-- The existing business rows still retain the old `failed` classification. Correcting exactly the
-  parent and attempt rows to `unknown`, without deleting history, changing the provider identity, or
-  contacting PushPlus, requires project-owner approval before JAI-027 G5 can close. Scheduler restart
-  and JAI-028 remain separately gated.
+- The project owner explicitly approved correcting only business delivery `1` and attempt `1` from
+  `failed` to `unknown`, preserving the provider identity, safe error metadata, and all history while
+  forbidding any provider request or resend. A guarded single transaction locked and matched both
+  exact rows before changing only their `status` fields. Read-only verification found one delivery
+  and one attempt, both `unknown`, the accepted provider identity still present, snapshot `2`
+  unchanged, Alembic at `0010`, one scheduler job, two succeeded pipeline runs, and eight succeeded
+  stage runs. The scheduler remained `Exited (143)`; `db` and `api` were healthy.
 - Commit `680fa04` preserves the conservative-state fix, regression coverage, G5 evidence, and
   paired documentation on the JAI-027 feature branch. A direct GitHub push timed out on port 443;
   the normal push then succeeded with the previously approved command-scoped proxy. Local HEAD,
@@ -871,13 +874,13 @@ interrupting safe work.
 
 ## 5. Next actions
 
-1. Obtain owner approval to correct only business delivery `1` and attempt `1` from `failed` to
-   `unknown`; do not change their identities, delete rows, query PushPlus, or submit another message.
-2. Run the proportional and complete PostgreSQL gates, update the final bilingual evidence, and
-   close/integrate JAI-027 only after the persisted ambiguity is safely classified.
-3. Keep the scheduler stopped. Report missing scheduled dates only from ledger evidence; do not run
-   makeup, start JAI-028 unattended acceptance, or perform JAI-029 release work without their
-   separate approvals. JAI-050 remains stacked and cannot integrate before JAI-027.
+1. Commit and normally push the final paired G5 evidence, then non-fast-forward merge JAI-027 into
+   the verified `develop` baseline without rewriting history.
+2. Run the complete PostgreSQL gate on merged `develop`, normally push it, and verify local,
+   tracking, and GitHub equality.
+3. Keep the scheduler stopped and do not run makeup or start JAI-028. After JAI-027 integration,
+   reconcile the existing stacked JAI-050 branch with `develop` by merge rather than rebase, then
+   continue its already planned acceptance work before JAI-028.
 
 ## 6. Update template
 

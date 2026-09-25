@@ -35,7 +35,7 @@
 | JAI-024 | 已完成、合并并普通推送到 `develop` | `develop` / `0aa6b23` | 合并后 PostgreSQL 门禁以 282 项测试、87.96% 覆盖率通过 |
 | JAI-025 | 按获批流程优先例外完成、合并并推送到 `develop` | `develop` / `a070030` | 合并后 PostgreSQL 门禁以 295 项测试和 87.82% 覆盖率通过；真实人工评审样本量仍延期到 JAI-049 |
 | JAI-026 | 已完成；G1～G4 后合入 `develop` | `develop` / 当前非快进合并 | 业务迁移、唯一真实 scheduler、受控补跑/复用及合并后完整门禁均通过 |
-| JAI-027 | G5 已执行一次；等待批准保守修正台账 | `feature/jai-027-wechat-delivery-idempotency` | 业务 Schema 已到 `0010`；快照 2 已提交一次，但最终确认被 AccessKey 拒绝阻断，必须保持不可重发 |
+| JAI-027 | D-037/G1～G5 已完成；等待非快进集成 | `feature/jai-027-wechat-delivery-idempotency` | 业务 Schema 已到 `0010`；快照 2 只提交一次，未确认的已受理结果已持久保存为 `unknown` 且不可重发 |
 
 ## 2. 当前决策
 
@@ -800,9 +800,11 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 顺序；U3、真实外�
   `.env` 而失败。测试现会切换到隔离的临时工作目录，只读取自身合成环境。重新运行后，Ruff format
   检查 251 个文件、Ruff lint、168 个源文件的 Mypy、350 项启用 PostgreSQL 且无跳过的测试均通过，
   覆盖率 85.53%。
-- 现有业务行仍保留旧的 `failed` 分类。把父记录与尝试记录各一行原位修正为 `unknown`，且不删除
-  历史、不改变 provider 身份、不访问 PushPlus，仍需项目负责人批准后才能关闭 JAI-027 G5。
-  scheduler 重启与 JAI-028 继续受独立闸门约束。
+- 项目负责人明确批准：只把业务投递 `1` 与尝试 `1` 从 `failed` 修正为 `unknown`，保留 provider
+  身份、安全错误元数据和全部历史，且禁止任何 provider 请求或重发。带保护条件的单事务先锁定并
+  精确匹配两行，然后只修改其 `status` 字段。只读复核确认：投递与尝试各一行且均为 `unknown`，
+  已受理 provider 身份仍存在，快照 `2` 未变化，Alembic 为 `0010`，调度作业 1 条，成功流水线运行
+  2 条、成功阶段 8 条。scheduler 保持 `Exited (143)`，`db` 与 `api` 健康。
 - 提交 `680fa04` 已在 JAI-027 feature 分支保存保守状态修复、回归覆盖、G5 证据与成对文档。直接向
   GitHub 推送时 443 超时，随后使用此前获准的单命令临时代理完成普通推送；本地 HEAD、
   `origin/feature/jai-027-wechat-delivery-idempotency` 与 GitHub 一致，`origin` 仍为既有 HTTPS 地址，
@@ -835,12 +837,11 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 顺序；U3、真实外�
 
 ## 5. 下一步
 
-1. 取得负责人批准，只把业务投递 `1` 与尝试 `1` 从 `failed` 原位修正为 `unknown`；不得改变身份、
-   删除记录、查询 PushPlus 或再次提交消息。
-2. 执行相称检查和 PostgreSQL 完整门禁，补齐最终双语证据；只有持久化歧义得到安全分类后，才关闭
-   并集成 JAI-027。
-3. scheduler 继续停止。缺失调度日期只按台账证据报告；未经独立批准，不得补跑、启动 JAI-028
-   无人值守验收或执行 JAI-029 发布工作。JAI-050 继续作为堆叠分支，不能先于 JAI-027 集成。
+1. 提交并普通推送最终成对 G5 证据，然后在不改写历史的前提下，把 JAI-027 非快进合入已核验的
+   `develop` 基线。
+2. 在合并后的 `develop` 执行 PostgreSQL 完整门禁、普通推送，并核验本地、跟踪与 GitHub 三端一致。
+3. scheduler 继续停止，不补跑、不启动 JAI-028。JAI-027 集成后，通过 merge 而非 rebase 让既有
+   堆叠 JAI-050 分支吸收 `develop`，随后按既定计划完成其验收，再进入 JAI-028。
 
 ## 6. 更新模板
 

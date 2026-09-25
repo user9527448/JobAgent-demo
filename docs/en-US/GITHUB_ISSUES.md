@@ -356,9 +356,9 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Goal**: reliably deliver through one selected channel.
 - **Scope**: PushPlus or WeCom bot, message length, retries, send records, secret configuration.
 - **Acceptance**:
-  - [ ] A successful report/channel pair is not sent again.
-  - [ ] Temporary failures retry within limits; permanent failures expose a reason.
-  - [ ] Tokens never appear in logs or database records.
+  - [x] A successful report/channel pair is not sent again.
+  - [x] Temporary failures retry within limits; permanent failures expose a reason.
+  - [x] Tokens never appear in logs or database records.
 
 ### JAI-050 Establish the production frontend foundation and read-only Morning Briefing
 
@@ -668,4 +668,4 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 ## 4. Recommended execution order
 
-JAI-021 through JAI-026 have completed and merged into `develop` in order; the current baseline is the JAI-026 non-fast-forward merge `a9e9b643b629e5632015778549917f44bd658586`. JAI-027 has completed approved D-037 G1–G4 implementation, paired documentation, and the no-skip 350-test PostgreSQL gate at 85.37% coverage on its independent feature branch. Business migration, credentials, and one named live snapshot test remain in the manual-action queue behind A-001/G5; do not mark the Issue complete. D-038/U1-R and option 1 were approved on 2026-09-14: create the independent stacked JAI-050 branch from the current JAI-027 tip and deliver the production read-only “Morning Briefing,” but do not merge JAI-050 into `develop` before JAI-027. The planned sequence is now JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029; JAI-051 migration still requires U3. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
+JAI-021 through JAI-026 have completed and merged into `develop` in order; the current baseline is the JAI-026 non-fast-forward merge `a9e9b643b629e5632015778549917f44bd658586`. JAI-027 has completed approved D-037 gates G1–G5 on its independent feature branch: the business database safely advanced to `0010_notification_delivery`, and snapshot 2 was submitted exactly once. PushPlus returned an accepted identity, but AccessKey rejection prevented final confirmation; the approved correction conservatively preserves the ledger as `unknown` and forbids resend. The corrected complete PostgreSQL gate passed all 350 tests without skips at 85.53% coverage, so the Issue meets acceptance and awaits a non-fast-forward merge into `develop`. D-038/U1-R and option 1 were approved on 2026-09-14: the independent stacked JAI-050 branch delivers the production read-only “Morning Briefing,” but it must not merge into `develop` before JAI-027. The planned sequence remains JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029; JAI-051 migration still requires U3. Never rebase, force push, or rewrite history. JAI-041 was absorbed into JAI-021; JAI-049 tracks live completeness and source risk before the MVP release gate. Execute the remaining JAI-038–JAI-045 sources one at a time after the release loop is stable, and keep JAI-048 independent. If a dynamic portal cannot satisfy public-access or terms boundaries, record `blocked`; never force integration with login, CAPTCHA, Playwright, or evasion.
