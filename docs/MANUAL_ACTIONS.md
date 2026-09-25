@@ -21,6 +21,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
 | `A-007` | Partially executed: 2026-09-25 | Deploy the JAI-050 API image and approve the JAI-028 operating window | JAI-050 `/app/` is live; scheduler start is now gated by A-008 |
 | `A-008` | Approved and activated: 2026-09-25 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | Sole scheduler is running; count the five live trials |
+| `A-009` | Pending | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Unattended daily verification and durable JAI-028 evidence |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -58,6 +59,11 @@ pipeline but an older notification-service source hash. It was stopped before th
 before any pipeline or delivery row changed. A fresh image was built from the current branch; an
 offline no-network check matched both critical source hashes. Exactly one scheduler now runs image
 `sha256:7138bffe...` with restart count zero, and the retained next time remains 2026-09-26 08:00.
+
+An attempt to create the five-day verification heartbeat was rejected before creation because the
+owner had not separately authorized recurring ledger reads, anomaly-triggered scheduler stops,
+paired-document edits, and normal Git commits/pushes. No automation exists yet and the scheduler was
+not changed. `A-009` is required to make daily verification itself unattended.
 
 ## M-003 — Restore the Docker build prerequisite
 
