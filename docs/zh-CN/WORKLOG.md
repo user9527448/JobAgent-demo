@@ -803,6 +803,11 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 顺序；U3、真实外�
 - 现有业务行仍保留旧的 `failed` 分类。把父记录与尝试记录各一行原位修正为 `unknown`，且不删除
   历史、不改变 provider 身份、不访问 PushPlus，仍需项目负责人批准后才能关闭 JAI-027 G5。
   scheduler 重启与 JAI-028 继续受独立闸门约束。
+- 提交 `680fa04` 已在 JAI-027 feature 分支保存保守状态修复、回归覆盖、G5 证据与成对文档。直接向
+  GitHub 推送时 443 超时，随后使用此前获准的单命令临时代理完成普通推送；本地 HEAD、
+  `origin/feature/jai-027-wechat-delivery-idempotency` 与 GitHub 一致，`origin` 仍为既有 HTTPS 地址，
+  未生成持久代理配置。之后一次 Compose 状态查询受当前 Windows Docker 配置/管道权限阻断；未执行
+  容器操作，PostgreSQL 门禁仍能访问既有测试库，也未根据该失败查询推断 scheduler 状态。
 
 ## 4. 检查与阻塞
 

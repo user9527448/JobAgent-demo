@@ -836,6 +836,14 @@ interrupting safe work.
   parent and attempt rows to `unknown`, without deleting history, changing the provider identity, or
   contacting PushPlus, requires project-owner approval before JAI-027 G5 can close. Scheduler restart
   and JAI-028 remain separately gated.
+- Commit `680fa04` preserves the conservative-state fix, regression coverage, G5 evidence, and
+  paired documentation on the JAI-027 feature branch. A direct GitHub push timed out on port 443;
+  the normal push then succeeded with the previously approved command-scoped proxy. Local HEAD,
+  `origin/feature/jai-027-wechat-delivery-idempotency`, and GitHub matched, while `origin` remained
+  the existing HTTPS URL and no persistent proxy setting was created. A later Compose status query
+  was blocked by the current Windows Docker-config/pipe permissions; no container command was run,
+  the PostgreSQL gate still reached the existing test database, and no scheduler-state inference was
+  made from that failed query.
 
 ## 4. Verification and blockers
 
