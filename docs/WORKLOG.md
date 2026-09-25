@@ -854,6 +854,7 @@ as part of this proposal.
 - After the owner manually started Docker, the elevated read-only audit found Docker Desktop 4.85.0/Engine 29.6.2, one healthy `db`, one healthy `api`, and one scheduler. The business database remains at `0009_pipeline_scheduling`; notification-delivery tables do not exist, and no `0010` migration occurred. Exactly one `jobagent.daily-pipeline.v1` job points to 2026-09-26 08:00 `Asia/Shanghai`.
 - Pipeline evidence remains two succeeded runs: the 2026-09-06 makeup and 2026-09-15 scheduled run, each with exactly four first-attempt succeeded stages. There are no run rows for 2026-09-16 through 2026-09-25. Startup logs show job registration and scheduler start but no explicit misfire event, so the ten missing dates are not classified as success, failure, or misfire. Business counts remain 13/43/52/11/15/3, matching the last recorded state.
 - `node:24-alpine` is still absent locally, so `M-003` remains pending. No image pull, container build/recreation, scheduler change, makeup, migration, delivery, source request, or database write was performed by this audit.
+- The owner then explicitly approved “stop only scheduler.” `docker compose stop scheduler` stopped that single service with exit code 143; one healthy `db` and one healthy `api` remained running. Post-stop read-only SQL confirmed `0009_pipeline_scheduling`, the retained fixed job row with its stored 2026-09-26 08:00 time, two succeeded pipeline runs, and eight succeeded stage rows. No makeup, migration, delivery, source request, or business write occurred. Any scheduler restart now requires fresh explicit approval.
 
 ## 4. Verification and blockers
 
@@ -880,12 +881,13 @@ as part of this proposal.
 - Manual-action/status documentation checks: paired manual-action and WORKLOG heading counts match at 7 and 79; development-plan and backlog heading counts match at 45 and 71; both backlogs expose the same 55 Issue headings in the same order; all relative Markdown links and `git diff --check` passed.
 - 2026-09-25 runtime recheck: Docker client 29.6.2 is installed, but `npipe:////./pipe/docker_engine` does not exist; A-006 ledger verification and `M-003` container-build verification remain blocked on a manually restored Docker daemon.
 - 2026-09-25 post-recovery A-006 audit: Compose exposes exactly one `db`, `api`, and `scheduler`; Alembic is `0009_pipeline_scheduling`; one fixed job next runs at 2026-09-26 08:00; two runs/eight stages are all succeeded; ten dates from 2026-09-16 through 2026-09-25 have no run rows; startup logs contain no explicit misfire event; `node:24-alpine` is absent.
+- A-006 closure verification: only `scheduler` is stopped (`Exited (143)`); `db`/`api` remain healthy. The retained APScheduler row and unchanged two-run/eight-stage ledger were verified read-only after the stop.
 
 ## 5. Next actions
 
-1. Before 2026-09-26 08:00 `Asia/Shanghai`, the owner decides A-006: keep ordinary daily business runs enabled, or explicitly approve stopping only the scheduler. The ten missing dates are not makeup-authorized and are not JAI-028 trials.
-2. Complete `M-003` later by pre-pulling `node:24-alpine`; then rerun the JAI-050 container build without recreating current services and close its remaining technical acceptance item.
-3. Keep `M-001`, `M-002`, and `A-001/G5` deferred until the owner is ready. Only after JAI-027 G5 closes may JAI-027 integrate first; then normally synchronize/reverify JAI-050 and integrate it. Do not start JAI-028, JAI-051, or JAI-029 early.
+1. The owner completes `M-003` by pre-pulling `node:24-alpine`; the agent then reruns the JAI-050 container build without recreating current services and closes its remaining technical acceptance item.
+2. The owner completes `M-001` and `M-002` when ready, then separately approves `A-001/G5`. Only after JAI-027 G5 closes may JAI-027 integrate first; then normally synchronize/reverify JAI-050 and integrate it.
+3. Keep the scheduler stopped unless a fresh explicit approval changes that state. Do not perform missing-date makeups or start JAI-028, JAI-051, or JAI-029 early.
 
 ## 6. Update template
 

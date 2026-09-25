@@ -18,7 +18,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
 | `M-003` | Pending | Restore Docker Hub access or pre-pull `node:24-alpine` | JAI-050 container-build verification |
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
-| `A-006` | Pending before 2026-09-26 08:00 | Decide whether the restored daily scheduler remains enabled; otherwise approve stopping only the scheduler | Explicit operating state before the next live-source slot |
+| `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
 
 No current queue item authorizes a makeup run, a live recruitment-source request, a second live
 notification, JAI-028's five unattended runs, or JAI-029 release work.
@@ -59,9 +59,12 @@ fixed job next scheduled for 2026-09-26 08:00 `Asia/Shanghai`. The only runs rem
 2026-09-06 makeup and successful 2026-09-15 scheduled run, each with four successful stages. There are
 no run rows for 2026-09-16 through 2026-09-25, and startup logs contain no explicit misfire event.
 
-Before the next slot, decide whether ordinary daily business runs stay enabled. If not, explicitly
-approve stopping only the scheduler. No makeup, migration, delivery, or source command is authorized
-by this item.
+The owner explicitly approved stopping only the scheduler. `docker compose stop scheduler` completed;
+the scheduler exited with code 143 while `db` and `api` remained healthy. Read-only SQL confirmed
+Alembic `0009_pipeline_scheduling`, one retained fixed job row, two succeeded runs, and eight succeeded
+stage rows. The stored 2026-09-26 08:00 time is durable job state, not an active execution while the
+scheduler container is stopped. Any scheduler restart requires fresh explicit approval. No makeup,
+migration, delivery, or source command was performed.
 
 ## M-001 — Prepare PushPlus
 
