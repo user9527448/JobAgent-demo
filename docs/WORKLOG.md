@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Started; `/app/` deployed and `A-008` approved | `feature/jai-028-e2e-unattended-trials` | Start the sole scheduler; count up to five automatic runs from database evidence only; no makeup |
+| JAI-028 | Active; `/app/` deployed and sole verified scheduler running under `A-008` | `feature/jai-028-e2e-unattended-trials` | Next slot 2026-09-26 08:00; count five automatic runs from database evidence only; no makeup |
 
 ## 2. Current decisions
 
@@ -969,6 +969,12 @@ as part of this proposal.
   sources and write business data. Makeup, manual send/resend, extra notification, and scheduler
   scaling remain forbidden; any failure, duplicate, non-terminal state, or ambiguous delivery must
   pause the trial and be reported.
+- The first scheduler recreation selected cached image `sha256:80744aaf...`. A read-only hash check
+  found its pipeline source current but its notification service older than the JAI-027 conservative
+  `unknown` fix. It was stopped before the first 08:00 slot and before any run/delivery ledger change.
+  Rebuilt `jobagent-scheduler:latest`; a no-network image check matched both local critical source
+  hashes. Exactly one scheduler now runs `sha256:7138bffe...`, restart count zero, with next slot
+  2026-09-26 08:00. Startup created no makeup, pipeline row, or notification attempt.
 
 ## 4. Verification and blockers
 
@@ -1002,7 +1008,8 @@ as part of this proposal.
 
 1. Under `A-007`, recreate only `api` from the verified image while scheduler remains stopped; verify
    health, `/app/`, and container identity.
-2. Start exactly one scheduler under `A-008` and verify its image, instance count, and next run.
+2. At and after each scheduled slot, verify the single-scheduler invariant and record terminal run,
+   stage, report, delivery, availability, completeness, parsing, duration, and duplicate evidence.
 3. Record each of five actual automatic runs only after database evidence exists. Do not start
    JAI-051 or JAI-029 before JAI-028 closes.
 

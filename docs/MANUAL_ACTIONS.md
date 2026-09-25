@@ -20,7 +20,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
 | `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
 | `A-007` | Partially executed: 2026-09-25 | Deploy the JAI-050 API image and approve the JAI-028 operating window | JAI-050 `/app/` is live; scheduler start is now gated by A-008 |
-| `A-008` | Approved: 2026-09-25 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | Start the sole scheduler and count the five live trials |
+| `A-008` | Approved and activated: 2026-09-25 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | Sole scheduler is running; count the five live trials |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -52,6 +52,12 @@ explicitly approved `A-008`: up to five automatic scheduled runs may send their 
 content to the configured PushPlus destination and may access approved public sources and write
 business data. Makeup, manual send/resend, extra notification, and scheduler scaling remain forbidden;
 any failure, duplicate, non-terminal state, or ambiguous delivery must pause the trial and be reported.
+
+The first scheduler recreation exposed that the cached `jobagent-scheduler` image had the current
+pipeline but an older notification-service source hash. It was stopped before the 08:00 slot and
+before any pipeline or delivery row changed. A fresh image was built from the current branch; an
+offline no-network check matched both critical source hashes. Exactly one scheduler now runs image
+`sha256:7138bffe...` with restart count zero, and the retained next time remains 2026-09-26 08:00.
 
 ## M-003 — Restore the Docker build prerequisite
 
