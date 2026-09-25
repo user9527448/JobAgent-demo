@@ -19,12 +19,15 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `M-003` | Completed and verified | `node:24-alpine` pulled and `docker compose build api` passed | JAI-050 technical acceptance complete |
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
 | `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
-| `A-007` | Approved: 2026-09-25 | Deploy the JAI-050 API image and start JAI-028's sole scheduler for five unattended trials | JAI-050 `/app/` runtime and JAI-028 live acceptance |
+| `A-007` | Partially executed: 2026-09-25 | Deploy the JAI-050 API image and approve the JAI-028 operating window | JAI-050 `/app/` is live; scheduler start is now gated by A-008 |
+| `A-008` | Pending | Explicitly authorize generated report/job content to be sent through PushPlus on up to five automatic JAI-028 runs | Starting the sole scheduler and counting the five live trials |
 
-`A-007` authorizes only the normal scheduled JAI-028 window: one scheduler, approved public-source
-requests, resulting business writes, and the pipeline's idempotent PushPlus delivery. It does not
-authorize a makeup run, manual delivery/resend, scheduler scaling, JAI-051, or JAI-029 release work.
-The earlier JAI-027 one-off live notification allowance remains consumed and is not reused.
+`A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
+business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
+safety gate requires the narrower `A-008` authorization before generated report/job content may be
+sent to the external PushPlus destination on up to five automatic runs. No makeup, manual
+delivery/resend, scheduler scaling, JAI-051, or JAI-029 release work is authorized. The earlier
+JAI-027 one-off live notification allowance remains consumed and is not reused.
 
 ## A-007 — Deploy JAI-050 and run JAI-028 unattended acceptance
 
@@ -39,6 +42,13 @@ the single-scheduler invariant pauses acceptance for read-only diagnosis before 
 If uninterrupted, the retained job row currently makes 2026-09-26 through 2026-09-30 the expected
 five-run observation window. This is an expectation, not a pre-recorded result; each day is recorded
 only after database evidence exists.
+
+The API portion completed with the verified `sha256:1662d4ec...` image: the recreated container is
+healthy and `/health/live`, `/health/ready`, `/app/`, and `/dashboard/briefing` all return HTTP 200.
+The scheduler-start command was rejected before execution because external-content authorization was
+not specific enough. Read-only verification confirmed the scheduler remains `Exited (143)`, the
+next stored time remains 2026-09-26 08:00, and pipeline/delivery ledgers are unchanged. The owner must
+approve `A-008` in explicit content-egress terms before scheduler activation.
 
 ## M-003 — Restore the Docker build prerequisite
 

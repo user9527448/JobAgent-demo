@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Started under approved live gate `A-007` | `feature/jai-028-e2e-unattended-trials` | Deploy `/app/`, then count five automatic runs from database evidence only; no makeup |
+| JAI-028 | Started; `/app/` deployed, scheduler start blocked pending `A-008` | `feature/jai-028-e2e-unattended-trials` | Explicit approval is required for up to five automatic PushPlus content deliveries; no makeup |
 
 ## 2. Current decisions
 
@@ -954,6 +954,16 @@ as part of this proposal.
   scheduled identity, terminal pipeline/stage states, immutable report, delivery ledger, metrics, and
   absence of duplicate announcements/notifications. Any failure, duplicate, non-terminal state,
   ambiguous delivery, or multiple scheduler instance pauses acceptance for diagnosis.
+- Recreated only `api` from image
+  `sha256:1662d4ec25639fa7657ee34ca95b906389df51535c28e29bb90118af76c48292`.
+  The new container is healthy; `/health/live`, `/health/ready`, `/app/`, and
+  `/dashboard/briefing` each returned HTTP 200. The scheduler remained stopped during deployment.
+- The pre-start snapshot confirmed Alembic `0010`, one fixed job for 2026-09-26 08:00
+  `Asia/Shanghai`, two succeeded pipeline runs, eight succeeded stages, three report snapshots, and
+  the prior one `unknown` delivery/attempt. The scheduler-start operation was rejected before
+  execution because approval did not explicitly authorize generated report/job payload content to
+  leave through PushPlus on up to five automatic runs. Post-rejection evidence was unchanged and the
+  scheduler remained `Exited (143)`. `A-008` now records the required narrower authorization.
 
 ## 4. Verification and blockers
 
@@ -987,8 +997,8 @@ as part of this proposal.
 
 1. Under `A-007`, recreate only `api` from the verified image while scheduler remains stopped; verify
    health, `/app/`, and container identity.
-2. Record a pre-start business-ledger snapshot, then start exactly one scheduler and verify its next
-   automatic run. Do not run a makeup or manually invoke delivery.
+2. Obtain explicit `A-008` approval for generated report/job content to be sent through PushPlus on
+   up to five automatic runs; only then start exactly one scheduler and verify its next run.
 3. Record each of five actual automatic runs only after database evidence exists. Do not start
    JAI-051 or JAI-029 before JAI-028 closes.
 

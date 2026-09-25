@@ -383,7 +383,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:test` `area:infra` `priority:P0` `size:L`
 - **Dependencies**: JAI-026, JAI-027, JAI-050
-- **Status**: the dedicated branch started from triple-matched `develop=dcdd697f...` on 2026-09-25 and received `A-007`; deploy JAI-050 `/app/` first, then start the sole scheduler. Count only automatic runs with actual database evidence, with no makeup or pre-recorded result.
+- **Status**: the dedicated branch started from triple-matched `develop=dcdd697f...` on 2026-09-25. The JAI-050 `/app/` deployment portion of `A-007` is complete. The scheduler start was blocked before execution and now awaits `A-008`, which must explicitly authorize generated report/job content to be sent through PushPlus on up to five automatic runs. Count only database-backed evidence, with no makeup or pre-recorded result.
 - **Goal**: prove the real scheduled MVP loop is stable.
 - **Scope**: offline E2E, controlled live trials, metrics, issue list.
 - **Acceptance**:
