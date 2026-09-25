@@ -36,7 +36,7 @@
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | D-037/G1–G4 approved and complete; G5 pending | remote feature tip `ff423f1` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration, credentials, and live delivery remain unauthorized |
-| JAI-050 | Implementation/design QA/full gate complete; `M-003` pending | remote stacked tip `96fe798` | 357 tests and 85.65% coverage passed; container build verification and ordered integration remain open |
+| JAI-050 | Implementation/design QA/full gate complete; `M-003` pending | implementation checkpoint `96fe798` | 357 tests and 85.65% coverage passed; later commits only synchronize status documentation; container build verification and ordered integration remain open |
 
 ## 2. Current decisions
 
