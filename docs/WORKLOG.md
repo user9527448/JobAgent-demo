@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Started; `/app/` deployed, scheduler start blocked pending `A-008` | `feature/jai-028-e2e-unattended-trials` | Explicit approval is required for up to five automatic PushPlus content deliveries; no makeup |
+| JAI-028 | Started; `/app/` deployed and `A-008` approved | `feature/jai-028-e2e-unattended-trials` | Start the sole scheduler; count up to five automatic runs from database evidence only; no makeup |
 
 ## 2. Current decisions
 
@@ -964,6 +964,11 @@ as part of this proposal.
   execution because approval did not explicitly authorize generated report/job payload content to
   leave through PushPlus on up to five automatic runs. Post-rejection evidence was unchanged and the
   scheduler remained `Exited (143)`. `A-008` now records the required narrower authorization.
+- The owner explicitly approved `A-008`: up to five automatic scheduled runs may send generated
+  job/report content through the configured PushPlus destination and may access approved public
+  sources and write business data. Makeup, manual send/resend, extra notification, and scheduler
+  scaling remain forbidden; any failure, duplicate, non-terminal state, or ambiguous delivery must
+  pause the trial and be reported.
 
 ## 4. Verification and blockers
 
@@ -997,8 +1002,7 @@ as part of this proposal.
 
 1. Under `A-007`, recreate only `api` from the verified image while scheduler remains stopped; verify
    health, `/app/`, and container identity.
-2. Obtain explicit `A-008` approval for generated report/job content to be sent through PushPlus on
-   up to five automatic runs; only then start exactly one scheduler and verify its next run.
+2. Start exactly one scheduler under `A-008` and verify its image, instance count, and next run.
 3. Record each of five actual automatic runs only after database evidence exists. Do not start
    JAI-051 or JAI-029 before JAI-028 closes.
 

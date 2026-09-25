@@ -20,7 +20,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
 | `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
 | `A-007` | Partially executed: 2026-09-25 | Deploy the JAI-050 API image and approve the JAI-028 operating window | JAI-050 `/app/` is live; scheduler start is now gated by A-008 |
-| `A-008` | Pending | Explicitly authorize generated report/job content to be sent through PushPlus on up to five automatic JAI-028 runs | Starting the sole scheduler and counting the five live trials |
+| `A-008` | Approved: 2026-09-25 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | Start the sole scheduler and count the five live trials |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -47,8 +47,11 @@ The API portion completed with the verified `sha256:1662d4ec...` image: the recr
 healthy and `/health/live`, `/health/ready`, `/app/`, and `/dashboard/briefing` all return HTTP 200.
 The scheduler-start command was rejected before execution because external-content authorization was
 not specific enough. Read-only verification confirmed the scheduler remains `Exited (143)`, the
-next stored time remains 2026-09-26 08:00, and pipeline/delivery ledgers are unchanged. The owner must
-approve `A-008` in explicit content-egress terms before scheduler activation.
+next stored time remains 2026-09-26 08:00, and pipeline/delivery ledgers are unchanged. The owner then
+explicitly approved `A-008`: up to five automatic scheduled runs may send their generated job/report
+content to the configured PushPlus destination and may access approved public sources and write
+business data. Makeup, manual send/resend, extra notification, and scheduler scaling remain forbidden;
+any failure, duplicate, non-terminal state, or ambiguous delivery must pause the trial and be reported.
 
 ## M-003 — Restore the Docker build prerequisite
 
