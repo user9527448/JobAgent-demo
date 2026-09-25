@@ -12,6 +12,8 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | Detailed development plan | [English](DEVELOPMENT_PLAN.md) | [中文](../DEVELOPMENT_PLAN.md) |
 | GitHub Issues backlog | [English](GITHUB_ISSUES.md) | [中文](../GITHUB_ISSUES.md) |
 | Continuous development work log | [English](../WORKLOG.md) | [中文](../zh-CN/WORKLOG.md) |
+| Configuration, logging, and error conventions | [English](CONFIGURATION.md) | [中文](../CONFIGURATION.md) |
+| Manual owner actions and approval queue | [English](../MANUAL_ACTIONS.md) | [中文](../zh-CN/MANUAL_ACTIONS.md) |
 | Source Adapter and collection orchestration | [English](../COLLECTION.md) | [中文](../zh-CN/COLLECTION.md) |
 | Database models and migrations | [English](../DATABASE.md) | [中文](../zh-CN/DATABASE.md) |
 | Source HTTP client policy | [English](../HTTP_CLIENT.md) | [中文](../zh-CN/HTTP_CLIENT.md) |
@@ -27,6 +29,7 @@ Repository documentation uses separate English and Simplified Chinese files. Upd
 | Top 20 matching-quality review | [English](../MATCHING_QUALITY.md) | [中文](../zh-CN/MATCHING_QUALITY.md) |
 | Daily report queries, rendering, and snapshots | [English](../REPORTS.md) | [中文](../zh-CN/REPORTS.md) |
 | Daily scheduling, recovery, and makeup operations | [English](../SCHEDULING.md) | [中文](../zh-CN/SCHEDULING.md) |
+| PushPlus report delivery | [English](../DELIVERY.md) | [中文](../zh-CN/DELIVERY.md) |
 | Sources 4-5 and stability verification | [English](../SOURCE_STABILITY.md) | [中文](../zh-CN/SOURCE_STABILITY.md) |
 | Recruitment source catalog | [English](SOURCE_CATALOG.md) | [中文](../SOURCE_CATALOG.md) |
 | JAI-005 Jining source Spike | [English](../spikes/JAI-005-JINING-SOURCE.md) | [中文](../zh-CN/spikes/JAI-005-JINING-SOURCE.md) |
@@ -50,7 +53,6 @@ The following repository-authored documents still lack an independent counterpar
 | Document | Current language | Missing version |
 |---|---|---|
 | [Project README](../../README.md) | Simplified Chinese | English |
-| [Configuration, logging, and error conventions](../CONFIGURATION.md) | Simplified Chinese | English |
 | [Unofficial recruitment reference sources](../REFERENCE_SOURCES.md) | Simplified Chinese | English |
 | [Firstjob fixture guide](../../tests/fixtures/firstjob/README.md) | English | Simplified Chinese |
 | [Jiangsu personnel-exam fixture guide](../../tests/fixtures/jiangsu/README.md) | Simplified Chinese | English |

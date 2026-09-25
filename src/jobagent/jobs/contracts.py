@@ -36,6 +36,7 @@ class PipelineStage(StrEnum):
     EXTRACTION = "extraction"
     MATCHING = "matching"
     REPORT = "report"
+    DELIVERY = "delivery"
 
 
 PIPELINE_STAGE_ORDER = (
@@ -43,6 +44,7 @@ PIPELINE_STAGE_ORDER = (
     PipelineStage.EXTRACTION,
     PipelineStage.MATCHING,
     PipelineStage.REPORT,
+    PipelineStage.DELIVERY,
 )
 
 

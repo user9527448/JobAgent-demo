@@ -28,6 +28,8 @@ CORE_TABLES = {
     "job_positions",
     "job_posts",
     "match_results",
+    "notification_deliveries",
+    "notification_delivery_attempts",
     "pipeline_runs",
     "pipeline_stage_runs",
     "raw_documents",

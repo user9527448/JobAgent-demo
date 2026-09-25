@@ -169,6 +169,7 @@ async def test_pipeline_runs_in_order_and_preserves_partial_status() -> None:
             StageOutcome(StageStatus.SUCCEEDED, {}),
             StageOutcome(StageStatus.SUCCEEDED, {}),
             StageOutcome(StageStatus.SUCCEEDED, {"report_snapshot_id": 9}),
+            StageOutcome(StageStatus.SUCCEEDED, {"delivery_id": 3}),
         ]
     )
 
@@ -246,6 +247,7 @@ async def test_recovery_skips_completed_stage_and_lock_contention_writes_nothing
         PipelineStage.EXTRACTION,
         PipelineStage.MATCHING,
         PipelineStage.REPORT,
+        PipelineStage.DELIVERY,
     ]
     assert recovered_repository.interrupt_calls == 1
 

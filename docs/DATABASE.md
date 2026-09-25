@@ -2,7 +2,7 @@
 
 > 简体中文：[JOBAGENT 核心数据库模型](zh-CN/DATABASE.md)
 
-This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md), JAI-022 [single-user preference policy](PREFERENCES.md), JAI-023 [versioned matching policy](MATCHING.md), JAI-024 [daily report snapshots](REPORTS.md), and JAI-026 [durable scheduling](SCHEDULING.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
+This document describes the PostgreSQL schema established in JAI-006 and extended by the JAI-009 [raw-document version policy](RAW_DOCUMENTS.md), JAI-010 [attachment storage policy](ATTACHMENTS.md), JAI-019 [versioned extraction/evidence policy](MERGING_AND_EVIDENCE.md), JAI-020 [validation/reparse policy](VALIDATION_AND_REPARSING.md), JAI-022 [single-user preference policy](PREFERENCES.md), JAI-023 [versioned matching policy](MATCHING.md), JAI-024 [daily report snapshots](REPORTS.md), JAI-026 [durable scheduling](SCHEDULING.md), and JAI-027 [PushPlus delivery ledger](DELIVERY.md). JAI-007 adds the crawl-run repository and collection orchestration described in [COLLECTION.md](COLLECTION.md).
 
 ## Tables
 
@@ -19,6 +19,8 @@ This document describes the PostgreSQL schema established in JAI-006 and extende
 | `user_preferences` | Singleton local-user profile | Fixed `id=1`; structured filters; unrestricted defaults; audit timestamps and sticky recomputation signal |
 | `match_results` | Versioned position matching decision | Score/rule version; input/preference/result hashes; hard-filter decision; JSONB components/rules; one current result plus append-only history |
 | `daily_report_snapshots` | Immutable structured/rendered daily report | Date/timezone/version/input identity; JSONB payload; content hash; Markdown and escaped HTML; identical inputs reuse one snapshot |
+| `notification_deliveries` | One logical report/channel delivery | Unique report/channel identity; renderer version, message hash, part count, parent state, timestamps, and safe error metadata |
+| `notification_delivery_attempts` | Numbered provider submissions per message part | Unique delivery/part/attempt; part hash, state, optional `shortCode`, timestamps, and safe error metadata |
 | `apscheduler_jobs` | APScheduler 3 persistent job store | Fixed string job ID; next-run timestamp index; serialized scheduler state; managed only by the single scheduler process |
 | `pipeline_runs` | One durable logical daily execution | Unique `(job_name, scheduled_for)`; trigger, local report date/timezone, current stage, terminal status, timestamps, and safe error metadata |
 | `pipeline_stage_runs` | Numbered attempts for each pipeline stage | Unique run/stage/attempt; constrained stage/status; JSONB artifact IDs, versions, counts, and safe failure output |
@@ -39,6 +41,8 @@ sources
     └── field_evidence (document source)
 
 daily_report_snapshots (immutable report payload and renderings)
+└── notification_deliveries (one logical row per channel)
+    └── notification_delivery_attempts (numbered part submissions)
 
 pipeline_runs
 └── pipeline_stage_runs (restricted, append-only numbered attempts)
@@ -53,6 +57,11 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 `validation_issues.post_id` is a real restricted foreign key to the exact `job_posts` extraction version that was validated. A new rule/extraction version appends a new post and new findings instead of mutating the historical decision.
 
 `match_results.position_id` and `preference_id` are restricted foreign keys to the exact position and singleton preference profile. New preference snapshots or score versions append results and move the one-current-result marker; `supersedes_id` retains the prior decision.
+
+`notification_deliveries.report_snapshot_id` is a restricted foreign key to the exact immutable
+report. Its `(report_snapshot_id, channel)` identity prevents duplicate successful delivery.
+`notification_delivery_attempts.delivery_id` is also restricted; attempts are retained for safe
+operator inspection and are never replaced by raw provider responses.
 
 ## Time handling
 
@@ -79,7 +88,9 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 - `match_results` constrains scores to 0–100, requires zero after any failed hard filter, validates all SHA-256 identities, and requires JSON arrays for component/rule explanations. One partial unique index permits one current result per position.
 - `daily_report_snapshots` requires a JSON object payload and valid input/content SHA-256 values. Its date/timezone/report-version/input-hash identity prevents duplicate snapshots while retaining changed same-day inputs as separate immutable rows.
 - `pipeline_runs` uses the UTC schedule instant as part of its logical identity while retaining the resolved local report date and timezone. Scheduled and makeup triggers for the same slot therefore cannot create duplicate runs.
-- `pipeline_stage_runs` permits only collection, extraction, matching, and report stages. Running attempts become `interrupted` on recovery; completed attempts and their JSON artifact references are retained.
+- `pipeline_stage_runs` permits collection, extraction, matching, report, and delivery stages. Running attempts become `interrupted` on recovery; completed attempts and their JSON artifact references are retained.
+- Delivery parent and attempt states have explicit timestamp checks. Accepted/succeeded attempts require a non-empty provider message identity; hashes are lowercase SHA-256 values and part/attempt numbers are positive.
+- `notification_deliveries` is unique by immutable report/channel. `unknown` is terminal for automatic execution so an ambiguous external acceptance cannot be resent silently.
 - `apscheduler_jobs` is shared by no more than one scheduler process. The domain advisory lock remains the cross-process authority and prevents a competing process from writing a duplicate run.
 
 ## Migrations
@@ -99,4 +110,12 @@ docker compose exec api alembic upgrade head
 ```
 
 Migration integration tests are destructive and therefore refuse any database whose name does not end in `_test`.
-Migration `0009_pipeline_scheduling` is covered by that guard. Applying it to a populated business database and starting the Compose scheduler are separate runtime operations requiring explicit approval.
+Migrations `0009_pipeline_scheduling` and `0010_notification_delivery` are covered by that guard.
+Migration `0010` adds both delivery tables and extends the pipeline constraint to the fifth
+`delivery` stage. Applying it to the populated business database, injecting PushPlus credentials,
+or sending a live message are separate G5 operations requiring explicit approval.
+
+On 2026-09-25, the owner approved G5 and the populated local business database advanced from
+`0009_pipeline_scheduling` to `0010_notification_delivery`. `alembic check` then reported no pending
+operations and pre-existing business-table counts were unchanged. This does not authorize another
+live notification, a scheduler restart, a makeup run, or destructive business-schema testing.

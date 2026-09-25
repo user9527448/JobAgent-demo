@@ -739,6 +739,134 @@ class DailyReportSnapshot(Base):
         server_default=func.now(),
     )
 
+    deliveries: Mapped[list[NotificationDelivery]] = relationship(
+        back_populates="report_snapshot",
+        passive_deletes=True,
+    )
+
+
+class NotificationDelivery(TimestampMixin, Base):
+    """One idempotent logical delivery for an immutable report and channel."""
+
+    __tablename__ = "notification_deliveries"
+    __table_args__ = (
+        UniqueConstraint(
+            "report_snapshot_id",
+            "channel",
+            name="uq_notification_deliveries_report_channel",
+        ),
+        CheckConstraint("channel IN ('pushplus_wechat')", name="channel_valid"),
+        CheckConstraint("length(delivery_version) > 0", name="version_present"),
+        CheckConstraint("message_hash ~ '^[0-9a-f]{64}$'", name="message_hash_sha256"),
+        CheckConstraint("part_count > 0", name="part_count_positive"),
+        CheckConstraint(
+            "status IN ('pending', 'sending', 'succeeded', 'failed', 'unknown')",
+            name="status_valid",
+        ),
+        CheckConstraint(
+            "finished_at IS NULL OR started_at IS NULL OR finished_at >= started_at",
+            name="finish_after_start",
+        ),
+        CheckConstraint(
+            "(status = 'pending' AND started_at IS NULL AND finished_at IS NULL) OR "
+            "(status = 'sending' AND started_at IS NOT NULL AND finished_at IS NULL) OR "
+            "(status IN ('succeeded', 'failed', 'unknown') "
+            "AND started_at IS NOT NULL AND finished_at IS NOT NULL)",
+            name="state_timestamps",
+        ),
+        Index("ix_notification_deliveries_status_created", "status", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    report_snapshot_id: Mapped[int] = mapped_column(
+        ForeignKey("daily_report_snapshots.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    channel: Mapped[str] = mapped_column(String(32), nullable=False)
+    delivery_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    message_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    part_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="pending",
+        server_default=text("'pending'"),
+    )
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    error_message: Mapped[str | None] = mapped_column(Text)
+
+    report_snapshot: Mapped[DailyReportSnapshot] = relationship(back_populates="deliveries")
+    attempts: Mapped[list[NotificationDeliveryAttempt]] = relationship(
+        back_populates="delivery",
+        passive_deletes=True,
+    )
+
+
+class NotificationDeliveryAttempt(Base):
+    """One append-only numbered submission attempt for a message part."""
+
+    __tablename__ = "notification_delivery_attempts"
+    __table_args__ = (
+        UniqueConstraint(
+            "delivery_id",
+            "part_number",
+            "attempt",
+            name="uq_notification_delivery_attempts_part_attempt",
+        ),
+        CheckConstraint("part_number > 0", name="part_number_positive"),
+        CheckConstraint("attempt > 0", name="attempt_positive"),
+        CheckConstraint("part_hash ~ '^[0-9a-f]{64}$'", name="part_hash_sha256"),
+        CheckConstraint(
+            "status IN ('submitting', 'accepted', 'succeeded', 'failed', 'unknown', 'interrupted')",
+            name="status_valid",
+        ),
+        CheckConstraint(
+            "finished_at IS NULL OR finished_at >= started_at",
+            name="finish_after_start",
+        ),
+        CheckConstraint(
+            "(status IN ('submitting', 'accepted') AND finished_at IS NULL) OR "
+            "(status IN ('succeeded', 'failed', 'unknown', 'interrupted') "
+            "AND finished_at IS NOT NULL)",
+            name="state_timestamps",
+        ),
+        CheckConstraint(
+            "status NOT IN ('accepted', 'succeeded') OR "
+            "(provider_message_id IS NOT NULL AND length(provider_message_id) > 0)",
+            name="provider_identity_present",
+        ),
+        Index(
+            "ix_notification_delivery_attempts_delivery_part",
+            "delivery_id",
+            "part_number",
+            "attempt",
+        ),
+        Index("ix_notification_delivery_attempts_status", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    delivery_id: Mapped[int] = mapped_column(
+        ForeignKey("notification_deliveries.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    part_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False)
+    part_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    provider_message_id: Mapped[str | None] = mapped_column(String(128))
+    started_at: Mapped[datetime] = mapped_column(
+        UTCDateTime(),
+        nullable=False,
+        server_default=func.now(),
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    error_message: Mapped[str | None] = mapped_column(Text)
+
+    delivery: Mapped[NotificationDelivery] = relationship(back_populates="attempts")
+
 
 class PipelineRun(TimestampMixin, Base):
     """One durable logical execution of the daily application pipeline."""
@@ -760,7 +888,7 @@ class PipelineRun(TimestampMixin, Base):
         ),
         CheckConstraint(
             "current_stage IS NULL OR current_stage IN "
-            "('collection', 'extraction', 'matching', 'report')",
+            "('collection', 'extraction', 'matching', 'report', 'delivery')",
             name="current_stage_valid",
         ),
         CheckConstraint(
@@ -806,7 +934,7 @@ class PipelineStageRun(Base):
             name="uq_pipeline_stage_runs_attempt",
         ),
         CheckConstraint(
-            "stage IN ('collection', 'extraction', 'matching', 'report')",
+            "stage IN ('collection', 'extraction', 'matching', 'report', 'delivery')",
             name="stage_valid",
         ),
         CheckConstraint("attempt > 0", name="attempt_positive"),

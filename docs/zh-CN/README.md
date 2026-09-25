@@ -12,6 +12,8 @@
 | 详细开发计划 | [中文](../DEVELOPMENT_PLAN.md) | [English](../en-US/DEVELOPMENT_PLAN.md) |
 | GitHub Issues Backlog | [中文](../GITHUB_ISSUES.md) | [English](../en-US/GITHUB_ISSUES.md) |
 | 持续开发工作日志 | [中文](WORKLOG.md) | [English](../WORKLOG.md) |
+| 配置、日志与错误约定 | [中文](../CONFIGURATION.md) | [English](../en-US/CONFIGURATION.md) |
+| 项目负责人手动操作与审批队列 | [中文](MANUAL_ACTIONS.md) | [English](../MANUAL_ACTIONS.md) |
 | Source Adapter 与采集编排 | [中文](COLLECTION.md) | [English](../COLLECTION.md) |
 | 数据库模型与迁移 | [中文](DATABASE.md) | [English](../DATABASE.md) |
 | 来源 HTTP 客户端策略 | [中文](HTTP_CLIENT.md) | [English](../HTTP_CLIENT.md) |
@@ -27,6 +29,7 @@
 | Top 20 匹配质量评审 | [中文](MATCHING_QUALITY.md) | [English](../MATCHING_QUALITY.md) |
 | 日报查询、渲染与快照 | [中文](REPORTS.md) | [English](../REPORTS.md) |
 | 每日调度、恢复与补跑 | [中文](SCHEDULING.md) | [English](../SCHEDULING.md) |
+| PushPlus 日报投递 | [中文](DELIVERY.md) | [English](../DELIVERY.md) |
 | 来源 4、5 与稳定性验证 | [中文](SOURCE_STABILITY.md) | [English](../SOURCE_STABILITY.md) |
 | 招聘信息目标网站库 | [中文](../SOURCE_CATALOG.md) | [English](../en-US/SOURCE_CATALOG.md) |
 | JAI-005 济宁来源技术验证 | [中文](spikes/JAI-005-JINING-SOURCE.md) | [English](../spikes/JAI-005-JINING-SOURCE.md) |
@@ -50,7 +53,6 @@
 | 文档 | 当前语言 | 缺失版本 |
 |---|---|---|
 | [项目 README](../../README.md) | 简体中文 | English |
-| [配置、日志与错误约定](../CONFIGURATION.md) | 简体中文 | English |
 | [非官方招聘信息参考源](../REFERENCE_SOURCES.md) | 简体中文 | English |
 | [Firstjob 固定样本说明](../../tests/fixtures/firstjob/README.md) | English | 简体中文 |
 | [江苏人事考试固定样本说明](../../tests/fixtures/jiangsu/README.md) | 简体中文 | English |

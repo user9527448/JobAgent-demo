@@ -45,6 +45,13 @@ from jobagent.jobs import (
     StageOutcome,
     StageStatus,
 )
+from jobagent.notifications import (
+    DeliveryChannel,
+    DeliveryDispatchStatus,
+    DeliveryExecutionResult,
+    DeliverySnapshot,
+    DeliveryStatus,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -89,6 +96,34 @@ class SyntheticCollectionStages:
         )
 
 
+class SyntheticDelivery:
+    """Complete the fifth stage without any external provider traffic."""
+
+    def __init__(self) -> None:
+        self.snapshot_ids: list[int] = []
+
+    async def deliver(self, report_snapshot_id: int) -> DeliveryExecutionResult:
+        self.snapshot_ids.append(report_snapshot_id)
+        return DeliveryExecutionResult(
+            DeliveryDispatchStatus.EXECUTED,
+            DeliverySnapshot(
+                id=report_snapshot_id,
+                report_snapshot_id=report_snapshot_id,
+                channel=DeliveryChannel.PUSHPLUS_WECHAT,
+                delivery_version="integration-v1",
+                message_hash="d" * 64,
+                part_count=1,
+                status=DeliveryStatus.SUCCEEDED,
+                started_at=FIRST_SLOT,
+                finished_at=FIRST_SLOT,
+                error_code=None,
+                error_message=None,
+                created_at=FIRST_SLOT,
+                updated_at=FIRST_SLOT,
+            ),
+        )
+
+
 def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Path) -> None:
     database_url = _test_database_url()
     sync_engine = create_engine(database_url)
@@ -109,13 +144,18 @@ def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Pat
         database = Database(rendered_url)
         try:
             repository = SqlAlchemyPipelineRepository(database.session_factory)
+            delivery = SyntheticDelivery()
             coordinator = PipelineCoordinator(
                 repository,
                 SqlAlchemyPipelineLock(database.session_factory),
                 SyntheticCollectionStages(
                     database.session_factory,
                     source_id,
-                    ProductionPipelineStages(database.session_factory, settings),
+                    ProductionPipelineStages(
+                        database.session_factory,
+                        settings,
+                        delivery=delivery,
+                    ),
                 ),
                 timezone=settings.timezone,
             )
@@ -130,6 +170,8 @@ def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Pat
             assert first_attempts[1].output["extraction_version"] == "jai-026-v1"
             assert first_attempts[2].output["score_version"]
             assert first_attempts[3].output["report_snapshot_id"]
+            assert first_attempts[4].output["status"] == "succeeded"
+            assert delivery.snapshot_ids == [first_attempts[3].output["report_snapshot_id"]]
 
             repeated = await coordinator.execute(FIRST_SLOT, PipelineTrigger.SCHEDULED)
             assert repeated.dispatch_status is DispatchStatus.REUSED
@@ -154,6 +196,7 @@ def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Pat
             assert recovered_attempts[0].status is StageStatus.INTERRUPTED
             assert recovered_attempts[1].attempt == 2
             assert [item.stage for item in recovered_attempts[1:]] == list(PipelineStage)
+            assert delivery.snapshot_ids[-1] == recovered_attempts[-2].output["report_snapshot_id"]
         finally:
             await database.close()
 
@@ -163,7 +206,7 @@ def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Pat
 
         with Session(sync_engine) as session:
             assert session.scalar(select(func.count()).select_from(PipelineRun)) == 2
-            assert session.scalar(select(func.count()).select_from(PipelineStageRun)) == 9
+            assert session.scalar(select(func.count()).select_from(PipelineStageRun)) == 11
             assert session.scalar(select(func.count()).select_from(CrawlRun)) == 2
             assert session.scalar(select(func.count()).select_from(JobPost)) == 1
             assert session.scalar(select(func.count()).select_from(MatchResult)) == 2

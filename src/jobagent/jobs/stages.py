@@ -22,7 +22,7 @@ from jobagent.crawlers import (
     match_catalog_entry,
 )
 from jobagent.crawlers.contracts import SourceDefinition
-from jobagent.db.models import JobPost, RawDocument, Source
+from jobagent.db.models import JobPost, PipelineStageRun, RawDocument, Source
 from jobagent.extraction import (
     DeterministicFieldExtractor,
     ExtractionMerger,
@@ -32,6 +32,11 @@ from jobagent.extraction import (
     StoredDocumentReparsePipeline,
 )
 from jobagent.matching import CURRENT_SCORE_VERSION, SqlAlchemyMatchingService
+from jobagent.notifications import (
+    DeliveryDispatchStatus,
+    DeliveryOperations,
+    DeliveryStatus,
+)
 from jobagent.parsers import build_parser_registry
 from jobagent.reports import SqlAlchemyDailyReportService
 
@@ -65,6 +70,8 @@ class ProductionPipelineStages:
         self,
         session_factory: async_sessionmaker[AsyncSession],
         settings: Settings,
+        *,
+        delivery: DeliveryOperations | None = None,
     ) -> None:
         self._session_factory = session_factory
         self._settings = settings
@@ -81,6 +88,7 @@ class ProductionPipelineStages:
         )
         self._matching = SqlAlchemyMatchingService(session_factory)
         self._reports = SqlAlchemyDailyReportService(session_factory, settings.timezone)
+        self._delivery = delivery
 
     async def run(self, stage: PipelineStage, context: PipelineContext) -> StageOutcome:
         operations = {
@@ -88,6 +96,7 @@ class ProductionPipelineStages:
             PipelineStage.EXTRACTION: self._extract,
             PipelineStage.MATCHING: self._match,
             PipelineStage.REPORT: self._report,
+            PipelineStage.DELIVERY: self._deliver,
         }
         return await operations[stage](context)
 
@@ -222,6 +231,80 @@ class ProductionPipelineStages:
                 "content_hash": snapshot.content_hash,
             },
         )
+
+    async def _deliver(self, context: PipelineContext) -> StageOutcome:
+        if self._delivery is None:
+            raise PermanentJobAgentError(
+                "PushPlus delivery is not configured for the daily pipeline.",
+                code="notification.credentials_missing",
+            )
+        report_snapshot_id = await self._report_snapshot_id(context.pipeline_run_id)
+        result = await self._delivery.deliver(report_snapshot_id)
+        if result.dispatch_status is DeliveryDispatchStatus.LOCKED:
+            raise TransientJobAgentError(
+                "The report delivery identity is locked by another process.",
+                code="notification.delivery_locked",
+                details={"report_snapshot_id": report_snapshot_id},
+            )
+        delivery = result.delivery
+        if delivery is None:
+            raise PermanentJobAgentError(
+                "The delivery service returned no durable result.",
+                code="notification.delivery_result_missing",
+                details={"report_snapshot_id": report_snapshot_id},
+            )
+        output: dict[str, JsonValue] = {
+            "delivery_id": delivery.id,
+            "report_snapshot_id": delivery.report_snapshot_id,
+            "channel": delivery.channel.value,
+            "status": delivery.status.value,
+            "part_count": delivery.part_count,
+            "dispatch_status": result.dispatch_status.value,
+        }
+        if delivery.status is not DeliveryStatus.SUCCEEDED:
+            raise PermanentJobAgentError(
+                "The report delivery did not reach a successful final state.",
+                code=delivery.error_code or "notification.delivery_failed",
+                details=output,
+            )
+        return StageOutcome(StageStatus.SUCCEEDED, output)
+
+    async def _report_snapshot_id(self, pipeline_run_id: int) -> int:
+        try:
+            async with self._session_factory() as session:
+                stage_run = await session.scalar(
+                    select(PipelineStageRun)
+                    .where(
+                        PipelineStageRun.pipeline_run_id == pipeline_run_id,
+                        PipelineStageRun.stage == PipelineStage.REPORT.value,
+                        PipelineStageRun.status == StageStatus.SUCCEEDED.value,
+                    )
+                    .order_by(PipelineStageRun.attempt.desc())
+                    .limit(1)
+                )
+        except SQLAlchemyError as error:
+            raise TransientJobAgentError(
+                "The report stage output could not be loaded.",
+                code="notification.report_output_unavailable",
+            ) from error
+        if stage_run is None:
+            raise PermanentJobAgentError(
+                "The successful report stage output is missing.",
+                code="notification.report_output_missing",
+                details={"pipeline_run_id": pipeline_run_id},
+            )
+        report_snapshot_id = stage_run.output.get("report_snapshot_id")
+        if (
+            not isinstance(report_snapshot_id, int)
+            or isinstance(report_snapshot_id, bool)
+            or report_snapshot_id <= 0
+        ):
+            raise PermanentJobAgentError(
+                "The report stage output has no valid snapshot identity.",
+                code="notification.report_identity_invalid",
+                details={"pipeline_run_id": pipeline_run_id},
+            )
+        return report_snapshot_id
 
     async def _enabled_sources(self) -> tuple[SourceDefinition, ...]:
         try:

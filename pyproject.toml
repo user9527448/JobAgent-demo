@@ -36,6 +36,7 @@ dev = [
 
 [project.scripts]
 jobagent = "jobagent.cli:main"
+jobagent-delivery = "jobagent.notifications.cli:main"
 jobagent-scheduler = "jobagent.jobs.cli:main"
 
 [tool.hatch.build.targets.wheel]

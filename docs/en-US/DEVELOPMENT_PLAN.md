@@ -332,7 +332,9 @@ Each item includes title, organization, region, deadline, recommendation reason,
 - Add daily scheduling, concurrency locks, and misfire handling.
 - Integrate one WeChat channel.
 - Add idempotent delivery, retries, and failure records.
+- Before the five unattended acceptance runs, deliver the production UI foundation and a read-only “Morning Briefing” operations dashboard for scheduler evidence, pipeline state, reports, and safe delivery status; the page must not trigger runs, makeup runs, or sends.
 - Complete end-to-end tests, backup/restore guidance, and operations documentation.
+- After the five unattended acceptance runs and before release, add preference/report browsing and append-only recommendation feedback; its migration remains behind separate U3 approval.
 - Prepare the `v0.1.0-mvp` checklist.
 
 **Acceptance**: five consecutive unattended runs complete collection → parsing → matching → report → delivery without duplicate notifications.
@@ -342,7 +344,7 @@ Each item includes title, organization, region, deadline, recommendation reason,
 **Goal**: reduce daily maintenance and expose a stable tool layer for the Agent.
 
 - Add source listing/toggling, preference editing, run history, and failure APIs.
-- Add a minimal configuration page rather than a general admin console.
+- Extend the existing production page shell with source enable/disable, run/failure detail, and guarded rerun controls; do not build a general admin console.
 - Add job search, job detail, and score explanation services.
 - Add authorization boundaries and audit logs for tools.
 
@@ -407,7 +409,7 @@ Each item includes title, organization, region, deadline, recommendation reason,
 | M2 Collection | W2–W3 | Three sources collect incrementally and reliably |
 | M3 Extraction | W4–W6 | Five sources support parsing, extraction, and quality control |
 | M4 Intelligence | W7 | Matching and daily reports are usable |
-| M5 MVP Release | W8 | Scheduled delivery loop is live |
+| M5 MVP Release | W8 | Scheduled delivery is live, with a production read-only surface for evidence review and feedback collection |
 | M6 Agent | W9–W10 | Configuration console and Agent tools are released |
 
 ### 11.2 Priority
@@ -441,6 +443,6 @@ Before starting, an Issue must define goal, scope, acceptance criteria, dependen
 
 ## 13. Current next step
 
-JAI-011, JAI-037, JAI-046, JAI-047, and JAI-012 through JAI-025 have been merged and normally pushed to `develop` in order. The current baseline is JAI-025 non-fast-forward merge `a070030c5c29b9aaddfd87b9d5b0cd174f66a451`. JAI-021's actual 4/5 China Mobile `PoolTimeout` metric and the user's Day 3 waiver remain intact; JAI-025's flow-first exception and deferred quality debt also remain explicitly tracked in JAI-049.
+JAI-011, JAI-037, JAI-046, JAI-047, and JAI-012 through JAI-026 have been merged and normally pushed to `develop` in order. The current `develop` baseline is the JAI-026 non-fast-forward merge `a9e9b643b629e5632015778549917f44bd658586`. JAI-021's actual 4/5 China Mobile `PoolTimeout` metric and the user's Day 3 waiver remain intact; JAI-025's flow-first exception and deferred quality debt also remain explicitly tracked in JAI-049.
 
-JAI-026 completed approved D-036 gates G1–G4 and was integrated into `develop` by a non-fast-forward merge: stable APScheduler 3 with one dedicated scheduler process, a persistent PostgreSQL job store, domain run/stage ledgers, and an advisory lock; fixed collection, extraction/validation, matching, and reporting order; bounded retries, restart recovery, and same-logical-run manual makeup. The business database migrated to `0009` without drift, and the single scheduler, one live complete makeup, and same-date idempotent reuse all passed; the post-merge PostgreSQL gate passed all 313 tests without skips at 86.20% coverage. JAI-027 is the next planned incomplete Issue, but its notification design must be recorded and reviewed on an independent branch before implementation. Never rebase, force push, or rewrite published history. OCR remains deferred to JAI-B01, and JAI-048 remains an independent documentation Issue.
+JAI-027 has completed approved D-037 gates G1–G5 on `feature/jai-027-wechat-delivery-idempotency`. The business database advanced to `0010_notification_delivery`, and snapshot 2 was submitted exactly once. PushPlus returned an accepted identity, but AccessKey rejection prevented final confirmation; the approved in-place correction preserves the complete identity/error history as `unknown` and forbids resend. The corrected complete PostgreSQL gate passed all 350 tests without skips at 85.53% coverage. JAI-027 therefore meets acceptance and awaits its non-fast-forward merge into `develop`; the scheduler remains stopped and JAI-028 has not started. D-038/U1-R was approved on 2026-09-14: JAI-050 already uses an independent stacked branch from an earlier JAI-027 tip to deliver the production read-only “Morning Briefing” foundation, but it must not merge into `develop` before JAI-027. JAI-051 follows JAI-028 and precedes JAI-029, while its concrete feedback migration remains behind U3 approval. Never rebase, force push, or rewrite published history. OCR remains deferred to JAI-B01, and JAI-048 remains an independent documentation Issue.
