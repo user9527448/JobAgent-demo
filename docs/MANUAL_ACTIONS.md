@@ -21,7 +21,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
 | `A-007` | Partially executed: 2026-09-25 | Deploy the JAI-050 API image and approve the JAI-028 operating window | JAI-050 `/app/` is live; scheduler start is now gated by A-008 |
 | `A-008` | Approved and activated: 2026-09-25 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | Sole scheduler is running; count the five live trials |
-| `A-009` | Pending | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Unattended daily verification and durable JAI-028 evidence |
+| `A-009` | Approved: 2026-09-25 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Unattended daily verification and durable JAI-028 evidence |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -64,6 +64,14 @@ An attempt to create the five-day verification heartbeat was rejected before cre
 owner had not separately authorized recurring ledger reads, anomaly-triggered scheduler stops,
 paired-document edits, and normal Git commits/pushes. No automation exists yet and the scheduler was
 not changed. `A-009` is required to make daily verification itself unattended.
+
+The owner explicitly approved `A-009` for 2026-09-26 through 2026-09-30. After each planned run,
+the thread automation may read Docker and business-ledger state; on success it may update paired
+WORKLOG/planning status, run documentation checks, and normally commit/push the JAI-028 feature
+branch. On failure, duplicate, non-terminal timeout, ambiguous delivery, multiple schedulers, or image
+anomaly it must immediately stop the scheduler and notify the owner, with no makeup or resend. After
+the fifth success it must stop the scheduler, run final JAI-028 gates, and push closure evidence, but
+must not merge `develop` or start a later Issue.
 
 ## M-003 — Restore the Docker build prerequisite
 
