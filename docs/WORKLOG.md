@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-10
+> Last updated: 2026-09-25
 >
-> Active branch: `feature/jai-027-wechat-delivery-idempotency`
+> Active branch: `feature/jai-050-production-ui-foundation`
 
 ## 1. Current status
 
@@ -35,7 +35,8 @@
 | JAI-024 | Complete, merged and pushed to `develop` | `develop` / `0aa6b23` | Post-merge PostgreSQL gate passed with 282 tests and 87.96% coverage |
 | JAI-025 | Complete, merged and pushed to `develop` under approved flow-first exception | `develop` / `a070030` | Post-merge PostgreSQL gate passed with 295 tests and 87.82% coverage; live human-review volume remains deferred to JAI-049 |
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
-| JAI-027 | D-037/G1–G4 approved and complete; G5 pending | `feature/jai-027-wechat-delivery-idempotency` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration, credentials, and live delivery remain unauthorized |
+| JAI-027 | D-037/G1–G4 approved and complete; G5 pending | remote feature tip `ff423f1` | Full PostgreSQL gate passed with 350 tests and 85.37% coverage; business migration, credentials, and live delivery remain unauthorized |
+| JAI-050 | Implementation/design QA/full gate complete; `M-003` pending | remote stacked tip `96fe798` | 357 tests and 85.65% coverage passed; container build verification and ordered integration remain open |
 
 ## 2. Current decisions
 
@@ -266,6 +267,16 @@ later completion while safe repository work continues. The paired `docs/MANUAL_A
 values. Deferred items are not silently treated as approval. They should be surfaced again only when
 they block the next planned write or when their external state changes, rather than repeatedly
 interrupting safe work.
+
+### D-040 Withdraw the temporary spreadsheet proposal and restore the formal path
+
+On 2026-09-23 the project owner withdrew the proposed spreadsheet-backed acceleration path. Its
+independent audit branch is retained remotely as an unmerged documentation record at `53ada588`, but
+neither JAI-052 nor JAI-053 enters the active backlog or completion count. No spreadsheet-derived
+product implementation, business-data import, database change, scheduler change, or source contract
+is adopted. Work resumes on the already approved critical path
+JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029, and the shared resource will not be accessed again
+as part of this proposal.
 
 ## 3. Active work history
 
@@ -834,6 +845,13 @@ interrupting safe work.
 - The loss of clarity came from closure gates being distributed across the backlog, manual queue, and WORKLOG rather than from an unrecorded Issue reorder. Added a paired MVP execution control board to both development plans and expanded JAI-027 acceptance to distinguish completed G1–G4 evidence from pending G5. Issue order and scope are unchanged.
 - The enforced critical path is JAI-027 closure → JAI-050 container verification and ordered integration → JAI-028 five unattended trials → JAI-051 feedback → JAI-029 release. No later branch starts while a predecessor remains open, except an owner-approved and documented stacked exception that preserves integration order; JAI-050 remains the only such exception.
 
+### 2026-09-25 — Original plan resumed after the spreadsheet proposal was withdrawn
+
+- The withdrawn proposal is preserved without history rewriting on its remote audit branch at `53ada5883cc17fe1d2bf3718aa4dceb8e29d6bf7`; it was not merged into JAI-050 or `develop` and introduced no product implementation, source-data copy, business-database write, scheduler change, or new active Issue.
+- Returned to `feature/jai-050-production-ui-foundation`. Local HEAD and the cached remote branch ref both equal `96fe7984d0a46e5f2c94b2bddebee35adcdf1377`; the worktree was clean and repository-local authorship remained `user9527448 <2537759248@qq.com>`.
+- Restored the single formal path JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 in the paired plans, backlogs, manual-action queue, and work logs. Historical entries remain unchanged; only current status and new facts are appended.
+- The 2026-09-25 read-only A-006 audit found Docker client 29.6.2 but no Docker daemon pipe. Compose, Alembic, APScheduler, and pipeline ledgers were therefore unreadable, so no success, failure, or misfire is inferred for 2026-09-16 through 2026-09-25. No Docker start, makeup, migration, delivery, source request, or database write was attempted.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -857,10 +875,11 @@ interrupting safe work.
 - JAI-027 G4 static checks: Ruff format checked 247 files, Ruff lint passed, Mypy passed across 166 source files, the six configuration tests passed, `docker compose config --quiet`, `git diff --check`, bilingual heading parity, and relative Markdown-link checks passed. The first direct `pytest.exe` invocation could not import the repository `scripts` package on Windows; rerunning through `python -m pytest` collected the correct suite and all 325 selected non-integration tests passed, but the process correctly failed the 85% complete-gate threshold at 75.65% because 19 database tests were deselected. The Docker engine is reachable, but `db`, `api`, and `scheduler` all exited about three hours before the check, so the authoritative PostgreSQL gate and current ledger audit remain blocked rather than inferred.
 - JAI-027 G4 final gate after Docker recovery: Ruff format checked 249 files, Ruff lint passed, Mypy passed across 168 source files, all 350 PostgreSQL-enabled tests passed without skips, and coverage reached 85.37%; the test public schema returned to zero tables and the populated business database remained unchanged at `0009` with its one job, one run, and four stages.
 - Manual-action/status documentation checks: paired manual-action and WORKLOG heading counts match at 7 and 79; development-plan and backlog heading counts match at 45 and 71; both backlogs expose the same 55 Issue headings in the same order; all relative Markdown links and `git diff --check` passed.
+- 2026-09-25 runtime recheck: Docker client 29.6.2 is installed, but `npipe:////./pipe/docker_engine` does not exist; A-006 ledger verification and `M-003` container-build verification remain blocked on a manually restored Docker daemon.
 
 ## 5. Next actions
 
-1. The owner decides `A-006` before 2026-09-16 08:00: either keep ordinary daily business runs enabled or explicitly approve stopping only the scheduler. The evidenced 2026-09-15 run is not counted as JAI-028 and no makeup is authorized.
+1. The owner manually starts Docker Desktop when convenient. The agent then performs the overdue A-006 read-only Compose/Alembic/APScheduler/pipeline-ledger audit before any runtime decision; no makeup is authorized.
 2. Complete `M-003` later by pre-pulling `node:24-alpine`; then rerun the JAI-050 container build without recreating current services and close its remaining technical acceptance item.
 3. Keep `M-001`, `M-002`, and `A-001/G5` deferred until the owner is ready. Only after JAI-027 G5 closes may JAI-027 integrate first; then normally synchronize/reverify JAI-050 and integrate it. Do not start JAI-028, JAI-051, or JAI-029 early.
 

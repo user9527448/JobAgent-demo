@@ -353,7 +353,7 @@
 
 - **Labels**：`type:feature` `area:notification` `priority:P0` `size:M`
 - **依赖**：JAI-024
-- **状态**：D-037 G1～G4 的实现、双语文档和 350 项 PostgreSQL 完整门禁已通过；业务迁移 `0010`、真实密钥和一次指定快照真实核验仍等待 `M-001`、`M-002` 与 `A-001/G5`，因此 Issue 未完成、未推送、未合入 `develop`。
+- **状态**：D-037 G1～G4 的实现、双语文档和 350 项 PostgreSQL 完整门禁已通过；远程 feature 末端为 `ff423f1ec3b622b6bb934519f57ccf5d08cac885`。业务迁移 `0010`、真实密钥和一次指定快照真实核验仍等待 `M-001`、`M-002` 与 `A-001/G5`，因此 Issue 未完成、未合入 `develop`。
 - **目标**：通过一个选定通道可靠推送日报。
 - **范围**：PushPlus 或企业微信机器人（二选一）、消息长度处理、重试、发送记录和密钥配置。
 - **验收标准**：
@@ -366,7 +366,7 @@
 
 - **Labels**：`type:feature` `area:ui` `area:api` `priority:P0` `size:L`
 - **依赖**：JAI-024、JAI-026、JAI-027
-- **状态**：方案 1 的实现、浏览器 design QA 与 357 项 Python 完整门禁已于 2026-09-15 通过；Docker Hub 无法拉取 `node:24-alpine`，所以容器镜像构建验证仍等待人工项 `M-003`，Issue 不得标记完成。独立堆叠分支 `feature/jai-050-production-ui-foundation` 不得先于 JAI-027 合入 `develop`。
+- **状态**：方案 1 的实现、浏览器 design QA 与 357 项 Python 完整门禁已于 2026-09-15 通过；远程堆叠分支末端为 `96fe7984d0a46e5f2c94b2bddebee35adcdf1377`。容器镜像构建验证仍等待人工项 `M-003`，Issue 不得标记完成；该分支不得先于 JAI-027 合入 `develop`。
 - **目标**：在五次无人值守验收前提供可持续演进的正式页面基底，让负责人直接核对运行证据、阅读最新日报并反馈视觉/信息架构问题。
 - **范围**：`frontend/` 下的 React + TypeScript + Vite + pnpm 应用，Tailwind CSS v4、基于 Radix 的 shadcn/ui、语义 token、正式路由/布局壳、FastAPI 同源生产发布；方案 1“晨间简报”；API/数据库健康、scheduler 上次/下次证据、最近流水线/阶段、最新日报预览和安全投递状态；只新增页面所需的窄只读 API。
 - **不包含**：运行、补跑、重试、发送/补发、来源启停、偏好写入、推荐反馈写入、认证、多用户、JAI-028 验收或 JAI-051 迁移。
@@ -670,4 +670,4 @@
 
 ## 4. 推荐执行顺序
 
-JAI-021 至 JAI-026 已按顺序完成并合入 `develop`，当前基线为 JAI-026 非快进合并 `a9e9b643b629e5632015778549917f44bd658586`。JAI-027 已在独立 feature 分支完成 D-037 G1～G4 实施、双语文档和 350 项无跳过 PostgreSQL 门禁，覆盖率 85.37%；业务迁移、密钥和一次指定快照真实测试仍在人工操作队列等待 A-001/G5，不得标记 Issue 完成。JAI-050 的方案 1 实现、浏览器 design QA 与 357 项完整门禁已通过；容器镜像构建验证因 Docker Hub 拉取 `node:24-alpine` 失败而等待 `M-003`，Issue 保持未完成，且不得先于 JAI-027 合入 `develop`。随后按 JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 执行；JAI-051 迁移仍受 U3 审批。禁止 rebase、force push 或历史改写。JAI-041 已吸收到 JAI-021；JAI-049 在 MVP 发布闸门前跟踪真实完整率和来源风险。发布闭环稳定后逐站执行其余 JAI-038～JAI-045；JAI-048 保持独立文档 Issue。动态门户不满足公开访问或条款边界时记录 `blocked`，不使用登录、验证码、Playwright 或规避措施强行接入。
+JAI-021 至 JAI-026 已按顺序完成并合入 `develop`，当前基线为 JAI-026 非快进合并 `a9e9b643b629e5632015778549917f44bd658586`。JAI-027 已在远程独立 feature 分支 `ff423f1ec3b622b6bb934519f57ccf5d08cac885` 完成 D-037 G1～G4 实施、双语文档和 350 项无跳过 PostgreSQL 门禁，覆盖率 85.37%；业务迁移、密钥和一次指定快照真实测试仍在人工操作队列等待 A-001/G5，不得标记 Issue 完成。JAI-050 远程堆叠分支末端为 `96fe7984d0a46e5f2c94b2bddebee35adcdf1377`，方案 1 实现、浏览器 design QA 与 357 项完整门禁已通过；容器镜像构建验证仍等待 `M-003`，Issue 保持未完成，且不得先于 JAI-027 合入 `develop`。临时表格加速提案已撤回，只保留未合并审计记录，不进入 Backlog；正式顺序保持 JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029。2026-09-25 Docker 守护进程不可用，2026-09-16 至 2026-09-25 没有可读台账证据，不推断运行结果或执行补跑。JAI-051 迁移仍受 U3 审批。禁止 rebase、force push 或历史改写。JAI-041 已吸收到 JAI-021；JAI-049 在 MVP 发布闸门前跟踪真实完整率和来源风险。发布闭环稳定后逐站执行其余 JAI-038～JAI-045；JAI-048 保持独立文档 Issue。动态门户不满足公开访问或条款边界时记录 `blocked`，不使用登录、验证码、Playwright 或规避措施强行接入。

@@ -18,7 +18,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-004` | Future | Approve the JAI-051 feedback schema/API/retention boundary at U3 | Feedback migration and writes |
 | `M-003` | Pending | Restore Docker Hub access or pre-pull `node:24-alpine` | JAI-050 container-build verification |
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
-| `A-006` | Pending before 2026-09-16 08:00 | Decide whether daily scheduled business runs should remain enabled; otherwise approve stopping only the scheduler | Explicit operating state before the next live-source slot |
+| `A-006` | Deadline elapsed; runtime unavailable on 2026-09-25 | After Docker recovery, review the read-only ledger evidence and decide whether daily scheduled business runs should remain enabled | Explicit operating state before any further scheduler change |
 
 No current queue item authorizes a makeup run, a live recruitment-source request, a second live
 notification, JAI-028's five unattended runs, or JAI-029 release work.
@@ -52,9 +52,14 @@ scheduled run for that date, succeeded once across the existing four stages, and
 points to 2026-09-16 08:00. This fact does not retroactively approve the run and is not a JAI-028
 trial.
 
-Before the next slot, decide whether ordinary daily business runs should stay enabled. If not,
-explicitly approve stopping only the scheduler. Do not run a makeup, migration, delivery, or source
-command manually.
+The 2026-09-16 decision deadline elapsed without a recorded owner decision. On 2026-09-25 the Docker
+client was present but the daemon pipe was unavailable, so Compose, Alembic, APScheduler, and pipeline
+ledgers could not be read. There is therefore no evidence for 2026-09-16 through 2026-09-25, and the
+previous “running/next slot” state is stale rather than proof of success, failure, or misfire.
+
+After Docker is restored, the agent must first perform a read-only runtime and ledger audit. The owner
+then decides whether ordinary daily business runs stay enabled or whether only the scheduler should be
+stopped. No makeup, migration, delivery, or source command is authorized by this item.
 
 ## M-001 — Prepare PushPlus
 
