@@ -21,6 +21,7 @@
 | `daily_report_snapshots` | 不可变结构化/渲染日报 | 日期/时区/版本/输入身份；JSONB payload；内容哈希；Markdown 与已转义 HTML；相同输入复用一份快照 |
 | `notification_deliveries` | 一条日报/通道逻辑投递 | 日报/通道唯一身份；渲染版本、消息哈希、分段数、父状态、时间戳和安全错误元数据 |
 | `notification_delivery_attempts` | 各消息分段的编号 provider 提交 | 投递/分段/尝试唯一；分段哈希、状态、可选 `shortCode`、时间戳和安全错误元数据 |
+| `notification_delivery_operator_events` | 显式开发重发的只追加审计里程碑 | UUID 操作身份；投递/分段/尝试引用；authorized/started/completed 事件；有界原因、重复风险确认、安全结果与错误元数据；更新/删除触发器 |
 | `apscheduler_jobs` | APScheduler 3 持久 job store | 固定字符串任务 ID；下次运行时间索引；序列化调度状态；仅由单 scheduler 进程管理 |
 | `pipeline_runs` | 一次持久化每日逻辑运行 | `(job_name, scheduled_for)` 唯一；触发类型、本地报告日期/时区、当前阶段、终态、时间戳与安全错误元数据 |
 | `pipeline_stage_runs` | 各流水线阶段的编号尝试 | 运行/阶段/尝试唯一；阶段和状态受限；JSONB 产物 ID、版本、计数与安全失败输出 |
@@ -42,7 +43,8 @@ sources
 
 daily_report_snapshots（不可变日报 payload 与渲染）
 └── notification_deliveries（每通道一条逻辑记录）
-    └── notification_delivery_attempts（编号分段提交）
+    ├── notification_delivery_attempts（编号分段提交）
+    └── notification_delivery_operator_events（不可变恢复证据）
 
 pipeline_runs
 └── pipeline_stage_runs（受限外键、追加式编号尝试）
@@ -62,6 +64,10 @@ apscheduler_jobs（单 APScheduler 进程 job store）
 `(report_snapshot_id, channel)` 身份可防止重复成功投递。
 `notification_delivery_attempts.delivery_id` 同样受限；尝试记录会保留供运维安全查询，绝不以原始
 provider 响应替代。
+`notification_delivery_operator_events` 对投递及可选尝试使用受限外键；
+`(action_id, event_type)` 唯一约束防止重复里程碑，PostgreSQL 触发器拒绝更新或删除行。迁移
+`0011_delivery_operator_audit` 只新增结构；G1 仅应用于名称以 `_test` 结尾的数据库，不触碰已有
+业务数据库。
 
 ## 时间处理
 
@@ -110,10 +116,14 @@ docker compose exec api alembic upgrade head
 ```
 
 迁移集成测试具有破坏性，因此拒绝操作名称不以 `_test` 结尾的数据库。
-迁移 `0009_pipeline_scheduling` 和 `0010_notification_delivery` 都受此保护。迁移 `0010` 新增两张
+迁移 `0009_pipeline_scheduling`、`0010_notification_delivery` 和
+`0011_delivery_operator_audit` 都受此保护。迁移 `0010` 新增两张
 投递表，并把流水线约束扩展到第五个 `delivery` 阶段。将它应用到已有数据的业务库、注入 PushPlus
 凭据或发送真实消息均属于需要明确批准的独立 G5 操作。
 
 2026-09-25，负责人批准 G5，已有数据的本地业务库从 `0009_pipeline_scheduling` 升级到
 `0010_notification_delivery`。随后 `alembic check` 显示无待执行操作，既有业务表计数保持不变。
 该事实不授权第二次真实通知、scheduler 重启、补跑或针对业务 Schema 的破坏性测试。
+
+A-011 G1 只在 `jobagent_test` 验证了 `0011` 的升级/检查/降级行为。已有数据的业务库有意保持
+`0010_notification_delivery`；把 `0011` 应用于该库需要未来独立审批。

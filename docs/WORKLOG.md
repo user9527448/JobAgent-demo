@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Paused at 0/5; AccessKey retest still returns provider code `403`, and scheduler is stopped | `feature/jai-028-e2e-unattended-trials` | Controlled development recovery is approved in principle under D-041 but requires A-011 implementation/data approval before any makeup or resend |
+| JAI-028 | Paused at 0/5; A-011 G1 recovery implementation is complete in the feature worktree, while scheduler and live actions remain stopped | `feature/jai-028-e2e-unattended-trials` | Migration `0011`, append-only resend audit, and development-only CLI passed `_test` synthetic checks; business migration and any real action remain unapproved |
 
 ## 2. Current decisions
 
@@ -290,6 +290,17 @@ attempt and pipeline-stage rows, and adds a durable append-only operator-action 
 provider call. A business migration and the first real resend remain behind A-011 approval. Recovered
 development runs are reported separately from clean unattended successes unless the owner explicitly
 changes JAI-028's five-run acceptance definition.
+
+### D-042 A-011 G1 separates pipeline makeup evidence from provider resend authorization
+
+The owner approved G1 implementation and `_test`-only verification, but not a business migration or
+live action. Existing makeup remains an explicit command whose immutable logical run,
+`trigger=makeup`, and numbered stage rows already form append-only evidence. Migration
+`0011_delivery_operator_audit` therefore adds the missing provider-boundary evidence: immutable
+`authorized`, `started`, and `completed` events under one UUID, with authorization persisted before
+the single provider submission and a database trigger rejecting update/delete. The new `resend`
+command is available only in `development`, requires a bounded reason plus duplicate-risk
+confirmation, and never mutates the prior attempt or performs an implicit submission retry.
 
 ## 3. Active work history
 
@@ -1041,6 +1052,30 @@ changes JAI-028's five-run acceptance definition.
   evidence remains run `4` with the original seven stage rows and delivery `2` with only attempt `2`.
   No new pipeline, stage, delivery, or notification-attempt row was created during that interval.
 
+### 2026-09-26 — A-011 G1 audited development recovery implemented
+
+- The owner approved only G1: migration and application code, explicit CLI, and synthetic verification
+  against a database whose name ends in `_test`. The approval excludes business migration, PushPlus
+  access, credential checks, real makeup/resend, and scheduler start.
+- Added additive migration `0011_delivery_operator_audit`, ORM/contracts, and an append-only
+  `notification_delivery_operator_events` ledger. Each resend authorization records a bounded reason
+  and duplicate-risk confirmation before creating a new attempt; start and safe completion events
+  share the same UUID. Restricted foreign keys, unique action/event identity, and a PostgreSQL trigger
+  preserve prior attempts and reject event updates/deletes.
+- Added `jobagent-delivery resend` as a `development`-only command targeting one delivery part. It
+  accepts only a prior terminal failed/unknown/interrupted part, submits exactly once, uses the
+  existing advisory lock and deterministic message identity, and appends the terminal result. Normal
+  `send` keeps the production deny-by-default behavior for `unknown` deliveries.
+- Existing pipeline makeup remains explicit and is already append-only through the logical run,
+  `trigger=makeup`, and numbered stage attempts; G1 makes no runtime call. The complete gate passed:
+  Ruff format checked 266 files, Ruff lint passed, Mypy checked 176 source files, all 358 tests passed
+  without skips, and coverage reached 85.57%. The `_test` scenario proved attempt 1 remained
+  unchanged, attempt 2 succeeded through a synthetic provider, exactly three ordered operator events
+  were appended, a second resend after success was rejected, and the database trigger rejected
+  mutation. Post-gate read-only evidence showed healthy `db`/`api`, scheduler `Exited (143)`, business
+  Alembic still at `0010_notification_delivery`, and no business
+  `notification_delivery_operator_events` table.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -1073,9 +1108,9 @@ changes JAI-028's five-run acceptance definition.
 
 1. Keep the scheduler stopped and correct the PushPlus security-IP configuration until a separately
    approved credential-only check returns an AccessKey; the latest real check still returned `403`.
-2. Obtain A-011 approval before implementing migration `0011` and the explicit development-only,
-   append-only resend authorization path. Do not mutate the original unknown attempt.
-3. After the blocker and audit path are verified, separately approve any real resend/makeup and a new
+2. Keep business Alembic at `0010`; do not apply `0011`, run the new CLI against business data, call
+   PushPlus, perform makeup, or restart the scheduler without the next explicit approval.
+3. After authentication and the audit path are separately approved for live use, approve any real resend/makeup and a new
    unattended observation window. Do not start JAI-051 or JAI-029 before JAI-028 closes.
 
 ## 6. Update template

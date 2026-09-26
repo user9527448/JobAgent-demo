@@ -74,6 +74,13 @@ jobagent-scheduler show --run-id 1
 - `show` emits the run and every ordered stage attempt, including record IDs, versions, counts,
   statuses, and safe error metadata.
 
+Development makeup remains explicit and is already audited by `pipeline_runs.trigger=makeup` plus
+append-only numbered `pipeline_stage_runs`; it never erases the failed scheduled run or stage.
+Migration `0011` adds the separate operator authorization ledger only for the higher-risk provider
+resend boundary, where an ambiguous external identity must be preserved. G1 tests both recovery
+ledgers only on `_test`; it does not authorize running `makeup`, restarting the scheduler, or
+contacting a real provider.
+
 Exit code `0` means completed/reused inspection success, `2` means a failed/not-found operation,
 and `3` means another process holds the pipeline lock.
 

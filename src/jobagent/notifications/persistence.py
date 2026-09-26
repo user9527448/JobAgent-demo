@@ -6,6 +6,7 @@ import hashlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from uuid import UUID
 
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
@@ -13,7 +14,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from jobagent.core import PermanentJobAgentError, TransientJobAgentError
-from jobagent.db.models import NotificationDelivery, NotificationDeliveryAttempt
+from jobagent.db.models import (
+    NotificationDelivery,
+    NotificationDeliveryAttempt,
+    NotificationDeliveryOperatorEvent,
+)
 
 from .contracts import (
     DeliveryAttemptSnapshot,
@@ -21,6 +26,9 @@ from .contracts import (
     DeliveryChannel,
     DeliveryMessage,
     DeliveryMessagePart,
+    DeliveryOperatorEventSnapshot,
+    DeliveryOperatorEventType,
+    DeliveryOperatorOutcome,
     DeliverySnapshot,
     DeliveryStatus,
 )
@@ -120,6 +128,165 @@ class SqlAlchemyDeliveryRepository:
                 return tuple(_attempt_snapshot(model) for model in models)
         except SQLAlchemyError as error:
             raise _database_error("list delivery attempts", error) from error
+
+    async def list_operator_events(
+        self,
+        delivery_id: int,
+    ) -> tuple[DeliveryOperatorEventSnapshot, ...]:
+        """Return immutable operator events in insertion order."""
+        try:
+            async with self._session_factory() as session:
+                models = await session.scalars(
+                    select(NotificationDeliveryOperatorEvent)
+                    .where(NotificationDeliveryOperatorEvent.delivery_id == delivery_id)
+                    .order_by(NotificationDeliveryOperatorEvent.id)
+                )
+                return tuple(_operator_event_snapshot(model) for model in models)
+        except SQLAlchemyError as error:
+            raise _database_error("list delivery operator events", error) from error
+
+    async def start_operator_resend(
+        self,
+        *,
+        action_id: UUID,
+        delivery_id: int,
+        part: DeliveryMessagePart,
+        reason: str,
+    ) -> DeliveryAttemptSnapshot:
+        """Persist authorization and a new attempt before any provider interaction."""
+        normalized_reason = reason.strip()
+        if not 10 <= len(normalized_reason) <= 500:
+            raise ValueError("Operator resend reason must contain 10 to 500 characters.")
+        now = datetime.now(UTC)
+        try:
+            async with self._session_factory() as session, session.begin():
+                delivery = await _require_delivery(session, delivery_id)
+                if delivery.status not in {
+                    DeliveryStatus.FAILED.value,
+                    DeliveryStatus.UNKNOWN.value,
+                }:
+                    raise PermanentJobAgentError(
+                        "Only failed or unknown deliveries can be explicitly resent.",
+                        code="notification.operator_resend_not_allowed",
+                        details={"delivery_id": delivery_id, "status": delivery.status},
+                    )
+                if part.part_count != delivery.part_count or part.part_number > delivery.part_count:
+                    raise PermanentJobAgentError(
+                        "Delivery part identity conflicts with its logical delivery.",
+                        code="notification.part_identity_conflict",
+                        details={"delivery_id": delivery_id, "part_number": part.part_number},
+                    )
+                latest = await session.scalar(
+                    select(NotificationDeliveryAttempt)
+                    .where(
+                        NotificationDeliveryAttempt.delivery_id == delivery_id,
+                        NotificationDeliveryAttempt.part_number == part.part_number,
+                    )
+                    .order_by(NotificationDeliveryAttempt.attempt.desc())
+                    .limit(1)
+                    .with_for_update()
+                )
+                if latest is None or latest.status not in {
+                    DeliveryAttemptStatus.FAILED.value,
+                    DeliveryAttemptStatus.UNKNOWN.value,
+                    DeliveryAttemptStatus.INTERRUPTED.value,
+                }:
+                    raise PermanentJobAgentError(
+                        "The selected part has no terminal failed or unknown attempt to recover.",
+                        code="notification.operator_resend_part_not_allowed",
+                        details={"delivery_id": delivery_id, "part_number": part.part_number},
+                    )
+                if latest.part_hash != part.content_hash:
+                    raise PermanentJobAgentError(
+                        "Persisted delivery attempt does not match the deterministic message.",
+                        code="notification.attempt_identity_conflict",
+                        details={"delivery_id": delivery_id, "attempt_id": latest.id},
+                    )
+
+                session.add(
+                    NotificationDeliveryOperatorEvent(
+                        action_id=action_id,
+                        delivery_id=delivery_id,
+                        part_number=part.part_number,
+                        event_type=DeliveryOperatorEventType.AUTHORIZED.value,
+                        reason=normalized_reason,
+                        duplicate_risk_confirmed=True,
+                    )
+                )
+                attempt = NotificationDeliveryAttempt(
+                    delivery_id=delivery_id,
+                    part_number=part.part_number,
+                    attempt=latest.attempt + 1,
+                    part_hash=part.content_hash,
+                    status=DeliveryAttemptStatus.SUBMITTING.value,
+                    started_at=now,
+                )
+                session.add(attempt)
+                await session.flush()
+                session.add(
+                    NotificationDeliveryOperatorEvent(
+                        action_id=action_id,
+                        delivery_id=delivery_id,
+                        part_number=part.part_number,
+                        attempt_id=attempt.id,
+                        event_type=DeliveryOperatorEventType.STARTED.value,
+                    )
+                )
+                delivery.status = DeliveryStatus.SENDING.value
+                delivery.started_at = delivery.started_at or now
+                delivery.finished_at = None
+                delivery.error_code = None
+                delivery.error_message = None
+                delivery.updated_at = now
+                await session.flush()
+                return _attempt_snapshot(attempt)
+        except SQLAlchemyError as error:
+            raise _database_error("start operator delivery resend", error) from error
+
+    async def complete_operator_resend(
+        self,
+        *,
+        action_id: UUID,
+        attempt: DeliveryAttemptSnapshot,
+    ) -> DeliveryOperatorEventSnapshot:
+        """Append the safe terminal outcome for one operator action."""
+        outcomes = {
+            DeliveryAttemptStatus.SUCCEEDED: DeliveryOperatorOutcome.SUCCEEDED,
+            DeliveryAttemptStatus.FAILED: DeliveryOperatorOutcome.FAILED,
+            DeliveryAttemptStatus.UNKNOWN: DeliveryOperatorOutcome.UNKNOWN,
+            DeliveryAttemptStatus.INTERRUPTED: DeliveryOperatorOutcome.INTERRUPTED,
+        }
+        outcome = outcomes.get(attempt.status)
+        if outcome is None:
+            raise ValueError("Operator resend completion requires a terminal attempt.")
+        try:
+            async with self._session_factory() as session, session.begin():
+                persisted = await _require_attempt(session, attempt.id)
+                if (
+                    persisted.delivery_id != attempt.delivery_id
+                    or persisted.part_number != attempt.part_number
+                    or persisted.status != attempt.status.value
+                ):
+                    raise PermanentJobAgentError(
+                        "Operator resend completion conflicts with the persisted attempt.",
+                        code="notification.operator_resend_completion_conflict",
+                        details={"attempt_id": attempt.id},
+                    )
+                model = NotificationDeliveryOperatorEvent(
+                    action_id=action_id,
+                    delivery_id=attempt.delivery_id,
+                    part_number=attempt.part_number,
+                    attempt_id=attempt.id,
+                    event_type=DeliveryOperatorEventType.COMPLETED.value,
+                    outcome=outcome.value,
+                    error_code=attempt.error_code,
+                    error_message=attempt.error_message,
+                )
+                session.add(model)
+                await session.flush()
+                return _operator_event_snapshot(model)
+        except SQLAlchemyError as error:
+            raise _database_error("complete operator delivery resend", error) from error
 
     async def interrupt_submitting_attempts(self, delivery_id: int) -> int:
         """Make crash-window ambiguity explicit before any resumed submission."""
@@ -367,6 +534,25 @@ def _attempt_snapshot(model: NotificationDeliveryAttempt) -> DeliveryAttemptSnap
         finished_at=model.finished_at,
         error_code=model.error_code,
         error_message=model.error_message,
+    )
+
+
+def _operator_event_snapshot(
+    model: NotificationDeliveryOperatorEvent,
+) -> DeliveryOperatorEventSnapshot:
+    return DeliveryOperatorEventSnapshot(
+        id=model.id,
+        action_id=model.action_id,
+        delivery_id=model.delivery_id,
+        part_number=model.part_number,
+        attempt_id=model.attempt_id,
+        event_type=DeliveryOperatorEventType(model.event_type),
+        reason=model.reason,
+        duplicate_risk_confirmed=model.duplicate_risk_confirmed,
+        outcome=None if model.outcome is None else DeliveryOperatorOutcome(model.outcome),
+        error_code=model.error_code,
+        error_message=model.error_message,
+        created_at=model.created_at,
     )
 
 

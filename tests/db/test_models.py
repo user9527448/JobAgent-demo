@@ -18,6 +18,7 @@ EXPECTED_TABLES = {
     "match_results",
     "notification_deliveries",
     "notification_delivery_attempts",
+    "notification_delivery_operator_events",
     "pipeline_runs",
     "pipeline_stage_runs",
     "raw_documents",

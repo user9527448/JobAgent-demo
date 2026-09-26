@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass, field
 from typing import Protocol
+from uuid import UUID, uuid4
 
 from jobagent.core import PermanentJobAgentError, TransientJobAgentError
 from jobagent.reports import DailyReportOperations
@@ -20,6 +21,8 @@ from .contracts import (
     DeliveryFailureKind,
     DeliveryMessage,
     DeliveryMessagePart,
+    DeliveryOperatorEventSnapshot,
+    DeliveryOperatorResult,
     DeliveryProvider,
     DeliveryProviderError,
     DeliveryRetryPolicy,
@@ -60,6 +63,11 @@ class DeliveryRepository(Protocol):
 
     async def list_attempts(self, delivery_id: int) -> tuple[DeliveryAttemptSnapshot, ...]: ...
 
+    async def list_operator_events(
+        self,
+        delivery_id: int,
+    ) -> tuple[DeliveryOperatorEventSnapshot, ...]: ...
+
     async def interrupt_submitting_attempts(self, delivery_id: int) -> int: ...
 
     async def start_attempt(
@@ -67,6 +75,22 @@ class DeliveryRepository(Protocol):
         delivery_id: int,
         part: DeliveryMessagePart,
     ) -> DeliveryAttemptSnapshot: ...
+
+    async def start_operator_resend(
+        self,
+        *,
+        action_id: UUID,
+        delivery_id: int,
+        part: DeliveryMessagePart,
+        reason: str,
+    ) -> DeliveryAttemptSnapshot: ...
+
+    async def complete_operator_resend(
+        self,
+        *,
+        action_id: UUID,
+        attempt: DeliveryAttemptSnapshot,
+    ) -> DeliveryOperatorEventSnapshot: ...
 
     async def accept_attempt(
         self,
@@ -158,6 +182,188 @@ class SqlAlchemyNotificationDeliveryService:
                 status=DeliveryStatus.SUCCEEDED,
             )
             return DeliveryExecutionResult(DeliveryDispatchStatus.EXECUTED, completed)
+
+    async def resend(
+        self,
+        *,
+        delivery_id: int,
+        part_number: int,
+        reason: str,
+        duplicate_risk_confirmed: bool,
+    ) -> DeliveryOperatorResult:
+        """Make exactly one explicitly authorized submission for a terminal part."""
+        if not duplicate_risk_confirmed:
+            raise PermanentJobAgentError(
+                "Operator resend requires explicit duplicate-risk confirmation.",
+                code="notification.operator_resend_confirmation_required",
+                details={"delivery_id": delivery_id, "part_number": part_number},
+            )
+        if part_number <= 0:
+            raise ValueError("Delivery part number must be positive.")
+
+        delivery = await self._require_delivery(delivery_id)
+        snapshot = await self._reports.get(delivery.report_snapshot_id)
+        message = self._renderer.render(snapshot)
+        _verify_delivery_identity(delivery, message)
+        if part_number > len(message.parts):
+            raise PermanentJobAgentError(
+                "The selected delivery part does not exist.",
+                code="notification.part_not_found",
+                details={"delivery_id": delivery_id, "part_number": part_number},
+            )
+        part = message.parts[part_number - 1]
+        action_id = uuid4()
+
+        async with self._lock.acquire(message.report_snapshot_id, message.channel) as acquired:
+            if not acquired:
+                return DeliveryOperatorResult(
+                    action_id,
+                    DeliveryDispatchStatus.LOCKED,
+                    None,
+                    None,
+                )
+            delivery = await self._require_delivery(delivery_id)
+            _verify_delivery_identity(delivery, message)
+            attempts = await self._repository.list_attempts(delivery_id)
+            _verify_attempt_hashes(message, attempts)
+            attempt = await self._repository.start_operator_resend(
+                action_id=action_id,
+                delivery_id=delivery_id,
+                part=part,
+                reason=reason,
+            )
+            try:
+                submission = await self._provider.submit(part)
+            except asyncio.CancelledError:
+                terminal = await self._repository.finish_attempt(
+                    attempt.id,
+                    status=DeliveryAttemptStatus.UNKNOWN,
+                    error_code="notification.operator_submit_cancelled_unknown",
+                    error_message="Provider submission may have completed before cancellation.",
+                )
+                await self._repository.finish_delivery(
+                    delivery_id,
+                    status=DeliveryStatus.UNKNOWN,
+                    error_code=terminal.error_code,
+                    error_message=terminal.error_message,
+                )
+                await self._repository.complete_operator_resend(
+                    action_id=action_id,
+                    attempt=terminal,
+                )
+                raise
+            except DeliveryProviderError as error:
+                terminal = await self._finish_operator_provider_error(
+                    delivery_id,
+                    attempt,
+                    error,
+                )
+                await self._repository.complete_operator_resend(
+                    action_id=action_id,
+                    attempt=terminal,
+                )
+                return DeliveryOperatorResult(
+                    action_id,
+                    DeliveryDispatchStatus.EXECUTED,
+                    await self._require_delivery(delivery_id),
+                    terminal,
+                )
+
+            accepted = await self._repository.accept_attempt(
+                attempt.id,
+                submission.provider_message_id,
+            )
+            try:
+                outcome = await self._confirm_accepted(delivery_id, accepted)
+            except TransientJobAgentError as error:
+                terminal = await self._repository.finish_attempt(
+                    accepted.id,
+                    status=DeliveryAttemptStatus.UNKNOWN,
+                    error_code=error.code,
+                    error_message="Provider final status could not be confirmed safely.",
+                )
+                outcome = await self._repository.finish_delivery(
+                    delivery_id,
+                    status=DeliveryStatus.UNKNOWN,
+                    error_code=terminal.error_code,
+                    error_message=terminal.error_message,
+                )
+            if outcome is None:
+                outcome = await self._finish_delivery_from_latest_attempts(delivery_id)
+            terminal = await self._require_attempt(delivery_id, accepted.id)
+            await self._repository.complete_operator_resend(
+                action_id=action_id,
+                attempt=terminal,
+            )
+            return DeliveryOperatorResult(
+                action_id,
+                DeliveryDispatchStatus.EXECUTED,
+                outcome,
+                terminal,
+            )
+
+    async def _finish_operator_provider_error(
+        self,
+        delivery_id: int,
+        attempt: DeliveryAttemptSnapshot,
+        error: DeliveryProviderError,
+    ) -> DeliveryAttemptSnapshot:
+        status = (
+            DeliveryAttemptStatus.UNKNOWN
+            if error.kind is DeliveryFailureKind.UNKNOWN
+            else DeliveryAttemptStatus.FAILED
+        )
+        delivery_status = (
+            DeliveryStatus.UNKNOWN
+            if status is DeliveryAttemptStatus.UNKNOWN
+            else DeliveryStatus.FAILED
+        )
+        message = (
+            "The provider submission outcome is unknown; another resend requires new approval."
+            if status is DeliveryAttemptStatus.UNKNOWN
+            else "The provider rejected the single authorized resend submission."
+        )
+        terminal = await self._repository.finish_attempt(
+            attempt.id,
+            status=status,
+            error_code=error.code,
+            error_message=message,
+        )
+        await self._repository.finish_delivery(
+            delivery_id,
+            status=delivery_status,
+            error_code=error.code,
+            error_message=message,
+        )
+        return terminal
+
+    async def _finish_delivery_from_latest_attempts(
+        self,
+        delivery_id: int,
+    ) -> DeliverySnapshot:
+        delivery = await self._require_delivery(delivery_id)
+        attempts = await self._repository.list_attempts(delivery_id)
+        latest = {part: values[-1] for part, values in _attempts_by_part(attempts).items()}
+        if len(latest) == delivery.part_count and all(
+            attempt.status is DeliveryAttemptStatus.SUCCEEDED for attempt in latest.values()
+        ):
+            return await self._repository.finish_delivery(
+                delivery_id,
+                status=DeliveryStatus.SUCCEEDED,
+            )
+        if any(attempt.status is DeliveryAttemptStatus.UNKNOWN for attempt in latest.values()):
+            return await self._repository.finish_delivery(
+                delivery_id,
+                status=DeliveryStatus.UNKNOWN,
+                error_code="notification.operator_resend_incomplete_unknown",
+                error_message="At least one latest message-part outcome remains unknown.",
+            )
+        return await self._repository.finish_delivery(
+            delivery_id,
+            status=DeliveryStatus.FAILED,
+            error_code="notification.operator_resend_incomplete",
+            error_message="Not all latest message-part attempts have succeeded.",
+        )
 
     async def _deliver_part(
         self,
@@ -344,6 +550,21 @@ class SqlAlchemyNotificationDeliveryService:
             )
         return delivery
 
+    async def _require_attempt(
+        self,
+        delivery_id: int,
+        attempt_id: int,
+    ) -> DeliveryAttemptSnapshot:
+        attempts = await self._repository.list_attempts(delivery_id)
+        for attempt in attempts:
+            if attempt.id == attempt_id:
+                return attempt
+        raise PermanentJobAgentError(
+            "The notification delivery attempt disappeared during execution.",
+            code="notification.attempt_not_found",
+            details={"delivery_id": delivery_id, "attempt_id": attempt_id},
+        )
+
 
 def _attempts_by_part(
     attempts: tuple[DeliveryAttemptSnapshot, ...],
@@ -366,3 +587,18 @@ def _verify_attempt_hashes(
                 code="notification.attempt_identity_conflict",
                 details={"delivery_id": attempt.delivery_id, "attempt_id": attempt.id},
             )
+
+
+def _verify_delivery_identity(delivery: DeliverySnapshot, message: DeliveryMessage) -> None:
+    if (
+        delivery.report_snapshot_id != message.report_snapshot_id
+        or delivery.channel is not message.channel
+        or delivery.delivery_version != message.delivery_version
+        or delivery.message_hash != message.message_hash
+        or delivery.part_count != len(message.parts)
+    ):
+        raise PermanentJobAgentError(
+            "The logical delivery identity has conflicting rendered content.",
+            code="notification.delivery_identity_conflict",
+            details={"delivery_id": delivery.id},
+        )

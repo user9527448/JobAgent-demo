@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
+from uuid import UUID
 
 from sqlalchemy import (
     BigInteger,
@@ -25,6 +26,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from jobagent.core.exceptions import JsonValue
@@ -802,6 +804,10 @@ class NotificationDelivery(TimestampMixin, Base):
         back_populates="delivery",
         passive_deletes=True,
     )
+    operator_events: Mapped[list[NotificationDeliveryOperatorEvent]] = relationship(
+        back_populates="delivery",
+        passive_deletes=True,
+    )
 
 
 class NotificationDeliveryAttempt(Base):
@@ -866,6 +872,86 @@ class NotificationDeliveryAttempt(Base):
     error_message: Mapped[str | None] = mapped_column(Text)
 
     delivery: Mapped[NotificationDelivery] = relationship(back_populates="attempts")
+    operator_events: Mapped[list[NotificationDeliveryOperatorEvent]] = relationship(
+        back_populates="attempt",
+        passive_deletes=True,
+    )
+
+
+class NotificationDeliveryOperatorEvent(Base):
+    """One immutable milestone for an explicit development resend action."""
+
+    __tablename__ = "notification_delivery_operator_events"
+    __table_args__ = (
+        UniqueConstraint(
+            "action_id",
+            "event_type",
+            name="uq_notification_delivery_operator_events_action_type",
+        ),
+        CheckConstraint("part_number > 0", name="part_number_positive"),
+        CheckConstraint(
+            "event_type IN ('authorized', 'started', 'completed')",
+            name="event_type_valid",
+        ),
+        CheckConstraint(
+            "outcome IS NULL OR outcome IN ('succeeded', 'failed', 'unknown', 'interrupted')",
+            name="outcome_valid",
+        ),
+        CheckConstraint(
+            "(event_type = 'authorized' AND attempt_id IS NULL "
+            "AND reason IS NOT NULL AND length(reason) BETWEEN 10 AND 500 "
+            "AND duplicate_risk_confirmed AND outcome IS NULL "
+            "AND error_code IS NULL AND error_message IS NULL) OR "
+            "(event_type = 'started' AND attempt_id IS NOT NULL "
+            "AND reason IS NULL AND NOT duplicate_risk_confirmed AND outcome IS NULL "
+            "AND error_code IS NULL AND error_message IS NULL) OR "
+            "(event_type = 'completed' AND attempt_id IS NOT NULL "
+            "AND reason IS NULL AND NOT duplicate_risk_confirmed AND outcome IS NOT NULL)",
+            name="event_payload_valid",
+        ),
+        Index(
+            "ix_notification_delivery_operator_events_delivery_created",
+            "delivery_id",
+            "created_at",
+        ),
+        Index(
+            "ix_notification_delivery_operator_events_action_created",
+            "action_id",
+            "created_at",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    action_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    delivery_id: Mapped[int] = mapped_column(
+        ForeignKey("notification_deliveries.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    part_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    attempt_id: Mapped[int | None] = mapped_column(
+        ForeignKey("notification_delivery_attempts.id", ondelete="RESTRICT")
+    )
+    event_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    reason: Mapped[str | None] = mapped_column(String(500))
+    duplicate_risk_confirmed: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
+    outcome: Mapped[str | None] = mapped_column(String(32))
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    error_message: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        UTCDateTime(),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    delivery: Mapped[NotificationDelivery] = relationship(back_populates="operator_events")
+    attempt: Mapped[NotificationDeliveryAttempt | None] = relationship(
+        back_populates="operator_events"
+    )
 
 
 class PipelineRun(TimestampMixin, Base):

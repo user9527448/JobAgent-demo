@@ -23,7 +23,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-008` | Paused after first run: 2026-09-26 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | First run failed with an ambiguous delivery; 0/5 counted |
 | `A-009` | Anomaly action executed: 2026-09-26 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Scheduler stopped; failed/unknown evidence preserved |
 | `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
-| `A-011` | Pending owner approval | Approve migration `0011`, append-only development resend authorization, and a separately recorded first live resend/makeup | Implement D-041 without weakening production idempotency |
+| `A-011` | G1 approved and implemented; live action not approved | G1 permits migration `0011` code, append-only development resend authorization, explicit CLI, and `_test` synthetic verification only | D-041 implementation is ready; business migration, real resend/makeup, credential check, and scheduler restart remain gated |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -101,12 +101,16 @@ configuration must therefore be corrected and re-saved before another separately
 
 ## A-011 — Add an audited development-only makeup/resend path
 
-The owner approved the principle that development testing may use recorded makeup and resend.
-Implementation proposes additive migration `0011` with an append-only operator-action ledger, an
-explicit development-only command requiring a bounded reason and duplicate-risk confirmation, a new
-delivery attempt rather than mutation of the prior `unknown` attempt, and unchanged production
-deny-by-default behavior. A-011 must explicitly approve that data model and the first live resend;
-the live action may occur only after AccessKey authentication succeeds.
+The owner approved G1 on 2026-09-26: implement additive migration `0011`, the append-only operator
+event ledger, and an explicit development-only resend CLI, and verify them only with an `_test`
+database and synthetic provider. The implementation creates a new attempt instead of mutating the
+prior `unknown` attempt, writes authorization and start events before provider interaction, appends
+the safe completion result, and leaves production deny-by-default. Existing makeup remains explicit
+and is audited by its immutable run identity, `trigger=makeup`, and numbered stage rows.
+
+G1 does not permit applying `0011` to the business database, calling PushPlus, performing a real
+resend or makeup, checking real credentials, or restarting the scheduler. Those effects require a
+separately approved next gate after authentication is known to work.
 
 ## M-003 — Restore the Docker build prerequisite
 

@@ -35,6 +35,14 @@ metadata. `notification_delivery_attempts` stores each numbered part submission,
 `shortCode`, timestamps, hashes, and safe error metadata. Restricted foreign keys preserve both
 report and attempt history.
 
+Migration `0011_delivery_operator_audit` adds
+`notification_delivery_operator_events`. It records `authorized`, `started`, and `completed`
+milestones for an explicit development resend under one UUID action identity. The authorization
+stores a bounded operator reason and duplicate-risk confirmation before the new attempt is created;
+the completion stores only the safe terminal outcome and allowlisted error metadata. A database
+trigger rejects `UPDATE` and `DELETE`, so prior ambiguous attempts and operator evidence cannot be
+rewritten.
+
 ```text
 delivery: pending → sending → succeeded | failed | unknown
 attempt:  submitting → accepted → succeeded
@@ -99,21 +107,30 @@ secret key configured, and the sending host allowed by the provider's security-I
 
 ## Operator commands
 
-Migration `0010_notification_delivery` must be applied before either command uses the database:
+Migration `0010_notification_delivery` is sufficient for the normal commands. The audited resend
+command additionally requires `0011_delivery_operator_audit`:
 
 ```powershell
 jobagent-delivery show --delivery-id 1
 jobagent-delivery send --snapshot-id 2
+jobagent-delivery resend --delivery-id 2 --part-number 1 --reason "Approved development recovery" --confirm-duplicate-risk
 ```
 
-- `show` needs no provider credential and returns the safe parent plus ordered attempts.
+- `show` needs no provider credential and returns the safe parent, ordered attempts, and ordered
+  operator events.
 - `send` creates or resumes eligible work for one explicit immutable snapshot. A successful prior
   delivery returns `reused`; `succeeded` and `unknown` are never resubmitted automatically.
+- `resend` is rejected unless `JOBAGENT_ENVIRONMENT=development`. It accepts only a `failed` or
+  `unknown` delivery part with a prior terminal attempt, requires a 10–500 character reason and the
+  explicit duplicate-risk flag, creates one new attempt, and performs exactly one provider
+  submission. It never changes the prior attempt and never has an implicit submission retry.
 - Exit code `0` means successful/reused delivery or inspection, `2` means configuration/not-found/
   terminal failure, and `3` means lock contention.
 
 Do not use `send` merely to test configuration: it can create real external messages. The approved
-live test must name one snapshot in advance.
+live test must name one snapshot in advance. G1 validates `resend` only against an `_test` database
+and a synthetic provider; migration of the business database, credential checks, real resend,
+makeup, or scheduler restart always needs the next explicit approval.
 
 ## Activation gates
 

@@ -31,6 +31,11 @@ JAI-027 通过 PushPlus 把一份不可变日报快照投递到个人微信通�
 `notification_delivery_attempts` 保存每次编号分段提交、可选 PushPlus `shortCode`、时间戳、哈希和
 安全错误元数据。受限外键会保留日报与尝试历史。
 
+迁移 `0011_delivery_operator_audit` 新增 `notification_delivery_operator_events`。同一个 UUID
+操作身份下，以 `authorized`、`started`、`completed` 三类事件记录一次显式开发重发。授权事件会在
+创建新尝试前保存有界操作原因与重复风险确认；完成事件只保存安全终态与白名单错误元数据。数据库
+触发器拒绝 `UPDATE` 和 `DELETE`，因此既有不明确尝试与操作证据都不能被改写。
+
 ```text
 投递：pending → sending → succeeded | failed | unknown
 尝试：submitting → accepted → succeeded
@@ -88,19 +93,26 @@ access key 只在内存中获取和缓存。凭据不得进入 Git、数据库�
 
 ## 操作命令
 
-任何命令使用数据库前必须应用迁移 `0010_notification_delivery`：
+普通命令只要求迁移 `0010_notification_delivery`；受审计重发命令还要求
+`0011_delivery_operator_audit`：
 
 ```powershell
 jobagent-delivery show --delivery-id 1
 jobagent-delivery send --snapshot-id 2
+jobagent-delivery resend --delivery-id 2 --part-number 1 --reason "负责人已批准本次开发恢复重发" --confirm-duplicate-risk
 ```
 
-- `show` 不需要 provider 凭据，返回安全父记录和有序尝试。
+- `show` 不需要 provider 凭据，返回安全父记录、有序尝试和有序操作事件。
 - `send` 只为一份明确的不可变快照创建或恢复合资格工作。既有成功投递返回 `reused`；
   `succeeded` 和 `unknown` 都不会自动重新提交。
+- `resend` 仅在 `JOBAGENT_ENVIRONMENT=development` 时可用。它只接受已有终态尝试的 `failed` 或
+  `unknown` 投递分段，必须给出 10～500 字符原因及显式重复风险确认，只新增一次尝试并且只调用
+  provider 提交一次；既有尝试永不修改，也不隐式重试提交。
 - 退出码 `0` 表示成功/复用投递或查询，`2` 表示配置/不存在/终态失败，`3` 表示锁竞争。
 
 不得仅为了测试配置而运行 `send`，它可能创建真实外部消息。获批的真实测试必须提前指定唯一快照。
+G1 只在 `_test` 数据库和合成 provider 上验证 `resend`；业务库迁移、凭据检查、真实重发、补跑或
+scheduler 重启仍分别需要下一次明确审批。
 
 ## 启用闸门
 

@@ -10,17 +10,24 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine, func, select, text
+from sqlalchemy import create_engine, func, select, text, update
 from sqlalchemy.engine import URL, Engine, make_url
+from sqlalchemy.exc import SQLAlchemyError
 
-from jobagent.core import TransientJobAgentError
+from jobagent.core import PermanentJobAgentError, TransientJobAgentError
 from jobagent.db import Database
-from jobagent.db.models import NotificationDelivery, NotificationDeliveryAttempt
+from jobagent.db.models import (
+    NotificationDelivery,
+    NotificationDeliveryAttempt,
+    NotificationDeliveryOperatorEvent,
+)
 from jobagent.notifications import (
     DeliveryAttemptStatus,
     DeliveryDispatchStatus,
     DeliveryFailureKind,
     DeliveryMessagePart,
+    DeliveryOperatorEventType,
+    DeliveryOperatorOutcome,
     DeliveryProviderError,
     DeliveryServicePolicy,
     DeliveryStatus,
@@ -329,6 +336,66 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
             assert completed.delivery is not None
             assert completed.delivery.status is DeliveryStatus.SUCCEEDED
 
+            operator_snapshot = await reports.generate(date(2026, 9, 19))
+            initial_unknown_provider = ScriptedProvider(
+                [
+                    DeliveryProviderError(
+                        "pushplus.submit_outcome_unknown",
+                        kind=DeliveryFailureKind.UNKNOWN,
+                    )
+                ]
+            )
+            operator_delivery = await SqlAlchemyNotificationDeliveryService(
+                reports,
+                repository,
+                lock,
+                initial_unknown_provider,
+                policy=DeliveryServicePolicy(max_result_polls=1),
+            ).deliver(operator_snapshot.id)
+            assert operator_delivery.delivery is not None
+            assert operator_delivery.delivery.status is DeliveryStatus.UNKNOWN
+            original_attempt = (await repository.list_attempts(operator_delivery.delivery.id))[0]
+
+            resend_provider = ScriptedProvider([ProviderSubmission("synthetic-operator-success")])
+            resend_service = SqlAlchemyNotificationDeliveryService(
+                reports,
+                repository,
+                lock,
+                resend_provider,
+                policy=DeliveryServicePolicy(max_result_polls=1),
+            )
+            resend = await resend_service.resend(
+                delivery_id=operator_delivery.delivery.id,
+                part_number=1,
+                reason="Owner approved one synthetic development recovery.",
+                duplicate_risk_confirmed=True,
+            )
+            assert resend.delivery is not None
+            assert resend.delivery.status is DeliveryStatus.SUCCEEDED
+            assert resend.attempt is not None
+            assert resend.attempt.attempt == 2
+            assert resend.attempt.status is DeliveryAttemptStatus.SUCCEEDED
+            assert resend_provider.submit_calls == 1
+            operator_attempts = await repository.list_attempts(operator_delivery.delivery.id)
+            assert len(operator_attempts) == 2
+            assert operator_attempts[0] == original_attempt
+            events = await repository.list_operator_events(operator_delivery.delivery.id)
+            assert [event.event_type for event in events] == [
+                DeliveryOperatorEventType.AUTHORIZED,
+                DeliveryOperatorEventType.STARTED,
+                DeliveryOperatorEventType.COMPLETED,
+            ]
+            assert {event.action_id for event in events} == {resend.action_id}
+            assert events[0].duplicate_risk_confirmed is True
+            assert events[2].outcome is DeliveryOperatorOutcome.SUCCEEDED
+            with pytest.raises(PermanentJobAgentError, match="failed or unknown"):
+                await resend_service.resend(
+                    delivery_id=operator_delivery.delivery.id,
+                    part_number=1,
+                    reason="A second synthetic resend must remain forbidden.",
+                    duplicate_risk_confirmed=True,
+                )
+
             async with database.session_factory() as session:
                 delivery_count = await session.scalar(
                     select(func.count()).select_from(NotificationDelivery)
@@ -336,8 +403,20 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
                 attempt_count = await session.scalar(
                     select(func.count()).select_from(NotificationDeliveryAttempt)
                 )
-            assert delivery_count == 10
-            assert attempt_count == 14
+                operator_event_count = await session.scalar(
+                    select(func.count()).select_from(NotificationDeliveryOperatorEvent)
+                )
+            assert delivery_count == 11
+            assert attempt_count == 16
+            assert operator_event_count == 3
+
+            with pytest.raises(SQLAlchemyError):
+                async with database.session_factory() as session, session.begin():
+                    await session.execute(
+                        update(NotificationDeliveryOperatorEvent)
+                        .where(NotificationDeliveryOperatorEvent.id == events[0].id)
+                        .values(reason="Mutation must be rejected by the append-only trigger.")
+                    )
         finally:
             await database.close()
 

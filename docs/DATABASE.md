@@ -21,6 +21,7 @@ This document describes the PostgreSQL schema established in JAI-006 and extende
 | `daily_report_snapshots` | Immutable structured/rendered daily report | Date/timezone/version/input identity; JSONB payload; content hash; Markdown and escaped HTML; identical inputs reuse one snapshot |
 | `notification_deliveries` | One logical report/channel delivery | Unique report/channel identity; renderer version, message hash, part count, parent state, timestamps, and safe error metadata |
 | `notification_delivery_attempts` | Numbered provider submissions per message part | Unique delivery/part/attempt; part hash, state, optional `shortCode`, timestamps, and safe error metadata |
+| `notification_delivery_operator_events` | Append-only audit milestones for explicit development resends | UUID action identity; delivery/part/attempt references; authorized/started/completed event; bounded reason, duplicate-risk confirmation, safe outcome and error metadata; update/delete trigger |
 | `apscheduler_jobs` | APScheduler 3 persistent job store | Fixed string job ID; next-run timestamp index; serialized scheduler state; managed only by the single scheduler process |
 | `pipeline_runs` | One durable logical daily execution | Unique `(job_name, scheduled_for)`; trigger, local report date/timezone, current stage, terminal status, timestamps, and safe error metadata |
 | `pipeline_stage_runs` | Numbered attempts for each pipeline stage | Unique run/stage/attempt; constrained stage/status; JSONB artifact IDs, versions, counts, and safe failure output |
@@ -42,7 +43,8 @@ sources
 
 daily_report_snapshots (immutable report payload and renderings)
 └── notification_deliveries (one logical row per channel)
-    └── notification_delivery_attempts (numbered part submissions)
+    ├── notification_delivery_attempts (numbered part submissions)
+    └── notification_delivery_operator_events (immutable recovery evidence)
 
 pipeline_runs
 └── pipeline_stage_runs (restricted, append-only numbered attempts)
@@ -62,6 +64,10 @@ All historical foreign keys use `ON DELETE RESTRICT`, and ORM relationships do n
 report. Its `(report_snapshot_id, channel)` identity prevents duplicate successful delivery.
 `notification_delivery_attempts.delivery_id` is also restricted; attempts are retained for safe
 operator inspection and are never replaced by raw provider responses.
+`notification_delivery_operator_events` has restricted delivery and optional attempt foreign keys.
+Its `(action_id, event_type)` uniqueness prevents duplicate milestones, and a PostgreSQL trigger
+rejects row updates and deletes. Migration `0011_delivery_operator_audit` is additive; G1 applies it
+only to a database whose name ends in `_test`, never to the populated business database.
 
 ## Time handling
 
@@ -110,7 +116,8 @@ docker compose exec api alembic upgrade head
 ```
 
 Migration integration tests are destructive and therefore refuse any database whose name does not end in `_test`.
-Migrations `0009_pipeline_scheduling` and `0010_notification_delivery` are covered by that guard.
+Migrations `0009_pipeline_scheduling`, `0010_notification_delivery`, and
+`0011_delivery_operator_audit` are covered by that guard.
 Migration `0010` adds both delivery tables and extends the pipeline constraint to the fifth
 `delivery` stage. Applying it to the populated business database, injecting PushPlus credentials,
 or sending a live message are separate G5 operations requiring explicit approval.
@@ -119,3 +126,7 @@ On 2026-09-25, the owner approved G5 and the populated local business database a
 `0009_pipeline_scheduling` to `0010_notification_delivery`. `alembic check` then reported no pending
 operations and pre-existing business-table counts were unchanged. This does not authorize another
 live notification, a scheduler restart, a makeup run, or destructive business-schema testing.
+
+A-011 G1 verified `0011` upgrade/check/downgrade behavior only on `jobagent_test`. The populated
+business database intentionally remains at `0010_notification_delivery`; applying `0011` there is a
+separate future approval.

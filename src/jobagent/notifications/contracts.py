@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
+from uuid import UUID
 
 from jobagent.core.exceptions import JsonValue
 
@@ -61,6 +62,23 @@ class DeliveryDispatchStatus(StrEnum):
     EXECUTED = "executed"
     REUSED = "reused"
     LOCKED = "locked"
+
+
+class DeliveryOperatorEventType(StrEnum):
+    """Append-only milestones for one explicit operator-authorized resend."""
+
+    AUTHORIZED = "authorized"
+    STARTED = "started"
+    COMPLETED = "completed"
+
+
+class DeliveryOperatorOutcome(StrEnum):
+    """Safe terminal outcome recorded for an operator action."""
+
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    INTERRUPTED = "interrupted"
 
 
 class DeliveryProviderError(Exception):
@@ -268,6 +286,58 @@ class DeliveryExecutionResult:
         return {
             "dispatch_status": self.dispatch_status.value,
             "delivery": None if self.delivery is None else self.delivery.as_json(),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class DeliveryOperatorEventSnapshot:
+    """Credential-safe append-only audit event for one operator action."""
+
+    id: int
+    action_id: UUID
+    delivery_id: int
+    part_number: int
+    attempt_id: int | None
+    event_type: DeliveryOperatorEventType
+    reason: str | None
+    duplicate_risk_confirmed: bool
+    outcome: DeliveryOperatorOutcome | None
+    error_code: str | None
+    error_message: str | None
+    created_at: datetime
+
+    def as_json(self) -> dict[str, JsonValue]:
+        return {
+            "id": self.id,
+            "action_id": str(self.action_id),
+            "delivery_id": self.delivery_id,
+            "part_number": self.part_number,
+            "attempt_id": self.attempt_id,
+            "event_type": self.event_type.value,
+            "reason": self.reason,
+            "duplicate_risk_confirmed": self.duplicate_risk_confirmed,
+            "outcome": None if self.outcome is None else self.outcome.value,
+            "error_code": self.error_code,
+            "error_message": self.error_message,
+            "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class DeliveryOperatorResult:
+    """Result of one explicitly authorized, single-submission resend action."""
+
+    action_id: UUID
+    dispatch_status: DeliveryDispatchStatus
+    delivery: DeliverySnapshot | None
+    attempt: DeliveryAttemptSnapshot | None
+
+    def as_json(self) -> dict[str, JsonValue]:
+        return {
+            "action_id": str(self.action_id),
+            "dispatch_status": self.dispatch_status.value,
+            "delivery": None if self.delivery is None else self.delivery.as_json(),
+            "attempt": None if self.attempt is None else self.attempt.as_json(),
         }
 
 
