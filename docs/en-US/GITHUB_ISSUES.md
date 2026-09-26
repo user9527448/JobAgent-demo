@@ -383,7 +383,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:test` `area:infra` `priority:P0` `size:L`
 - **Dependencies**: JAI-026, JAI-027, JAI-050
-- **Status**: the dedicated branch started from triple-matched `develop=dcdd697f...` on 2026-09-25. Scheduled run `4` on 2026-09-26 recovered its collection retries and produced report snapshot `4`, then ended `failed` with `pushplus.access_key_rejected`; delivery `2`/attempt `2` conservatively remain `unknown`, so acceptance is still 0/5. The sole scheduler was stopped under `A-009`; no makeup or resend is allowed, and remediation or restart requires fresh approval.
+- **Status**: the dedicated branch started from triple-matched `develop=dcdd697f...` on 2026-09-25. Scheduled run `4` produced report snapshot `4` and then failed with `pushplus.access_key_rejected`; delivery `2`/attempt `2` remain `unknown`, so acceptance is 0/5. A credential-only retest still returned provider `403`, and the scheduler is stopped again. D-041 approves recorded development makeup/resend in principle, but migration `0011`, the append-only action ledger, and the first live resend remain behind A-011; production idempotency is unchanged.
 - **Goal**: prove the real scheduled MVP loop is stable.
 - **Scope**: offline E2E, controlled live trials, metrics, issue list.
 - **Acceptance**:

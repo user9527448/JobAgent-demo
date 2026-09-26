@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Paused at 0/5 after the first scheduled trial failed with an ambiguous delivery; scheduler stopped under A-009 | `feature/jai-028-e2e-unattended-trials` | 2026-09-26 run `4` is `failed`; delivery `2` and attempt `2` are `unknown`; no makeup or resend |
+| JAI-028 | Paused at 0/5; AccessKey retest still returns provider code `403`, and scheduler is stopped | `feature/jai-028-e2e-unattended-trials` | Controlled development recovery is approved in principle under D-041 but requires A-011 implementation/data approval before any makeup or resend |
 
 ## 2. Current decisions
 
@@ -278,6 +278,18 @@ product implementation, business-data import, database change, scheduler change,
 is adopted. Work resumes on the already approved critical path
 JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029, and the shared resource will not be accessed again
 as part of this proposal.
+
+### D-041 Development recovery may be explicit and append-only
+
+On 2026-09-26 the owner revised the development-test rule: controlled makeup and resend operations
+may be supported when every operator authorization, reason, prior ambiguous identity, new provider
+attempt, and final result is recorded. This is not permission to silently retry `unknown` deliveries
+or to weaken production idempotency. The proposed implementation keeps production deny-by-default,
+requires an explicit development-only command and duplicate-risk confirmation, preserves all prior
+attempt and pipeline-stage rows, and adds a durable append-only operator-action record before any
+provider call. A business migration and the first real resend remain behind A-011 approval. Recovered
+development runs are reported separately from clean unattended successes unless the owner explicitly
+changes JAI-028's five-run acceptance definition.
 
 ## 3. Active work history
 
@@ -1019,6 +1031,15 @@ as part of this proposal.
 - At the 09:30 audit the feature branch still ended at `0614e21`; no 08:15 automation evidence commit
   was present. The manual audit records the facts without inferring whether the heartbeat failed to
   start or failed before committing.
+- The owner then reported adding the Docker public egress IPv4 to PushPlus and revised the
+  development-test policy to allow recorded makeup/resend. A single credential-only real check used
+  a disposable scheduler-service container and called only `getAccessKey`; it returned HTTP 200 with
+  provider code `403` and no AccessKey, so no `/send`, database write, makeup, or resend followed.
+  The disposable container was removed automatically.
+- The formal scheduler was unexpectedly found running from 12:12 `Asia/Shanghai` with restart count
+  zero. It was stopped again under A-009 at 12:42. Its logs show scheduler startup only; database
+  evidence remains run `4` with the original seven stage rows and delivery `2` with only attempt `2`.
+  No new pipeline, stage, delivery, or notification-attempt row was created during that interval.
 
 ## 4. Verification and blockers
 
@@ -1050,13 +1071,12 @@ as part of this proposal.
 
 ## 5. Next actions
 
-1. Keep the scheduler stopped and preserve run `4`, report snapshot `4`, delivery `2`, and attempt `2`
-   unchanged; do not make up, resend, or reinterpret the 2026-09-26 result.
-2. The owner must verify the PushPlus user-token/OpenAPI-secret pairing and current public egress IP
-   allowlist locally, without disclosing values. Any remediation test or scheduler restart requires a
-   new explicit approval and a newly recorded observation window.
-3. Diagnose why the 08:15 automation produced no feature-branch evidence before relying on further
-   unattended checks. Do not start JAI-051 or JAI-029 before JAI-028 closes.
+1. Keep the scheduler stopped and correct the PushPlus security-IP configuration until a separately
+   approved credential-only check returns an AccessKey; the latest real check still returned `403`.
+2. Obtain A-011 approval before implementing migration `0011` and the explicit development-only,
+   append-only resend authorization path. Do not mutate the original unknown attempt.
+3. After the blocker and audit path are verified, separately approve any real resend/makeup and a new
+   unattended observation window. Do not start JAI-051 or JAI-029 before JAI-028 closes.
 
 ## 6. Update template
 

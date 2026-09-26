@@ -22,7 +22,8 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-007` | Partially executed: 2026-09-25 | Deploy the JAI-050 API image and approve the JAI-028 operating window | JAI-050 `/app/` is live; scheduler start is now gated by A-008 |
 | `A-008` | Paused after first run: 2026-09-26 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | First run failed with an ambiguous delivery; 0/5 counted |
 | `A-009` | Anomaly action executed: 2026-09-26 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Scheduler stopped; failed/unknown evidence preserved |
-| `A-010` | Pending owner decision | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Resume JAI-028 only after the blocker is safely cleared |
+| `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
+| `A-011` | Pending owner approval | Approve migration `0011`, append-only development resend authorization, and a separately recorded first live resend/makeup | Implement D-041 without weakening production idempotency |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -91,12 +92,21 @@ diagnosed before reliance.
 
 ## A-010 — Resolve the PushPlus OpenAPI blocker before resuming JAI-028
 
-The owner should locally verify—without sharing values—that `.env` still contains the PushPlus user
-token rather than a message token, that the configured OpenAPI `secretKey` still matches Developer
-settings, and that the machine's current public egress IP is present in PushPlus's security-IP list.
-Do not create or paste an AccessKey; JOBAGENT obtains it in memory. This check does not authorize a
-test message, resend, scheduler restart, or replacement trial window. Those actions require a fresh,
-explicit A-010 approval after the read-only diagnosis is reviewed.
+The owner confirmed a user token, enabled OpenAPI, matching `secretKey`, and reported adding the
+Docker public egress IPv4. A single real credential-only check then called only `getAccessKey`; it
+returned HTTP 200 with provider code `403` and no AccessKey. It made no `/send` call or database
+write, and its disposable container was removed. The formal scheduler was separately found running
+from 12:12 and was stopped again at 12:42; no new ledger row appeared. The PushPlus security-IP
+configuration must therefore be corrected and re-saved before another separately approved check.
+
+## A-011 — Add an audited development-only makeup/resend path
+
+The owner approved the principle that development testing may use recorded makeup and resend.
+Implementation proposes additive migration `0011` with an append-only operator-action ledger, an
+explicit development-only command requiring a bounded reason and duplicate-risk confirmation, a new
+delivery attempt rather than mutation of the prior `unknown` attempt, and unchanged production
+deny-by-default behavior. A-011 must explicitly approve that data model and the first live resend;
+the live action may occur only after AccessKey authentication succeeds.
 
 ## M-003 — Restore the Docker build prerequisite
 
