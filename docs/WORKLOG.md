@@ -1075,6 +1075,9 @@ confirmation, and never mutates the prior attempt or performs an implicit submis
   mutation. Post-gate read-only evidence showed healthy `db`/`api`, scheduler `Exited (143)`, business
   Alembic still at `0010_notification_delivery`, and no business
   `notification_delivery_operator_events` table.
+- Commit `7eecd95c9746e28d397c026c20cd4735b1a73d17` records the G1 implementation and was normally
+  pushed to the existing JAI-028 feature branch. Local HEAD, its tracking ref, and GitHub matched;
+  `origin` remained the existing HTTPS URL and no persistent Git proxy was configured.
 
 ## 4. Verification and blockers
 

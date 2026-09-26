@@ -995,6 +995,9 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 关键路径；本提案
   触发器会拒绝篡改。门禁后只读证据显示 `db`/`api` 健康、scheduler 为 `Exited (143)`、业务
   Alembic 仍是 `0010_notification_delivery`，且业务库不存在
   `notification_delivery_operator_events` 表。
+- 提交 `7eecd95c9746e28d397c026c20cd4735b1a73d17` 记录 G1 实现，并已普通推送到既有 JAI-028 feature
+  分支。本地 HEAD、跟踪引用与 GitHub 一致；`origin` 保持既有 HTTPS 地址，且没有配置持久 Git
+  代理。
 
 ## 4. 检查与阻塞
 
