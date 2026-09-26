@@ -383,7 +383,7 @@ This document turns the ten-week plan into executable Issues. These are planning
 
 - **Labels**: `type:test` `area:infra` `priority:P0` `size:L`
 - **Dependencies**: JAI-026, JAI-027, JAI-050
-- **Status**: the dedicated branch started from triple-matched `develop=dcdd697f...` on 2026-09-25. The JAI-050 `/app/` deployment portion of `A-007` is complete, and `A-008` is explicitly approved and active. Exactly one source-hash-verified scheduler is running with its next slot at 2026-09-26 08:00; `A-009` automation `jai-028` is active for the five checks from September 26 through 30, with no makeup or pre-recorded result.
+- **Status**: the dedicated branch started from triple-matched `develop=dcdd697f...` on 2026-09-25. Scheduled run `4` on 2026-09-26 recovered its collection retries and produced report snapshot `4`, then ended `failed` with `pushplus.access_key_rejected`; delivery `2`/attempt `2` conservatively remain `unknown`, so acceptance is still 0/5. The sole scheduler was stopped under `A-009`; no makeup or resend is allowed, and remediation or restart requires fresh approval.
 - **Goal**: prove the real scheduled MVP loop is stable.
 - **Scope**: offline E2E, controlled live trials, metrics, issue list.
 - **Acceptance**:

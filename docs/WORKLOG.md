@@ -6,9 +6,9 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-25
+> Last updated: 2026-09-26
 >
-> Active branch: `feature/jai-050-production-ui-foundation`
+> Active branch: `feature/jai-028-e2e-unattended-trials`
 
 ## 1. Current status
 
@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Active; sole verified scheduler running and `A-009/jai-028` heartbeat active | `feature/jai-028-e2e-unattended-trials` | Next slot 2026-09-26 08:00; five checks run daily at 08:15 through September 30; no makeup |
+| JAI-028 | Paused at 0/5 after the first scheduled trial failed with an ambiguous delivery; scheduler stopped under A-009 | `feature/jai-028-e2e-unattended-trials` | 2026-09-26 run `4` is `failed`; delivery `2` and attempt `2` are `unknown`; no makeup or resend |
 
 ## 2. Current decisions
 
@@ -996,6 +996,30 @@ as part of this proposal.
   `unknown` delivery/attempt. `/app/` and both health endpoints returned HTTP 200. The restart caused
   no makeup, early pipeline row, or notification attempt.
 
+### 2026-09-26 — JAI-028 first scheduled trial failed and acceptance paused
+
+- The fixed job triggered exactly once at 08:00 `Asia/Shanghai`. Pipeline run `4` is the authoritative
+  record: `trigger=scheduled`, `status=failed`, start `08:00:00`, finish `08:02:47`, duration
+  167.525 seconds, and safe error code `pushplus.access_key_rejected`. This run does not count toward
+  the required five consecutive successes, so JAI-028 remains at 0/5.
+- Collection attempts 1 and 2 exhausted a transient source-5 HTTP retry; attempt 3 recovered and all
+  five sources completed. Extraction/validation, matching, and report then succeeded, producing 11
+  posts, one position, ten match results, and immutable report snapshot `4`. The delivery stage alone
+  failed after PushPlus accepted one submission and returned a durable provider identity.
+- Delivery `2` and its only attempt `2` remain conservatively `unknown` with
+  `pushplus.access_key_rejected`; the provider identity, safe error, and full history are retained.
+  No retry, resend, manual delivery, status repair, or duplicate attempt occurred. APScheduler's
+  callable-completed log is not acceptance evidence; the persisted pipeline and delivery states are
+  authoritative.
+- Under the pre-approved A-009 anomaly rule, the sole scheduler was stopped and verified as
+  `Exited (143)` while `api` and `db` remained healthy. The post-stop read confirmed the same one
+  failed run and one unknown attempt with no mutation. A fresh explicit owner decision is required
+  before any credential remediation, scheduler restart, replacement observation window, or live
+  provider action.
+- At the 09:30 audit the feature branch still ended at `0614e21`; no 08:15 automation evidence commit
+  was present. The manual audit records the facts without inferring whether the heartbeat failed to
+  start or failed before committing.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -1026,12 +1050,13 @@ as part of this proposal.
 
 ## 5. Next actions
 
-1. Under `A-007`, recreate only `api` from the verified image while scheduler remains stopped; verify
-   health, `/app/`, and container identity.
-2. Let automation `jai-028` verify the single-scheduler invariant after each slot and record terminal run,
-   stage, report, delivery, availability, completeness, parsing, duration, and duplicate evidence.
-3. Record each of five actual automatic runs only after database evidence exists. Do not start
-   JAI-051 or JAI-029 before JAI-028 closes.
+1. Keep the scheduler stopped and preserve run `4`, report snapshot `4`, delivery `2`, and attempt `2`
+   unchanged; do not make up, resend, or reinterpret the 2026-09-26 result.
+2. The owner must verify the PushPlus user-token/OpenAPI-secret pairing and current public egress IP
+   allowlist locally, without disclosing values. Any remediation test or scheduler restart requires a
+   new explicit approval and a newly recorded observation window.
+3. Diagnose why the 08:15 automation produced no feature-branch evidence before relying on further
+   unattended checks. Do not start JAI-051 or JAI-029 before JAI-028 closes.
 
 ## 6. Update template
 

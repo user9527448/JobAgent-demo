@@ -20,8 +20,9 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-005` | Superseded: slot elapsed | The restored scheduler executed the 2026-09-15 slot before a decision was recorded | Factual record only; no retrospective approval inferred |
 | `A-006` | Completed: stop only scheduler | Owner approved stopping only the scheduler; `db`/`api` remain running | No 2026-09-26 live-source slot while stopped |
 | `A-007` | Partially executed: 2026-09-25 | Deploy the JAI-050 API image and approve the JAI-028 operating window | JAI-050 `/app/` is live; scheduler start is now gated by A-008 |
-| `A-008` | Approved and activated: 2026-09-25 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | Sole scheduler is running; count the five live trials |
-| `A-009` | Approved and activated: 2026-09-25 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Automation `jai-028` is active for five daily checks |
+| `A-008` | Paused after first run: 2026-09-26 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | First run failed with an ambiguous delivery; 0/5 counted |
+| `A-009` | Anomaly action executed: 2026-09-26 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Scheduler stopped; failed/unknown evidence preserved |
+| `A-010` | Pending owner decision | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Resume JAI-028 only after the blocker is safely cleared |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -78,6 +79,24 @@ at 08:15 `Asia/Shanghai`. Because creation occurred after the 2026-09-25 check t
 occurrences cover 2026-09-26 through 2026-09-30. Viewing the saved automation confirmed it remains
 active. The first two creation attempts made no automation or runtime change: one had a local call
 syntax error, and one was rejected because immediate creation must omit an explicit DTSTART.
+
+The first scheduled trial ran once at 08:00 on 2026-09-26. Collection recovered on its third attempt,
+and extraction, matching, and report generation succeeded, but delivery reconciliation returned
+`pushplus.access_key_rejected`. Pipeline run `4` is therefore `failed`, while delivery `2` and its
+only attempt `2` remain `unknown` with the durable provider identity intact. Under A-009 the sole
+scheduler was stopped and verified `Exited (143)`; `api` and `db` remain healthy. No makeup, resend,
+status repair, or duplicate attempt occurred, and the acceptance count remains 0/5. At the 09:30
+audit no 08:15 automation evidence commit was present, so future unattended monitoring must also be
+diagnosed before reliance.
+
+## A-010 — Resolve the PushPlus OpenAPI blocker before resuming JAI-028
+
+The owner should locally verify—without sharing values—that `.env` still contains the PushPlus user
+token rather than a message token, that the configured OpenAPI `secretKey` still matches Developer
+settings, and that the machine's current public egress IP is present in PushPlus's security-IP list.
+Do not create or paste an AccessKey; JOBAGENT obtains it in memory. This check does not authorize a
+test message, resend, scheduler restart, or replacement trial window. Those actions require a fresh,
+explicit A-010 approval after the read-only diagnosis is reviewed.
 
 ## M-003 — Restore the Docker build prerequisite
 
