@@ -23,7 +23,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-008` | Paused after first run: 2026-09-26 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | First run failed with an ambiguous delivery; 0/5 counted |
 | `A-009` | Anomaly action executed: 2026-09-26 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Scheduler stopped; failed/unknown evidence preserved |
 | `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
-| `A-011` | G1 approved and implemented; live action not approved | G1 permits migration `0011` code, append-only development resend authorization, explicit CLI, and `_test` synthetic verification only | D-041 implementation is ready; business migration, real resend/makeup, credential check, and scheduler restart remain gated |
+| `A-011` | G1 complete; G2 credential-only retest failed with provider `403` | G2 permitted one `getAccessKey` call only; no send, database write, migration, makeup, or scheduler start | Authentication remains blocked; business migration and all real recovery actions remain gated |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -111,6 +111,13 @@ and is audited by its immutable run identity, `trigger=makeup`, and numbered sta
 G1 does not permit applying `0011` to the business database, calling PushPlus, performing a real
 resend or makeup, checking real credentials, or restarting the scheduler. Those effects require a
 separately approved next gate after authentication is known to work.
+
+The owner then approved G2 for exactly one credential-only `getAccessKey` retest. The disposable
+container received HTTP 200 but provider business code `403`, with no AccessKey. It was removed
+automatically; the formal scheduler remained `Exited (143)`. No `/send`, business-database write,
+migration, makeup, or scheduler start occurred. Work stopped as required, and no real recovery gate
+is available until the PushPlus security-IP/credential configuration is corrected and another
+credential-only retest is separately approved.
 
 ## M-003 — Restore the Docker build prerequisite
 

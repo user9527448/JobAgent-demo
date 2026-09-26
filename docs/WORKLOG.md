@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Paused at 0/5; A-011 G1 recovery implementation is complete in the feature worktree, while scheduler and live actions remain stopped | `feature/jai-028-e2e-unattended-trials` | Migration `0011`, append-only resend audit, and development-only CLI passed `_test` synthetic checks; business migration and any real action remain unapproved |
+| JAI-028 | Paused at 0/5; A-011 G1 is complete, but the G2 credential-only retest still returned provider `403` | `feature/jai-028-e2e-unattended-trials` | Scheduler remains stopped; business migration, real recovery, and a further credential check all require new approval |
 
 ## 2. Current decisions
 
@@ -1078,6 +1078,19 @@ confirmation, and never mutates the prior attempt or performs an implicit submis
 - Commit `7eecd95c9746e28d397c026c20cd4735b1a73d17` records the G1 implementation and was normally
   pushed to the existing JAI-028 feature branch. Local HEAD, its tracking ref, and GitHub matched;
   `origin` remained the existing HTTPS URL and no persistent Git proxy was configured.
+
+### 2026-09-26 — A-011 G2 credential-only retest remained blocked
+
+- The owner approved exactly one real `getAccessKey` call with no message send, database write,
+  migration, makeup, or scheduler start. A disposable scheduler-service container read the existing
+  ignored credentials and called only the PushPlus AccessKey endpoint.
+- The credential-safe result was HTTP 200, provider business code `403`, and
+  `access_key_obtained=false`. No credential or provider message text was printed. Execution stopped
+  immediately; `/send` and every business runtime path were untouched.
+- Read-only verification found the disposable container removed, `db`/`api` healthy, and the formal
+  scheduler still `Exited (143)`. G2 therefore does not unlock business migration or a real
+  resend/makeup. The PushPlus security-IP or credential configuration must be corrected before a
+  separately approved credential-only retest.
 
 ## 4. Verification and blockers
 

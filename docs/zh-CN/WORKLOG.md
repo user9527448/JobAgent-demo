@@ -37,7 +37,7 @@
 | JAI-026 | 已完成；G1～G4 后合入 `develop` | `develop` / 当前非快进合并 | 业务迁移、唯一真实 scheduler、受控补跑/复用及合并后完整门禁均通过 |
 | JAI-027 | D-037/G1～G5 后完成、合并并推送到 `develop` | `develop` / `5c56af3` | 业务 Schema 已到 `0010`；快照 2 只提交一次，未确认的已受理结果持久保存为 `unknown`，合并后完整门禁通过 |
 | JAI-050 | 已完成、合并并推送到 `develop` | `develop` / `dcdd697` | 357 项测试、85.80% 覆盖率、design QA 和重建容器镜像均通过 |
-| JAI-028 | 当前暂停且为 0/5；A-011 G1 恢复实现已在 feature 工作区完成，scheduler 与真实操作继续停止 | `feature/jai-028-e2e-unattended-trials` | 迁移 `0011`、只追加重发审计和仅开发 CLI 已通过 `_test` 合成检查；业务迁移与任何真实操作均未获批 |
+| JAI-028 | 当前暂停且为 0/5；A-011 G1 已完成，但 G2 仅鉴权复测仍返回 provider `403` | `feature/jai-028-e2e-unattended-trials` | scheduler 保持停止；业务迁移、真实恢复及下一次鉴权检查均需新审批 |
 
 ## 2. 当前决策
 
@@ -998,6 +998,16 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 关键路径；本提案
 - 提交 `7eecd95c9746e28d397c026c20cd4735b1a73d17` 记录 G1 实现，并已普通推送到既有 JAI-028 feature
   分支。本地 HEAD、跟踪引用与 GitHub 一致；`origin` 保持既有 HTTPS 地址，且没有配置持久 Git
   代理。
+
+### 2026-09-26 — A-011 G2 仅鉴权复测仍受阻
+
+- 负责人只批准一次真实 `getAccessKey` 调用，禁止发送消息、数据库写入、迁移、补跑或启动
+  scheduler。一次性 scheduler 服务容器读取既有被忽略凭据，并且只调用 PushPlus AccessKey 端点。
+- 脱敏结果为 HTTP 200、provider 业务码 `403`、`access_key_obtained=false`。没有输出凭据或 provider
+  消息文本；执行立即停止，`/send` 与全部业务运行路径均未触碰。
+- 只读核验确认一次性容器已删除、`db`/`api` 健康、正式 scheduler 仍为 `Exited (143)`。因此 G2
+  不解锁业务迁移或真实重发/补跑；必须先修正 PushPlus 安全 IP 或凭据配置，再另行批准一次仅鉴权
+  复测。
 
 ## 4. 检查与阻塞
 
