@@ -383,7 +383,7 @@
 
 - **Labels**：`type:test` `area:infra` `priority:P0` `size:L`
 - **依赖**：JAI-026、JAI-027、JAI-050
-- **状态**：已于 2026-09-25 从三端一致的 `develop=dcdd697f...` 创建独立分支。2026-09-26 第一次计划运行 `4` 生成日报快照 `4` 后因 `pushplus.access_key_rejected` 失败，投递 `2`/尝试 `2` 保持 `unknown`，当前 0/5。负责人批准的 A-011 G1 已完成：迁移 `0011`、只追加开发重发台账及显式 CLI 已实现，并仅在 `_test` 数据库通过合成 provider 验证。随后 G2 只调用一次 `getAccessKey`，结果仍为 HTTP 200/provider `403`，未取得 AccessKey；一次性容器已删除，scheduler 保持停止。业务库迁移、真实重发/补跑和 scheduler 重启仍未获批，生产幂等不放宽。
+- **状态**：已于 2026-09-25 从三端一致的 `develop=dcdd697f...` 创建独立分支。2026-09-26 第一次计划运行 `4` 生成日报快照 `4` 后因 `pushplus.access_key_rejected` 失败，投递 `2`/尝试 `2` 保持 `unknown`，当前 0/5。负责人批准的 A-011 G1 已完成：迁移 `0011`、只追加开发重发台账及显式 CLI 已实现，并仅在 `_test` 数据库通过合成 provider 验证。G2 只调用一次 `getAccessKey`，结果仍为 HTTP 200/provider `403`；G2.1 随后从一次性 scheduler 服务容器取得当前公网出口 IPv4 并直接报告负责人核对，具体值未写入仓库。一次性容器已删除，scheduler 保持停止。业务库迁移、真实重发/补跑和下一次鉴权复测仍未获批，生产幂等不放宽。
 - **目标**：证明 MVP 闭环在真实调度下稳定工作。
 - **范围**：离线 E2E、线上受控试运行、指标统计和问题清单。
 - **验收标准**：

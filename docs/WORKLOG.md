@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Paused at 0/5; A-011 G1 is complete, but the G2 credential-only retest still returned provider `403` | `feature/jai-028-e2e-unattended-trials` | Scheduler remains stopped; business migration, real recovery, and a further credential check all require new approval |
+| JAI-028 | Paused at 0/5; G2 still returned provider `403`, and G2.1 obtained the current container egress IPv4 for owner comparison | `feature/jai-028-e2e-unattended-trials` | Scheduler remains stopped; owner must verify the PushPlus security-IP entry before separately approving another credential-only check |
 
 ## 2. Current decisions
 
@@ -1091,6 +1091,19 @@ confirmation, and never mutates the prior attempt or performs an implicit submis
   scheduler still `Exited (143)`. G2 therefore does not unlock business migration or a real
   resend/makeup. The PushPlus security-IP or credential configuration must be corrected before a
   separately approved credential-only retest.
+
+### 2026-09-26 — A-011 G2.1 captured the container egress IPv4
+
+- The owner approved one request to `api.ipify.org` from a disposable scheduler-service container,
+  with PushPlus, message send, database writes, migration, makeup, and scheduler start explicitly
+  excluded. The lookup succeeded and the exact IPv4 was reported directly to the owner for manual
+  comparison with the PushPlus security-IP list.
+- The value is intentionally omitted from repository history because personal network metadata must
+  not be committed. Read-only verification found the disposable container removed, `db`/`api`
+  healthy, and the formal scheduler still `Exited (143)`.
+- G2.1 grants no credential retest or recovery permission. The owner must first correct and save any
+  PushPlus security-IP mismatch, then separately approve another credential-only `getAccessKey`
+  check.
 
 ## 4. Verification and blockers
 

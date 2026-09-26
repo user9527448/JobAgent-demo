@@ -37,7 +37,7 @@
 | JAI-026 | 已完成；G1～G4 后合入 `develop` | `develop` / 当前非快进合并 | 业务迁移、唯一真实 scheduler、受控补跑/复用及合并后完整门禁均通过 |
 | JAI-027 | D-037/G1～G5 后完成、合并并推送到 `develop` | `develop` / `5c56af3` | 业务 Schema 已到 `0010`；快照 2 只提交一次，未确认的已受理结果持久保存为 `unknown`，合并后完整门禁通过 |
 | JAI-050 | 已完成、合并并推送到 `develop` | `develop` / `dcdd697` | 357 项测试、85.80% 覆盖率、design QA 和重建容器镜像均通过 |
-| JAI-028 | 当前暂停且为 0/5；A-011 G1 已完成，但 G2 仅鉴权复测仍返回 provider `403` | `feature/jai-028-e2e-unattended-trials` | scheduler 保持停止；业务迁移、真实恢复及下一次鉴权检查均需新审批 |
+| JAI-028 | 当前暂停且为 0/5；G2 仍返回 provider `403`，G2.1 已取得当前容器出口 IPv4 供负责人核对 | `feature/jai-028-e2e-unattended-trials` | scheduler 保持停止；负责人必须先核对 PushPlus 安全 IP 条目，再另行批准下一次仅鉴权检查 |
 
 ## 2. 当前决策
 
@@ -1008,6 +1008,16 @@ JAI-027 → JAI-050 → JAI-028 → JAI-051 → JAI-029 关键路径；本提案
 - 只读核验确认一次性容器已删除、`db`/`api` 健康、正式 scheduler 仍为 `Exited (143)`。因此 G2
   不解锁业务迁移或真实重发/补跑；必须先修正 PushPlus 安全 IP 或凭据配置，再另行批准一次仅鉴权
   复测。
+
+### 2026-09-26 — A-011 G2.1 取得容器出口 IPv4
+
+- 负责人批准一次性 scheduler 服务容器只请求一次 `api.ipify.org`，并明确排除 PushPlus、消息发送、
+  数据库写入、迁移、补跑和 scheduler 启动。查询成功，准确 IPv4 已直接报告负责人，用于与
+  PushPlus 安全 IP 列表人工核对。
+- 仓库不得提交个人网络元数据，因此历史中有意不记录该值。只读核验确认一次性容器已删除、
+  `db`/`api` 健康、正式 scheduler 仍为 `Exited (143)`。
+- G2.1 不授予鉴权复测或恢复权限。负责人必须先修正并保存任何 PushPlus 安全 IP 不一致，再单独
+  批准下一次仅鉴权 `getAccessKey` 检查。
 
 ## 4. 检查与阻塞
 

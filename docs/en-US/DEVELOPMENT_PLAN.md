@@ -455,7 +455,7 @@ JAI-027 completed D-037 G1–G5 and integrated into `develop` through non-fast-f
 | 1 | JAI-027 | G1–G5, business migration, the single live submission, conservative `unknown` ledger, and post-merge full gate are complete | Closed | Do not resend or start the scheduler |
 | 2 | JAI-050 | Integrated and pushed through `dcdd697f...`; post-merge 357-test and container gates passed | Closed | Production `/app/` deployment proceeds under A-007 |
 | Runtime control | `A-006` | Complete: the owner approved and only the scheduler was stopped; `db`/`api` remain healthy and the fixed job row retains its stored 2026-09-26 08:00 time | Closed; any restart requires fresh explicit approval | Infer no outcome and run no makeup for 2026-09-16 through 2026-09-25 |
-| 3 | JAI-028 | Paused at 0/5; A-011 G1 passed, but the G2 credential-only retest still returned provider `403`, with scheduler stopped | Correct PushPlus authentication and separately approve a retest; only then approve business migration and one real recovery | Production still forbids automatic resend; do not start JAI-051 early |
+| 3 | JAI-028 | Paused at 0/5; G2 still returned provider `403`, and G2.1 obtained the current container egress IPv4 for owner comparison | Verify and save the PushPlus security-IP entry, then separately approve a retest; only after success approve business migration and one real recovery | Production still forbids automatic resend; do not start JAI-051 early |
 | 4 | JAI-051 | Not started | JAI-028 completes and `A-004/U3` approves the schema/API/retention boundary | Do not migrate or write feedback early |
 | 5 | JAI-029 | Not started | JAI-028 and JAI-051 complete with release-gate evidence | Do not publish or tag early |
 

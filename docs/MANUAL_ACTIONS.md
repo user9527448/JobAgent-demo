@@ -23,7 +23,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-008` | Paused after first run: 2026-09-26 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | First run failed with an ambiguous delivery; 0/5 counted |
 | `A-009` | Anomaly action executed: 2026-09-26 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Scheduler stopped; failed/unknown evidence preserved |
 | `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
-| `A-011` | G1 complete; G2 credential-only retest failed with provider `403` | G2 permitted one `getAccessKey` call only; no send, database write, migration, makeup, or scheduler start | Authentication remains blocked; business migration and all real recovery actions remain gated |
+| `A-011` | G1 complete; G2 returned provider `403`; G2.1 egress-IP lookup complete | Compare the separately reported current container egress IPv4 with the PushPlus security-IP entry and save any correction | Authentication remains blocked; another credential-only check and all real recovery actions require new approval |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -118,6 +118,13 @@ automatically; the formal scheduler remained `Exited (143)`. No `/send`, busines
 migration, makeup, or scheduler start occurred. Work stopped as required, and no real recovery gate
 is available until the PushPlus security-IP/credential configuration is corrected and another
 credential-only retest is separately approved.
+
+The owner approved G2.1 for one public-egress IPv4 lookup from a disposable scheduler-service
+container. The lookup succeeded and the value was reported directly to the owner for manual
+comparison; it is intentionally not committed because repository history must not retain personal
+network metadata. The container was removed automatically, `db`/`api` remained healthy, and the
+formal scheduler remained `Exited (143)`. G2.1 made no PushPlus or business request and unlocks no
+credential retest or recovery action.
 
 ## M-003 — Restore the Docker build prerequisite
 
