@@ -384,12 +384,14 @@ This document turns the ten-week plan into executable Issues. These are planning
 - **Labels**: `type:test` `area:infra` `priority:P0` `size:L`
 - **Dependencies**: JAI-026, JAI-027, JAI-050
 - **Status**: the dedicated branch started from triple-matched `develop=dcdd697f...` on 2026-09-25. Scheduled run `4` produced report snapshot `4` and then failed with `pushplus.access_key_rejected`; delivery `2`/attempt `2` remain `unknown`, so acceptance is 0/5. The owner-approved A-011 G1 is complete: migration `0011`, the append-only development resend ledger, and explicit CLI are implemented and verified only against `_test` with a synthetic provider. G2 called `getAccessKey` exactly once and still received HTTP 200/provider `403`; G2.1 then obtained the current public egress IPv4 from a disposable scheduler-service container and reported it directly to the owner for comparison, without committing the value. The disposable container was removed and scheduler remains stopped. Business migration, real resend/makeup, and another credential retest remain unapproved; production idempotency is unchanged.
-- **Goal**: prove the real scheduled MVP loop is stable.
-- **Scope**: offline E2E, controlled live trials, metrics, issue list.
+- **Goal**: prove that the complete MVP loop from daily public-source collection through WeChat delivery is stable under real scheduling, and establish an initial end-to-end quality baseline.
+- **Scope**: offline E2E, five controlled daily live trials, per-source freshness/change evidence, stage quality and duration metrics, daily scorecards, and a final prioritized improvement list.
 - **Acceptance**:
   - [ ] Offline fixtures complete collection through report generation.
-  - [ ] Five consecutive automatic runs succeed without duplicate announcements or notifications.
-  - [ ] Record availability, completeness, parsing success, and duration.
+  - [ ] Five consecutive real automatic runs check every enabled official source on schedule and complete collection, extraction/validation, matching, reporting, and delivery without duplicate announcements or notifications.
+  - [ ] Each run records per-source list/detail checks, `created`/`updated`/`skipped`/`failed`, content versions, and deduplication evidence; a successful check with no new announcement is valid and is not treated as a collection failure.
+  - [ ] Each run records source availability, field completeness, parsing success, validation findings, match/report counts, per-stage and total duration, retries, and safe error states.
+  - [ ] Produce a factual daily scorecard and, after the fifth run, a prioritized stability/data-quality/recommendation/delivery/operations improvement list without automatically implementing out-of-plan features in JAI-028.
 
 ### JAI-051 Add preferences, report browsing, and persisted recommendation feedback
 

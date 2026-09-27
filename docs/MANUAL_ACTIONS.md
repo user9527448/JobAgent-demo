@@ -23,7 +23,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-008` | Paused after first run: 2026-09-26 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | First run failed with an ambiguous delivery; 0/5 counted |
 | `A-009` | Anomaly action executed: 2026-09-26 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Scheduler stopped; failed/unknown evidence preserved |
 | `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
-| `A-011` | G1 complete; G2 returned provider `403`; G2.1 egress-IP lookup complete | Compare the separately reported current container egress IPv4 with the PushPlus security-IP entry and save any correction | Authentication remains blocked; another credential-only check and all real recovery actions require new approval |
+| `A-011` | G1 complete; G2 returned provider `403`; G2.1 lookup complete and the owner confirmed the security IP was saved | Separately approve one new credential-only check before any runtime recovery | Authentication remains unverified; business migration, live recovery, makeup/resend, and scheduler restart remain gated |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -75,6 +75,14 @@ anomaly it must immediately stop the scheduler and notify the owner, with no mak
 the fifth success it must stop the scheduler, run final JAI-028 gates, and push closure evidence, but
 must not merge `develop` or start a later Issue.
 
+On 2026-09-27 the owner expanded JAI-028 acceptance into an initial full-flow quality baseline. A
+counted day must include evidence that the real crawler checked every enabled source, distinguish a
+successful zero-change check from collection failure, and score collection freshness/change,
+deduplication, extraction/validation, matching, report, delivery, retries, and duration. The fifth
+successful observation produces prioritized recommendations only. This scope refinement does not
+restore any consumed or paused runtime approval and does not authorize an authentication retest,
+container/scheduler start, makeup, resend, migration, or external call.
+
 The thread heartbeat was created successfully as automation `jai-028`, active for five daily checks
 at 08:15 `Asia/Shanghai`. Because creation occurred after the 2026-09-25 check time, its five
 occurrences cover 2026-09-26 through 2026-09-30. Viewing the saved automation confirmed it remains
@@ -123,8 +131,9 @@ The owner approved G2.1 for one public-egress IPv4 lookup from a disposable sche
 container. The lookup succeeded and the value was reported directly to the owner for manual
 comparison; it is intentionally not committed because repository history must not retain personal
 network metadata. The container was removed automatically, `db`/`api` remained healthy, and the
-formal scheduler remained `Exited (143)`. G2.1 made no PushPlus or business request and unlocks no
-credential retest or recovery action.
+formal scheduler remained `Exited (143)`. The owner later confirmed that the matching PushPlus
+security-IP entry was saved, but that configuration action is not proof that authentication now
+works. G2.1 made no PushPlus or business request and unlocks no credential retest or recovery action.
 
 ## M-003 — Restore the Docker build prerequisite
 

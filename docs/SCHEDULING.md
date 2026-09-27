@@ -94,6 +94,22 @@ jobagent-delivery send --snapshot-id 2
 `show` is read-only and credential-free. `send` may contact PushPlus and therefore requires a named
 snapshot and live-send approval; see [DELIVERY.md](DELIVERY.md).
 
+## JAI-028 daily full-flow evidence
+
+JAI-028 treats each counted scheduled run as an initial end-to-end quality observation, not merely
+as a terminal-status check. The collection stage must prove that the real adapters attempted every
+enabled official source and must retain per-source list/detail outcomes, crawl-run identities,
+`created`/`updated`/`skipped`/`failed` counts, content-version evidence, and deduplication results. A
+successful source check with zero new announcements is a valid fresh observation; missing or failed
+collection evidence is not.
+
+The same daily scorecard then follows extraction/validation, matching, report generation, and
+delivery. It records source availability, field completeness, parsing success, validation findings,
+match/report counts, delivery finality, retries, per-stage and total duration, and announcement or
+notification duplicates. After the fifth successful observation, JAI-028 ranks improvement
+recommendations by impact and effort. This evidence definition does not itself authorize container
+starts, public-source/provider calls, database migration, makeup, resend, or scheduler restart.
+
 ## Recovery and traceability
 
 Successful or partial stages are never replayed during recovery. A previously `running` stage is

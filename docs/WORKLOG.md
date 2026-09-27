@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Paused at 0/5; G2 still returned provider `403`, and G2.1 obtained the current container egress IPv4 for owner comparison | `feature/jai-028-e2e-unattended-trials` | Scheduler remains stopped; owner must verify the PushPlus security-IP entry before separately approving another credential-only check |
+| JAI-028 | Paused at 0/5; the owner expanded the five-run acceptance into an initial full-flow quality baseline, while runtime recovery remains gated | `feature/jai-028-e2e-unattended-trials` | Daily acceptance now includes real collection freshness/change evidence and scorecards; scheduler remains stopped pending authentication and a new runtime approval |
 
 ## 2. Current decisions
 
@@ -301,6 +301,17 @@ live action. Existing makeup remains an explicit command whose immutable logical
 the single provider submission and a database trigger rejecting update/delete. The new `resend`
 command is available only in `development`, requires a bounded reason plus duplicate-risk
 confirmation, and never mutates the prior attempt or performs an implicit submission retry.
+
+### D-043 JAI-028 is the initial full-flow quality baseline
+
+The owner expanded the five unattended trials without creating an out-of-plan branch or Issue.
+Every counted daily run must prove that the real collector checked all enabled official sources and
+must retain per-source list/detail activity, created/updated/skipped/failed counts, content versions,
+and deduplication evidence before evaluating extraction/validation, matching, report, delivery,
+retries, and duration. A successful source check with zero new announcements is valid; missing or
+failed collection evidence is not. Each run receives a factual scorecard, and the fifth run produces
+prioritized improvement recommendations. Recommendations are analysis only until mapped to an
+existing planned Issue or explicitly approved as a new plan item.
 
 ## 3. Active work history
 
@@ -1104,6 +1115,23 @@ confirmation, and never mutates the prior attempt or performs an implicit submis
 - G2.1 grants no credential retest or recovery permission. The owner must first correct and save any
   PushPlus security-IP mismatch, then separately approve another credential-only `getAccessKey`
   check.
+
+### 2026-09-27 — JAI-028 daily acceptance expanded to full-flow evaluation
+
+- The owner directed the current JAI-028 trial to act as the project's initial end-to-end test and
+  explicitly added daily crawler freshness/change evidence to acceptance. This refines the existing
+  JAI-028 scope rather than creating a parallel feature track or changing the critical path.
+- The daily scorecard covers source attempts and availability, list/detail outcomes,
+  created/updated/skipped/failed and deduplication/version evidence, field completeness, parsing and
+  validation, match/report counts, delivery finality, retries, per-stage duration, and total duration.
+  Zero new announcements may pass only when the source check itself is proven successful.
+- The fifth-run review will separate observed defects, operational risks, and improvement proposals,
+  rank them by impact and effort, and request owner approval before any out-of-plan implementation.
+  This documentation change authorizes no container start, source/provider request, migration,
+  makeup, resend, or scheduler restart.
+- The existing active `jai-028` heartbeat retained its schedule and safety gates, while its prompt was
+  updated to collect this per-source and per-stage scorecard and the fifth-run recommendation list.
+  It remains observational and cannot start stopped runtime services or expand runtime authority.
 
 ## 4. Verification and blockers
 
