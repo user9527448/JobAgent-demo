@@ -1232,6 +1232,11 @@ schedule, or downstream ordering.
   `unknown`; changing code to claim success would destroy evidence. Resolving provider-side allowlist
   recognition or approving a different finality strategy is now an owner decision, and neither
   option is silently implemented in JAI-028.
+- Commit `8a55bdceb700c7dcc6cbabdc68a4519ae1e896a5` records the G3 scorecard, D-045 repair,
+  complete gate, and paired documentation. The first direct push failed on the known GitHub 443
+  timeout; one command-scoped proxy push succeeded. Local HEAD, tracking ref, and GitHub then
+  matched. `origin` remains the existing HTTPS URL and no persistent Git proxy is configured. The
+  pre-existing untracked `架构图V1.png` was preserved and deliberately excluded from this commit.
 
 ## 4. Verification and blockers
 
