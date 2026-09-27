@@ -57,9 +57,9 @@ outcome becomes `unknown` and is not retried automatically.
 
 ## Operator commands
 
-Apply migration `0010` before running the five-stage scheduler. Do not migrate or restart the
-long-lived scheduler against a populated business database until the G5 runtime gate has been
-explicitly approved and both delivery secrets are ready.
+Apply the current migration head (`0011_delivery_operator_audit`) before running the five-stage
+scheduler. Do not migrate or restart the long-lived scheduler against a populated business database
+until the relevant runtime gate has been explicitly approved and both delivery secrets are ready.
 
 ```powershell
 jobagent-scheduler start
@@ -80,6 +80,17 @@ Migration `0011` adds the separate operator authorization ledger only for the hi
 resend boundary, where an ambiguous external identity must be preserved. G1 tests both recovery
 ledgers only on `_test`; it does not authorize running `makeup`, restarting the scheduler, or
 contacting a real provider.
+
+A-012 G3 later provided one narrow exception: apply `0011` to the business database and run exactly
+one 2026-09-27 makeup with one PushPlus submission for its new report. That allowance is consumed.
+Run `6` ended `failed` because delivery finality remained `unknown`; the formal scheduler stayed
+stopped and no further makeup, resend, provider call, or scheduler restart is authorized.
+
+Collection stage output records attempted, successful, partial, and failed source IDs. When only a
+subset fails transiently, the next bounded stage attempt targets those retryable failed IDs instead
+of recollecting healthy sources, while its output retains cumulative source and crawl-run evidence.
+The latest persisted attempt restores this retry selection after process restart; older ledger rows
+without source identities safely retain full-stage retry behavior.
 
 Exit code `0` means completed/reused inspection success, `2` means a failed/not-found operation,
 and `3` means another process holds the pipeline lock.

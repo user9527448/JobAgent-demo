@@ -23,15 +23,16 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-008` | Paused after first run: 2026-09-26 | Authorize generated report/job content through PushPlus on up to five automatic JAI-028 runs | First run failed with an ambiguous delivery; 0/5 counted |
 | `A-009` | Anomaly action executed: 2026-09-26 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Scheduler stopped; failed/unknown evidence preserved |
 | `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
-| `A-011` | G1 complete; G2 returned provider `403`; G2.1 lookup complete and the owner confirmed the security IP was saved | Separately approve one new credential-only check before any runtime recovery | Authentication remains unverified; business migration, live recovery, makeup/resend, and scheduler restart remain gated |
-| `A-012` | Blocked at credential gate: provider `403` | Save the separately reported current scheduler-container egress IPv4 in the PushPlus security-IP list, then approve one new credential-only retest | No migration, collection, report, or notification occurred; scheduler was stopped again |
+| `A-011` | G1 complete; G2 returned provider `403`; G2.1 lookup complete and the owner confirmed the security IP was saved | Preserve the append-only recovery controls; use them only under a separately recorded execution gate | G3 later applied `0011`; authentication remains unverified and resend/scheduler restart remain gated |
+| `A-012` | G3 executed once; delivery remained `unknown` | Decide provider allowlist remediation versus a separately designed finality strategy; approve any later real call separately | Business DB is at `0011`; run `6` failed safely after one PushPlus submission; scheduler remains stopped and JAI-028 is 0/5 |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
 safety gate requires the narrower `A-008` authorization before generated report/job content may be
-sent to the external PushPlus destination on up to five automatic runs. No makeup, manual
-delivery/resend, scheduler scaling, JAI-051, or JAI-029 release work is authorized. The earlier
-JAI-027 one-off live notification allowance remains consumed and is not reused.
+sent to the external PushPlus destination on up to five automatic runs. A-012 G3 later authorized
+and consumed one diagnostic makeup/submission without changing the 0/5 acceptance count. No further
+makeup, manual delivery/resend, scheduler scaling, JAI-051, or JAI-029 release work is authorized.
+The earlier JAI-027 one-off live notification allowance remains consumed and is not reused.
 
 ## A-007 — Deploy JAI-050 and run JAI-028 unattended acceptance
 
@@ -159,6 +160,27 @@ and `api`. Read-only evidence showed no 2026-09-27 pipeline/crawl row and the fi
 returned provider `403`. PushPlus documents `403` as an unauthorized request IP; the current egress
 IPv4 was reported directly to the owner and intentionally omitted here. No migration, source access,
 report generation, provider submission, or job application followed.
+
+The owner then approved `A-012 G3` despite the remaining credential-only `403`. This one-time gate
+allowed the additive business migration to `0011`, exactly one 2026-09-27 makeup, approved public
+source access and business writes, and exactly one PushPlus submission for the newly generated
+report. It explicitly continued to prohibit historical resend, duplicate submission, scheduler
+restart, and automatic job application, and declared that this diagnostic could not count toward the
+five unattended successes.
+
+G3 completed within that boundary. Business Alembic is `0011_delivery_operator_audit`; the formal
+scheduler remained stopped. Pipeline run `6` ultimately collected all five sources after two
+transient China Mobile failures, generated snapshot `5`, and submitted its single message part once.
+The provider identity was retained, but the final-status lookup still returned
+`pushplus.access_key_rejected`, so delivery/attempt `3` are terminal `unknown` and the pipeline is
+`failed`. No operator resend event, second provider submission, or job-application action occurred.
+Any later provider call, makeup/resend, or scheduler restart needs a new recorded approval.
+
+The post-run offline audit matched the repository request shape to the current official PushPlus
+OpenAPI contract and found no client-side path, JSON-field, header, or result-query mismatch.
+Provider code `403` remains documented as unauthorized request IP. The next owner action is therefore
+to resolve provider-side allowlist recognition or approve a separately designed finality strategy;
+neither choice authorizes another real call by itself.
 
 ## M-003 — Restore the Docker build prerequisite
 

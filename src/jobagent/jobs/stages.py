@@ -101,16 +101,28 @@ class ProductionPipelineStages:
         return await operations[stage](context)
 
     async def _collect(self, context: PipelineContext) -> StageOutcome:
-        del context
         sources = await self._enabled_sources()
         if not sources:
             raise PermanentJobAgentError(
                 "No enabled sources are configured for the daily pipeline.",
                 code="pipeline.sources_empty",
             )
+        source_count = len(sources)
+        if context.collection_source_ids is not None:
+            sources_by_id = {source.id: source for source in sources}
+            missing_ids = sorted(set(context.collection_source_ids) - sources_by_id.keys())
+            if missing_ids:
+                raise PermanentJobAgentError(
+                    "One or more collection retry sources are no longer enabled.",
+                    code="pipeline.collection_retry_sources_missing",
+                    details={"source_ids": cast(list[JsonValue], missing_ids)},
+                )
+            sources = tuple(sources_by_id[source_id] for source_id in context.collection_source_ids)
         catalog = load_source_catalog(self._settings.source_catalog_path)
         run_ids: list[int] = []
         failures: list[_SourceFailure] = []
+        partial_source_ids: list[int] = []
+        successful_source_ids: list[int] = []
         partial_sources = 0
         successful_sources = 0
         for source in sources:
@@ -131,15 +143,20 @@ class ProductionPipelineStages:
                 run_ids.append(result.run_id)
                 if result.status == "succeeded":
                     successful_sources += 1
+                    successful_source_ids.append(source.id)
                 else:
                     partial_sources += 1
+                    partial_source_ids.append(source.id)
             except JobAgentError as error:
                 failures.append(_SourceFailure(source.id, error.code, error.retryable))
 
         output: dict[str, JsonValue] = {
-            "source_count": len(sources),
+            "source_count": source_count,
+            "attempted_source_ids": [source.id for source in sources],
             "successful_sources": successful_sources,
             "partial_sources": partial_sources,
+            "successful_source_ids": cast(list[JsonValue], successful_source_ids),
+            "partial_source_ids": cast(list[JsonValue], partial_source_ids),
             "crawl_run_ids": cast(list[JsonValue], run_ids),
             "failures": cast(list[JsonValue], [failure.as_json() for failure in failures]),
         }

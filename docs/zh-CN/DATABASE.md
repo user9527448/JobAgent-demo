@@ -66,8 +66,8 @@ apscheduler_jobs（单 APScheduler 进程 job store）
 provider 响应替代。
 `notification_delivery_operator_events` 对投递及可选尝试使用受限外键；
 `(action_id, event_type)` 唯一约束防止重复里程碑，PostgreSQL 触发器拒绝更新或删除行。迁移
-`0011_delivery_operator_audit` 只新增结构；G1 仅应用于名称以 `_test` 结尾的数据库，不触碰已有
-业务数据库。
+`0011_delivery_operator_audit` 只新增结构。A-011 G1 最初只在名称以 `_test` 结尾的数据库验证；
+A-012 G3 后续明确批准并应用到已有数据的业务库，且没有改变既有实体计数。
 
 ## 时间处理
 
@@ -125,5 +125,7 @@ docker compose exec api alembic upgrade head
 `0010_notification_delivery`。随后 `alembic check` 显示无待执行操作，既有业务表计数保持不变。
 该事实不授权第二次真实通知、scheduler 重启、补跑或针对业务 Schema 的破坏性测试。
 
-A-011 G1 只在 `jobagent_test` 验证了 `0011` 的升级/检查/降级行为。已有数据的业务库有意保持
-`0010_notification_delivery`；把 `0011` 应用于该库需要未来独立审批。
+A-011 G1 在 `jobagent_test` 验证了 `0011` 的升级/检查/降级行为。2026-09-27，负责人另行批准
+A-012 G3，已有数据的业务库从 `0010_notification_delivery` 升级到
+`0011_delivery_operator_audit`。`alembic check` 显示无待执行操作，既有实体计数不变，操作事件表
+为空，只追加触发器存在。迁移本身不授权重发、provider 调用、补跑或 scheduler 重启。

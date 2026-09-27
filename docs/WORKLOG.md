@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-26
+> Last updated: 2026-09-27
 >
 > Active branch: `feature/jai-028-e2e-unattended-trials`
 
@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | A-012 stopped at the credential gate; still 0/5 | `feature/jai-028-e2e-unattended-trials` | Current egress IP must be saved in PushPlus before one newly approved auth-only retest; no automatic job applications |
+| JAI-028 | A-012 G3 diagnostic completed; still 0/5 | `feature/jai-028-e2e-unattended-trials` | Business DB is `0011`; run `6` checked 5/5 sources but its sole PushPlus submission remains `unknown`; scheduler stopped and no automatic job applications |
 
 ## 2. Current decisions
 
@@ -320,6 +320,16 @@ briefing through PushPlus, but recruitment output ends at evidenced official ann
 links. Link presence, provenance, safety, and completeness are quality metrics; opening portals,
 logging in, filling forms, uploading résumés, solving CAPTCHAs, and submitting applications remain
 outside scope and require deliberate user action.
+
+### D-045 Collection stage retries only unresolved sources
+
+JAI-028 evidence showed that one transient China Mobile failure caused all four healthy sources to
+be collected three times. A collection attempt now records attempted, successful, partial, and
+failed source identities. The coordinator carries cumulative evidence across numbered attempts and
+targets the next bounded retry only at retryable failed source IDs; the latest persisted attempt also
+restores that selection after a process restart. Legacy attempt output without source identities
+falls back to the prior full-stage retry behavior. This changes no HTTP retry limits, source set,
+schedule, or downstream ordering.
 
 ## 3. Active work history
 
@@ -1162,6 +1172,67 @@ outside scope and require deliberate user action.
 - The active `jai-028` heartbeat retained its schedule and stop-on-anomaly gates, while its prompt now
   scores official-link quality and explicitly forbids all recruitment-portal application actions.
 
+### 2026-09-27 — A-012 G3 completed one controlled makeup with an unknown delivery
+
+- The owner explicitly approved G3 despite the repeated credential-only provider `403`: migrate the
+  business database from `0010` to `0011`, run exactly one `makeup --date 2026-09-27`, permit the
+  approved public-source reads and resulting business writes, and submit the new report to PushPlus
+  exactly once. Historical resend, duplicate submission, scheduler restart, and automatic job
+  application remained prohibited. This diagnostic does not count toward the five unattended
+  successes even if its message is received.
+- A fresh scheduler image was built from the current branch as `sha256:4f4d82da...`; the formal
+  scheduler container remained stopped on its older image. The additive business migration reached
+  `0011_delivery_operator_audit`, `alembic check` reported no drift, existing entity counts were
+  unchanged, and the operator-event table was empty. An initial verification used the wrong trigger
+  name and returned false; the corrected migration-defined name
+  `trg_notification_operator_events_append_only` was then confirmed present. No data repair or
+  migration rerun was performed.
+- Exactly one logical makeup became pipeline run `6`. Collection attempts 1 and 2 failed transiently
+  because China Mobile exhausted HTTP retries; attempts 2 and 3 began after the configured 30- and
+  60-second delays. Attempt 3 succeeded across all five enabled sources. Its final source scorecard
+  was 5/5 available, 28 announcements discovered, 28/28 details fetched, 0 created, 0 updated, 28
+  content-identical skips, and 0 failed. Across all retries there were 15 source attempts: 13
+  succeeded and two China Mobile discovery attempts failed. Rechecking the four healthy sources on
+  every stage retry is an observed efficiency issue for scoped offline diagnosis.
+- Extraction succeeded with zero new documents, so new-document parse success is not applicable;
+  the existing 52 current raw documents all retain a current structured post. Matching processed 10
+  positions, created 10 immutable results, passed one, and filtered nine. Report snapshot `5` contains
+  11 item occurrences representing 10 unique match results; the single repeated occurrence is an
+  expected cross-section overlap allowed by `REPORTS.md`, not a duplicate persisted announcement.
+  All 11 occurrences expose HTTPS official source URLs and none exposes a distinct `apply_url`.
+- The current 54-post corpus measures 72.22% across JAI-049's five core fields: organization 48/54,
+  title 54/54, region 15/54, deadline 24/54, and HTTPS source URL 54/54. Only 2/54 posts have a
+  distinct HTTPS `apply_url`. These measured gaps remain JAI-049 quality debt and do not authorize
+  automatic applications or silent source expansion.
+- PushPlus `/send` was called once for snapshot `5`, producing delivery `3`, one part, one attempt,
+  and a retained provider message identity. The following `getAccessKey` result check was still
+  rejected, so both delivery and attempt safely ended `unknown` with
+  `pushplus.access_key_rejected`; the delivery stage and pipeline ended `failed`. There are no
+  non-terminal pipeline, stage, delivery, or attempt rows, no operator resend events, and no second
+  submission. Total pipeline duration was 162.960 seconds; stage attempts were collection 14.484,
+  13.822, and 43.774 seconds, extraction 0.016, matching 0.121, report 0.047, and delivery 0.647.
+- Post-run runtime evidence shows healthy `db`/`api` and the sole formal scheduler still
+  `Exited (143)`. JAI-028 remains 0/5. The next safe work is offline analysis and proportionate tests
+  for the collection-retry efficiency and PushPlus finality diagnostics; any further provider call,
+  makeup/resend, or scheduler restart requires a new recorded approval.
+- Scoped offline repair implemented D-045 without runtime calls: collection output now preserves
+  source identities and cumulative crawl-run evidence, while retries target only unresolved
+  retryable source IDs. Recovery reads the latest persisted stage output, so the narrowed selection
+  survives a process restart. Two focused unit scenarios cover same-process retry and ledger-backed
+  recovery. The complete PostgreSQL-enabled gate passed: Ruff format checked 266 files, Ruff lint
+  passed, Mypy checked 176 source files, all 360 tests passed without skips, and coverage reached
+  85.55%. The test database returned to zero public tables. Post-gate evidence kept business Alembic
+  at `0011`, run `6` failed, delivery/attempt `3` unknown, zero operator events, healthy `db`/`api`,
+  and the formal scheduler stopped. No live source/provider or business-data operation was performed
+  by this repair or gate.
+- Offline comparison against the current official PushPlus OpenAPI and response-code documents found
+  no client-contract mismatch: the repository uses the documented AccessKey path, POST JSON
+  `token`/`secretKey`, `access-key` result header, and `shortCode` query parameter. The provider still
+  defines business code `403` as an unauthorized request IP. Therefore the ledger must remain
+  `unknown`; changing code to claim success would destroy evidence. Resolving provider-side allowlist
+  recognition or approving a different finality strategy is now an owner decision, and neither
+  option is silently implemented in JAI-028.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -1192,11 +1263,12 @@ outside scope and require deliberate user action.
 
 ## 5. Next actions
 
-1. Keep the scheduler stopped. Save the separately reported current egress IPv4 in PushPlus, then
-   approve one new credential-only check; the A-012 request still returned provider `403`.
-2. Keep business Alembic at `0010`; do not apply `0011`, call PushPlus again, perform makeup, or
-   restart the scheduler until authentication succeeds and the next execution gate is recorded.
-3. After authentication and the audit path are separately approved for live use, approve any real resend/makeup and a new
+1. Keep the scheduler stopped and preserve run `6`, snapshot `5`, and delivery/attempt `3` as the
+   authoritative A-012 G3 evidence. Business Alembic is now `0011`; do not downgrade or rewrite it.
+2. Obtain an owner decision for provider-side allowlist resolution versus a separately designed
+   delivery-finality strategy, then approve any credential retest and replacement observation window.
+   Do not make another provider call, makeup/resend, or scheduler restart without that record.
+3. After the scoped fixes and synthetic/PostgreSQL gates pass, request an approved replacement
    unattended observation window. Do not start JAI-051 or JAI-029 before JAI-028 closes.
 
 ## 6. Update template

@@ -66,8 +66,9 @@ report. Its `(report_snapshot_id, channel)` identity prevents duplicate successf
 operator inspection and are never replaced by raw provider responses.
 `notification_delivery_operator_events` has restricted delivery and optional attempt foreign keys.
 Its `(action_id, event_type)` uniqueness prevents duplicate milestones, and a PostgreSQL trigger
-rejects row updates and deletes. Migration `0011_delivery_operator_audit` is additive; G1 applies it
-only to a database whose name ends in `_test`, never to the populated business database.
+rejects row updates and deletes. Migration `0011_delivery_operator_audit` is additive. A-011 G1
+first verified it only on a database whose name ends in `_test`; A-012 G3 later explicitly approved
+and applied it to the populated business database without changing existing entity counts.
 
 ## Time handling
 
@@ -127,6 +128,9 @@ On 2026-09-25, the owner approved G5 and the populated local business database a
 operations and pre-existing business-table counts were unchanged. This does not authorize another
 live notification, a scheduler restart, a makeup run, or destructive business-schema testing.
 
-A-011 G1 verified `0011` upgrade/check/downgrade behavior only on `jobagent_test`. The populated
-business database intentionally remains at `0010_notification_delivery`; applying `0011` there is a
-separate future approval.
+A-011 G1 verified `0011` upgrade/check/downgrade behavior on `jobagent_test`. On 2026-09-27, the
+owner separately approved A-012 G3 and the populated business database advanced from
+`0010_notification_delivery` to `0011_delivery_operator_audit`. `alembic check` reported no pending
+operations, prior entity counts were unchanged, the operator-event table was empty, and the
+append-only trigger was present. The migration does not itself authorize a resend, provider call,
+makeup, or scheduler restart.

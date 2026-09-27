@@ -114,6 +114,10 @@ jobagent-delivery resend --delivery-id 2 --part-number 1 --reason "负责人已�
 G1 只在 `_test` 数据库和合成 provider 上验证 `resend`；业务库迁移、凭据检查、真实重发、补跑或
 scheduler 重启仍分别需要下一次明确审批。
 
+业务库已在 2026-09-27 的 A-012 G3 下到达 `0011_delivery_operator_audit`。同一闸门消耗了一次补跑
+和一次新日报提交，终态仍为 `unknown`。没有执行重发，操作事件台账仍为空，后续 provider 调用仍
+需另行审批。
+
 ## 启用闸门
 
 - G4 只覆盖双语文档、Compose 环境变量接线和完整仓库门禁。

@@ -86,6 +86,13 @@ class FakeRepository:
         assert run_id == self.run.id
         return self.latest
 
+    async def latest_stage_attempts(self, run_id: int) -> dict[PipelineStage, StageAttemptSnapshot]:
+        assert run_id == self.run.id
+        latest: dict[PipelineStage, StageAttemptSnapshot] = {}
+        for attempt in reversed(self.attempts):
+            latest.setdefault(attempt.stage, attempt)
+        return latest
+
     async def start_stage(
         self,
         run_id: int,
@@ -124,6 +131,7 @@ class FakeRepository:
             error_code=error_code,
             error_message=error_message,
         )
+        self.attempts[stage_run_id - 1] = finished
         self.finished_stages.append((original.stage, status))
         return finished
 
@@ -159,6 +167,73 @@ class SequenceStages:
         if isinstance(value, Exception):
             raise value
         return value
+
+
+class FailedSourceRetryStages:
+    def __init__(self) -> None:
+        self.collection_source_ids: list[tuple[int, ...] | None] = []
+
+    async def run(self, stage: PipelineStage, context: PipelineContext) -> StageOutcome:
+        if stage is not PipelineStage.COLLECTION:
+            return StageOutcome(StageStatus.SUCCEEDED, {})
+        self.collection_source_ids.append(context.collection_source_ids)
+        if len(self.collection_source_ids) == 1:
+            raise TransientJobAgentError(
+                "one source failed",
+                code="pipeline.collection_transient",
+                details={
+                    "source_count": 5,
+                    "attempted_source_ids": [1, 2, 3, 4, 5],
+                    "successful_sources": 4,
+                    "partial_sources": 0,
+                    "successful_source_ids": [1, 2, 3, 4],
+                    "partial_source_ids": [],
+                    "crawl_run_ids": [11, 12, 13, 14],
+                    "failures": [
+                        {
+                            "source_id": 5,
+                            "code": "crawler.http_retry_exhausted",
+                            "retryable": True,
+                        }
+                    ],
+                },
+            )
+        return StageOutcome(
+            StageStatus.SUCCEEDED,
+            {
+                "source_count": 5,
+                "attempted_source_ids": [5],
+                "successful_sources": 1,
+                "partial_sources": 0,
+                "successful_source_ids": [5],
+                "partial_source_ids": [],
+                "crawl_run_ids": [15],
+                "failures": [],
+            },
+        )
+
+
+class RecoveredFailedSourceStages:
+    def __init__(self) -> None:
+        self.collection_source_ids: list[tuple[int, ...] | None] = []
+
+    async def run(self, stage: PipelineStage, context: PipelineContext) -> StageOutcome:
+        if stage is not PipelineStage.COLLECTION:
+            return StageOutcome(StageStatus.SUCCEEDED, {})
+        self.collection_source_ids.append(context.collection_source_ids)
+        return StageOutcome(
+            StageStatus.SUCCEEDED,
+            {
+                "source_count": 5,
+                "attempted_source_ids": [5],
+                "successful_sources": 1,
+                "partial_sources": 0,
+                "successful_source_ids": [5],
+                "partial_source_ids": [],
+                "crawl_run_ids": [15],
+                "failures": [],
+            },
+        )
 
 
 async def test_pipeline_runs_in_order_and_preserves_partial_status() -> None:
@@ -211,6 +286,98 @@ async def test_transient_stage_retries_with_exponential_delays() -> None:
     assert result.run is not None and result.run.status is PipelineStatus.SUCCEEDED
     assert stages.calls.count(PipelineStage.COLLECTION) == 3
     assert delays == [30, 60]
+
+
+async def test_collection_retry_targets_only_failed_sources_and_keeps_full_evidence() -> None:
+    repository = FakeRepository()
+    stages = FailedSourceRetryStages()
+    delays: list[float] = []
+
+    async def capture_sleep(delay: float) -> None:
+        delays.append(delay)
+
+    result = await PipelineCoordinator(
+        repository,
+        FakeLock(),
+        stages,
+        timezone="Asia/Shanghai",
+        policy=PipelinePolicy(max_attempts=3, retry_delay_seconds=30),
+        sleep=capture_sleep,
+    ).execute(SCHEDULED_FOR, PipelineTrigger.SCHEDULED)
+
+    assert result.run is not None and result.run.status is PipelineStatus.SUCCEEDED
+    assert stages.collection_source_ids == [None, (5,)]
+    assert delays == [30]
+    collection_attempts = [
+        attempt for attempt in repository.attempts if attempt.stage is PipelineStage.COLLECTION
+    ]
+    assert [attempt.status for attempt in collection_attempts] == [
+        StageStatus.FAILED,
+        StageStatus.SUCCEEDED,
+    ]
+    assert collection_attempts[1].output == {
+        "source_count": 5,
+        "attempted_source_ids": [5],
+        "successful_sources": 5,
+        "partial_sources": 0,
+        "successful_source_ids": [1, 2, 3, 4, 5],
+        "partial_source_ids": [],
+        "crawl_run_ids": [11, 12, 13, 14, 15],
+        "failures": [],
+    }
+
+
+async def test_collection_retry_recovers_failed_source_selection_from_ledger() -> None:
+    repository = FakeRepository(
+        status=PipelineStatus.FAILED,
+        latest={PipelineStage.COLLECTION: StageStatus.FAILED},
+    )
+    repository.attempts.append(
+        StageAttemptSnapshot(
+            id=1,
+            pipeline_run_id=repository.run.id,
+            stage=PipelineStage.COLLECTION,
+            attempt=1,
+            status=StageStatus.FAILED,
+            started_at=SCHEDULED_FOR,
+            finished_at=SCHEDULED_FOR,
+            output={
+                "source_count": 5,
+                "attempted_source_ids": [1, 2, 3, 4, 5],
+                "successful_sources": 4,
+                "partial_sources": 0,
+                "successful_source_ids": [1, 2, 3, 4],
+                "partial_source_ids": [],
+                "crawl_run_ids": [11, 12, 13, 14],
+                "failures": [
+                    {
+                        "source_id": 5,
+                        "code": "crawler.http_retry_exhausted",
+                        "retryable": True,
+                    }
+                ],
+            },
+            error_code="pipeline.collection_transient",
+            error_message="one source failed",
+        )
+    )
+    stages = RecoveredFailedSourceStages()
+
+    result = await PipelineCoordinator(
+        repository,
+        FakeLock(),
+        stages,
+        timezone="Asia/Shanghai",
+    ).execute(SCHEDULED_FOR, PipelineTrigger.MAKEUP)
+
+    assert result.run is not None and result.run.status is PipelineStatus.SUCCEEDED
+    assert stages.collection_source_ids == [(5,)]
+    collection_attempts = [
+        attempt for attempt in repository.attempts if attempt.stage is PipelineStage.COLLECTION
+    ]
+    assert [attempt.attempt for attempt in collection_attempts] == [1, 2]
+    assert collection_attempts[1].output["successful_source_ids"] == [1, 2, 3, 4, 5]
+    assert collection_attempts[1].output["crawl_run_ids"] == [11, 12, 13, 14, 15]
 
 
 async def test_permanent_failure_stops_downstream_stages() -> None:

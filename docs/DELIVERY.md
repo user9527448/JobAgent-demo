@@ -132,6 +132,11 @@ live test must name one snapshot in advance. G1 validates `resend` only against 
 and a synthetic provider; migration of the business database, credential checks, real resend,
 makeup, or scheduler restart always needs the next explicit approval.
 
+The business database reached `0011_delivery_operator_audit` under A-012 G3 on 2026-09-27. The same
+gate consumed one makeup and one new-report submission; finality remained `unknown`. No resend was
+performed, the operator-event ledger remains empty, and later provider calls remain separately
+gated.
+
 ## Activation gates
 
 - G4 covers paired documentation, Compose environment wiring, and the complete repository gate.

@@ -178,6 +178,21 @@ class SqlAlchemyPipelineRepository:
         except SQLAlchemyError as error:
             raise _database_error("load pipeline stage statuses", error) from error
 
+    async def latest_stage_attempts(self, run_id: int) -> dict[PipelineStage, StageAttemptSnapshot]:
+        try:
+            async with self._session_factory() as session:
+                models = await session.scalars(
+                    select(PipelineStageRun)
+                    .where(PipelineStageRun.pipeline_run_id == run_id)
+                    .order_by(PipelineStageRun.stage, PipelineStageRun.attempt.desc())
+                )
+                latest: dict[PipelineStage, StageAttemptSnapshot] = {}
+                for model in models:
+                    latest.setdefault(PipelineStage(model.stage), _stage_snapshot(model))
+                return latest
+        except SQLAlchemyError as error:
+            raise _database_error("load latest pipeline stage attempts", error) from error
+
     async def start_stage(
         self,
         run_id: int,
