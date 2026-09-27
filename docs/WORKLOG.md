@@ -1267,6 +1267,11 @@ schedule, or downstream ordering.
   pipeline/stage/delivery/attempt rows. `db`/`api` remain healthy and the sole formal scheduler
   remains stopped on its prior image. No business row, credential, external provider, live source,
   makeup/resend, container recreation, or automatic job application was involved.
+- Commit `af605dc89646042446cbf78bbf421781284f4c90` records the offline E2E and paired acceptance
+  evidence. The first direct push hit the known GitHub 443 timeout; one command-scoped proxy push
+  then succeeded. Local HEAD, tracking ref, and GitHub matched that commit. `origin` remains the
+  existing HTTPS URL, no persistent Git proxy is configured, and the pre-existing untracked
+  `架构图V1.png` remains excluded.
 
 ## 4. Verification and blockers
 
