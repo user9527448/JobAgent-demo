@@ -24,6 +24,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-009` | Anomaly action executed: 2026-09-26 | Authorize a five-day thread automation to audit each run, stop scheduler on anomalies, and commit/push bilingual evidence | Scheduler stopped; failed/unknown evidence preserved |
 | `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
 | `A-011` | G1 complete; G2 returned provider `403`; G2.1 lookup complete and the owner confirmed the security IP was saved | Separately approve one new credential-only check before any runtime recovery | Authentication remains unverified; business migration, live recovery, makeup/resend, and scheduler restart remain gated |
+| `A-012` | Blocked at credential gate: provider `403` | Save the separately reported current scheduler-container egress IPv4 in the PushPlus security-IP list, then approve one new credential-only retest | No migration, collection, report, or notification occurred; scheduler was stopped again |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -134,6 +135,30 @@ network metadata. The container was removed automatically, `db`/`api` remained h
 formal scheduler remained `Exited (143)`. The owner later confirmed that the matching PushPlus
 security-IP entry was saved, but that configuration action is not proof that authentication now
 works. G2.1 made no PushPlus or business request and unlocks no credential retest or recovery action.
+
+## A-012 — Controlled real full-flow diagnosis
+
+The owner approved a direct JAI-028 diagnostic from live official-source collection through
+extraction/validation, matching, report generation, and PushPlus notification, followed by scoped
+defect diagnosis and repair. Execute it in gates: first one credential-only `getAccessKey` check; if
+that succeeds, take a read-only business-ledger baseline, apply additive migration `0011`, verify
+schema and runtime image identity, and trigger at most one current-date full-flow run. Preserve every
+attempt and stop on ambiguous delivery instead of silently resending. Code fixes may use offline,
+`_test`, and synthetic-provider verification; another real provider submission still needs a new
+recorded execution decision when duplicate risk exists.
+
+“Delivery” in this approval means PushPlus delivery of the generated briefing. It does not authorize
+automatic job applications, résumé submission, form filling, account login, CAPTCHA handling, or
+any action on recruitment portals. Product output must provide evidenced official announcement and
+application links for the user to open and act on manually. JAI-028 scorecards therefore include
+official-link presence, provenance, safety, and completeness without submitting any application.
+
+On execution, Docker Desktop had automatically restored one scheduler together with healthy `db`
+and `api`. Read-only evidence showed no 2026-09-27 pipeline/crawl row and the fixed job next at
+2026-09-28 08:00, so the scheduler was stopped before diagnosis. The actual credential request still
+returned provider `403`. PushPlus documents `403` as an unauthorized request IP; the current egress
+IPv4 was reported directly to the owner and intentionally omitted here. No migration, source access,
+report generation, provider submission, or job application followed.
 
 ## M-003 — Restore the Docker build prerequisite
 

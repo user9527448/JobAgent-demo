@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Paused at 0/5; the owner expanded the five-run acceptance into an initial full-flow quality baseline, while runtime recovery remains gated | `feature/jai-028-e2e-unattended-trials` | Daily acceptance now includes real collection freshness/change evidence and scorecards; scheduler remains stopped pending authentication and a new runtime approval |
+| JAI-028 | A-012 stopped at the credential gate; still 0/5 | `feature/jai-028-e2e-unattended-trials` | Current egress IP must be saved in PushPlus before one newly approved auth-only retest; no automatic job applications |
 
 ## 2. Current decisions
 
@@ -312,6 +312,14 @@ retries, and duration. A successful source check with zero new announcements is 
 failed collection evidence is not. Each run receives a factual scorecard, and the fifth run produces
 prioritized improvement recommendations. Recommendations are analysis only until mapped to an
 existing planned Issue or explicitly approved as a new plan item.
+
+### D-044 Job applications remain human-controlled
+
+The owner clarified that the system must not automatically apply for jobs. JAI-028 may deliver its
+briefing through PushPlus, but recruitment output ends at evidenced official announcement/application
+links. Link presence, provenance, safety, and completeness are quality metrics; opening portals,
+logging in, filling forms, uploading résumés, solving CAPTCHAs, and submitting applications remain
+outside scope and require deliberate user action.
 
 ## 3. Active work history
 
@@ -1137,6 +1145,22 @@ existing planned Issue or explicitly approved as a new plan item.
   the diff. Commit `b7c8001` was normally pushed after one direct 443 timeout and two command-local
   proxy attempts; local HEAD, its tracking ref, and GitHub then matched. The HTTPS origin and
   persistent Git proxy configuration were unchanged.
+- The owner then approved A-012 for one credential-first real full-flow diagnostic and scoped JAI-028
+  fixes. They clarified that automatic job application is forbidden: PushPlus may carry the briefing,
+  while official announcement/application links are presented only for manual user action.
+- Docker restart had automatically restored exactly one scheduler plus healthy `db`/`api`. The
+  ledger had no 2026-09-27 run or crawl row and the retained job next pointed to 2026-09-28 08:00, so
+  the scheduler was stopped before the gated diagnostic. A malformed local Python probe failed at
+  parse time without a request; the corrected single `getAccessKey` request then returned provider
+  `403`. Official PushPlus documentation classifies this code as an unauthorized request IP. The
+  current egress IPv4 was reported directly and omitted from repository history.
+- No migration, source request, report, notification submission, resend, or job application followed.
+  The business database remains at `0010`. Existing data contains 54/54 HTTPS official source links,
+  but only 2/54 current posts have a distinct `apply_url` (3.70%); all four saved reports expose
+  `source_url`, while none expose `apply_url`. This is a measured source-completeness improvement
+  item, not an excuse to automate applications or silently expand adapters in JAI-028.
+- The active `jai-028` heartbeat retained its schedule and stop-on-anomaly gates, while its prompt now
+  scores official-link quality and explicitly forbids all recruitment-portal application actions.
 
 ## 4. Verification and blockers
 
@@ -1168,10 +1192,10 @@ existing planned Issue or explicitly approved as a new plan item.
 
 ## 5. Next actions
 
-1. Keep the scheduler stopped and correct the PushPlus security-IP configuration until a separately
-   approved credential-only check returns an AccessKey; the latest real check still returned `403`.
-2. Keep business Alembic at `0010`; do not apply `0011`, run the new CLI against business data, call
-   PushPlus, perform makeup, or restart the scheduler without the next explicit approval.
+1. Keep the scheduler stopped. Save the separately reported current egress IPv4 in PushPlus, then
+   approve one new credential-only check; the A-012 request still returned provider `403`.
+2. Keep business Alembic at `0010`; do not apply `0011`, call PushPlus again, perform makeup, or
+   restart the scheduler until authentication succeeds and the next execution gate is recorded.
 3. After authentication and the audit path are separately approved for live use, approve any real resend/makeup and a new
    unattended observation window. Do not start JAI-051 or JAI-029 before JAI-028 closes.
 
