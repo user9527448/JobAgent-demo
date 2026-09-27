@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-27
+> Last updated: 2026-09-28
 >
 > Active branch: `feature/jai-028-e2e-unattended-trials`
 
@@ -1315,6 +1315,17 @@ all block automatic resubmission. Historical business rows are never silently re
   non-terminal pipeline/stage rows, and zero public tables left in `jobagent_test`. No G1-forbidden
   effect occurred.
 
+### 2026-09-28 — A-013 G1 version-control checkpoint
+
+- Commit `76a502d13dbdd81e0731083880e9c2bd737f31a4` records the accepted-state migration,
+  state machine, page evidence, regression coverage, and paired documentation. The first ordinary
+  push hit the known GitHub 443 timeout; one command-scoped proxy push succeeded. Local HEAD, the
+  tracking ref, and GitHub then matched that commit. `origin` remains the existing HTTPS URL, no
+  persistent Git proxy is configured, and the pre-existing untracked `架构图V1.png` remains excluded.
+- This checkpoint completes only A-013 G1. The populated business database remains at `0011`, the
+  formal scheduler remains stopped, and no provider/source call, runtime rebuild/recreation, makeup,
+  resend, historical reclassification, or automatic job application occurred.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -1347,11 +1358,11 @@ all block automatic resubmission. Historical business rows are never silently re
 
 1. Keep the scheduler stopped and preserve run `6`, snapshot `5`, and delivery/attempt `3` as the
    authoritative A-012 G3 evidence. Business Alembic is now `0011`; do not downgrade or rewrite it.
-2. Commit and normally push the completed A-013 G1 source-only `0012` evidence. Do not migrate or
-   reclassify the business database, replace runtime containers, or contact PushPlus under G1.
-3. After the pushed G1 evidence, request a separate gate for business migration `0012`, runtime image replacement,
-   credential/live verification, and a replacement unattended window. Do not make another provider
-   call, makeup/resend, or scheduler restart without that record, and do not start JAI-051 or JAI-029
+2. A-013 G1 source-only `0012` evidence is committed and pushed. Do not migrate or reclassify the
+   business database, replace runtime containers, or contact PushPlus under the completed G1 gate.
+3. Request a separate gate for business migration `0012`, runtime image replacement, credential/live
+   verification, and a replacement unattended window. Do not make another provider call,
+   makeup/resend, or scheduler restart without that record, and do not start JAI-051 or JAI-029
    before JAI-028 closes.
 
 ## 6. Update template
