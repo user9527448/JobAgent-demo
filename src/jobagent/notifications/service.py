@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 from uuid import UUID, uuid4
 
-from jobagent.core import PermanentJobAgentError, TransientJobAgentError
+from jobagent.core import PermanentJobAgentError
 from jobagent.reports import DailyReportOperations
 
 from .contracts import (
@@ -156,6 +156,7 @@ class SqlAlchemyNotificationDeliveryService:
                 return DeliveryExecutionResult(DeliveryDispatchStatus.LOCKED, None)
             delivery = await self._repository.get_or_create(message)
             if delivery.status in {
+                DeliveryStatus.ACCEPTED,
                 DeliveryStatus.SUCCEEDED,
                 DeliveryStatus.FAILED,
                 DeliveryStatus.UNKNOWN,
@@ -177,10 +178,7 @@ class SqlAlchemyNotificationDeliveryService:
                 if outcome is not None:
                     return DeliveryExecutionResult(DeliveryDispatchStatus.EXECUTED, outcome)
 
-            completed = await self._repository.finish_delivery(
-                delivery.id,
-                status=DeliveryStatus.SUCCEEDED,
-            )
+            completed = await self._finish_delivery_from_latest_attempts(delivery.id)
             return DeliveryExecutionResult(DeliveryDispatchStatus.EXECUTED, completed)
 
     async def resend(
@@ -273,21 +271,7 @@ class SqlAlchemyNotificationDeliveryService:
                 attempt.id,
                 submission.provider_message_id,
             )
-            try:
-                outcome = await self._confirm_accepted(delivery_id, accepted)
-            except TransientJobAgentError as error:
-                terminal = await self._repository.finish_attempt(
-                    accepted.id,
-                    status=DeliveryAttemptStatus.UNKNOWN,
-                    error_code=error.code,
-                    error_message="Provider final status could not be confirmed safely.",
-                )
-                outcome = await self._repository.finish_delivery(
-                    delivery_id,
-                    status=DeliveryStatus.UNKNOWN,
-                    error_code=terminal.error_code,
-                    error_message=terminal.error_message,
-                )
+            outcome = await self._confirm_accepted(delivery_id, accepted)
             if outcome is None:
                 outcome = await self._finish_delivery_from_latest_attempts(delivery_id)
             terminal = await self._require_attempt(delivery_id, accepted.id)
@@ -351,6 +335,27 @@ class SqlAlchemyNotificationDeliveryService:
                 delivery_id,
                 status=DeliveryStatus.SUCCEEDED,
             )
+        accepted_statuses = {
+            DeliveryAttemptStatus.ACCEPTED,
+            DeliveryAttemptStatus.SUCCEEDED,
+        }
+        if len(latest) == delivery.part_count and all(
+            attempt.status in accepted_statuses for attempt in latest.values()
+        ):
+            accepted = next(
+                attempt
+                for attempt in latest.values()
+                if attempt.status is DeliveryAttemptStatus.ACCEPTED
+            )
+            return await self._repository.finish_delivery(
+                delivery_id,
+                status=DeliveryStatus.ACCEPTED,
+                error_code=(accepted.error_code or "notification.provider_receipt_unavailable"),
+                error_message=(
+                    "The provider accepted every message part, but final delivery receipt "
+                    "is unavailable."
+                ),
+            )
         if any(attempt.status is DeliveryAttemptStatus.UNKNOWN for attempt in latest.values()):
             return await self._repository.finish_delivery(
                 delivery_id,
@@ -372,7 +377,10 @@ class SqlAlchemyNotificationDeliveryService:
         attempts: tuple[DeliveryAttemptSnapshot, ...],
     ) -> DeliverySnapshot | None:
         latest = attempts[-1] if attempts else None
-        if latest is not None and latest.status is DeliveryAttemptStatus.SUCCEEDED:
+        if latest is not None and latest.status in {
+            DeliveryAttemptStatus.ACCEPTED,
+            DeliveryAttemptStatus.SUCCEEDED,
+        }:
             return None
         if latest is not None and latest.status is DeliveryAttemptStatus.UNKNOWN:
             return await self._repository.finish_delivery(
@@ -381,9 +389,6 @@ class SqlAlchemyNotificationDeliveryService:
                 error_code=latest.error_code,
                 error_message=latest.error_message,
             )
-        if latest is not None and latest.status is DeliveryAttemptStatus.ACCEPTED:
-            return await self._confirm_accepted(delivery_id, latest)
-
         used_attempts = latest.attempt if latest is not None else 0
         if used_attempts >= self._policy.retry.max_attempts:
             return await self._repository.finish_delivery(
@@ -485,29 +490,20 @@ class SqlAlchemyNotificationDeliveryService:
                 if error.retryable and poll < self._policy.max_result_polls:
                     await self._sleep(self._policy.result_poll_interval_seconds)
                     continue
-                if error.retryable:
-                    raise TransientJobAgentError(
-                        "Provider final status remains temporarily unavailable.",
-                        code="notification.result_temporarily_unavailable",
-                        details={"delivery_id": delivery_id, "attempt_id": attempt.id},
-                    ) from None
-                # Submission already returned a durable provider identity. A lookup
-                # error cannot prove final delivery failure, even when its immediate
-                # cause (for example an AccessKey rejection) is permanent. Keep the
-                # logical outcome unknown so no later operator action can resubmit it.
-                message = "Provider final status could not be safely confirmed."
                 await self._repository.finish_attempt(
                     attempt.id,
-                    status=DeliveryAttemptStatus.UNKNOWN,
-                    error_code=error.code,
-                    error_message=message,
+                    status=DeliveryAttemptStatus.ACCEPTED,
+                    error_code=(
+                        "notification.result_temporarily_unavailable"
+                        if error.retryable
+                        else error.code
+                    ),
+                    error_message=(
+                        "The provider accepted the submission, but its final delivery receipt "
+                        "could not be queried."
+                    ),
                 )
-                return await self._repository.finish_delivery(
-                    delivery_id,
-                    status=DeliveryStatus.UNKNOWN,
-                    error_code=error.code,
-                    error_message=message,
-                )
+                return None
 
             if result.status is ProviderDeliveryStatus.SUCCEEDED:
                 await self._repository.finish_attempt(
@@ -533,11 +529,16 @@ class SqlAlchemyNotificationDeliveryService:
             if poll < self._policy.max_result_polls:
                 await self._sleep(self._policy.result_poll_interval_seconds)
                 continue
-            raise TransientJobAgentError(
-                "Provider delivery remains accepted but not final.",
-                code="notification.result_pending",
-                details={"delivery_id": delivery_id, "attempt_id": attempt.id},
+            await self._repository.finish_attempt(
+                attempt.id,
+                status=DeliveryAttemptStatus.ACCEPTED,
+                error_code="notification.result_pending",
+                error_message=(
+                    "The provider accepted the submission, but its final delivery receipt "
+                    "did not become available within the bounded polling window."
+                ),
             )
+            return None
         raise AssertionError("Delivery result polling loop exited without a result.")
 
     async def _require_delivery(self, delivery_id: int) -> DeliverySnapshot:

@@ -96,8 +96,13 @@ and applied it to the populated business database without changing existing enti
 - `daily_report_snapshots` requires a JSON object payload and valid input/content SHA-256 values. Its date/timezone/report-version/input-hash identity prevents duplicate snapshots while retaining changed same-day inputs as separate immutable rows.
 - `pipeline_runs` uses the UTC schedule instant as part of its logical identity while retaining the resolved local report date and timezone. Scheduled and makeup triggers for the same slot therefore cannot create duplicate runs.
 - `pipeline_stage_runs` permits collection, extraction, matching, report, and delivery stages. Running attempts become `interrupted` on recovery; completed attempts and their JSON artifact references are retained.
-- Delivery parent and attempt states have explicit timestamp checks. Accepted/succeeded attempts require a non-empty provider message identity; hashes are lowercase SHA-256 values and part/attempt numbers are positive.
-- `notification_deliveries` is unique by immutable report/channel. `unknown` is terminal for automatic execution so an ambiguous external acceptance cannot be resent silently.
+- Delivery parent and attempt states have explicit timestamp checks. Terminal `accepted`/`succeeded`
+  attempts require a non-empty provider message identity; hashes are lowercase SHA-256 values and
+  part/attempt numbers are positive.
+- `notification_deliveries` is unique by immutable report/channel. `accepted` means provider
+  acceptance is durable but a final receipt is unavailable; `unknown` means submission acceptance
+  itself is ambiguous. Both are terminal for automatic execution, and neither may be silently
+  resent.
 - `apscheduler_jobs` is shared by no more than one scheduler process. The domain advisory lock remains the cross-process authority and prevents a competing process from writing a duplicate run.
 
 ## Migrations
@@ -117,8 +122,8 @@ docker compose exec api alembic upgrade head
 ```
 
 Migration integration tests are destructive and therefore refuse any database whose name does not end in `_test`.
-Migrations `0009_pipeline_scheduling`, `0010_notification_delivery`, and
-`0011_delivery_operator_audit` are covered by that guard.
+Migrations `0009_pipeline_scheduling`, `0010_notification_delivery`,
+`0011_delivery_operator_audit`, and `0012_delivery_accepted` are covered by that guard.
 Migration `0010` adds both delivery tables and extends the pipeline constraint to the fifth
 `delivery` stage. Applying it to the populated business database, injecting PushPlus credentials,
 or sending a live message are separate G5 operations requiring explicit approval.
@@ -134,3 +139,10 @@ owner separately approved A-012 G3 and the populated business database advanced 
 operations, prior entity counts were unchanged, the operator-event table was empty, and the
 append-only trigger was present. The migration does not itself authorize a resend, provider call,
 makeup, or scheduler restart.
+
+A-013 G1 verifies `0012_delivery_accepted` only on `_test`. It makes `accepted` a terminal parent,
+attempt, and operator outcome; backfills only pre-existing accepted attempts and qualifying
+in-progress parents that already have complete durable provider identities; and maps `accepted`
+conservatively to `unknown` on downgrade while restoring the append-only operator trigger. The
+populated business database remains at `0011_delivery_operator_audit`; no historical business row
+is reclassified by this source-only gate.

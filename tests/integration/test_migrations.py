@@ -11,7 +11,7 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, func, inspect, select, text
 from sqlalchemy.engine import URL, Engine, make_url
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from jobagent.db.models import RawDocument, Source, UserPreference
@@ -55,6 +55,125 @@ def test_empty_database_upgrade_constraints_utc_and_downgrade() -> None:
         command.downgrade(alembic_config, "base")
         assert not (CORE_TABLES & set(inspect(engine).get_table_names()))
     finally:
+        engine.dispose()
+
+
+def test_0012_backfills_accepted_attempt_and_downgrades_conservatively() -> None:
+    database_url = _test_database_url()
+    engine = create_engine(database_url)
+    alembic_config = _alembic_config(database_url)
+    _reset_test_schema(engine)
+
+    try:
+        command.upgrade(alembic_config, "0011_delivery_operator_audit")
+        with engine.begin() as connection:
+            report_id = connection.scalar(
+                text(
+                    "INSERT INTO daily_report_snapshots "
+                    "(report_date, timezone, report_version, input_hash, content_hash, "
+                    "payload, markdown, html) VALUES "
+                    "('2026-09-27', 'Asia/Shanghai', 'migration-test-v1', :input_hash, "
+                    ":content_hash, '{}'::jsonb, '# Test', '<p>Test</p>') RETURNING id"
+                ),
+                {"input_hash": "a" * 64, "content_hash": "b" * 64},
+            )
+            delivery_id = connection.scalar(
+                text(
+                    "INSERT INTO notification_deliveries "
+                    "(report_snapshot_id, channel, delivery_version, message_hash, part_count, "
+                    "status, started_at) VALUES "
+                    "(:report_id, 'pushplus_wechat', 'migration-test-v1', :message_hash, 1, "
+                    "'sending', now()) RETURNING id"
+                ),
+                {"report_id": report_id, "message_hash": "c" * 64},
+            )
+            attempt_id = connection.scalar(
+                text(
+                    "INSERT INTO notification_delivery_attempts "
+                    "(delivery_id, part_number, attempt, part_hash, status, "
+                    "provider_message_id) VALUES "
+                    "(:delivery_id, 1, 1, :part_hash, 'accepted', 'synthetic-provider-id') "
+                    "RETURNING id"
+                ),
+                {"delivery_id": delivery_id, "part_hash": "d" * 64},
+            )
+
+        command.upgrade(alembic_config, "head")
+        command.check(alembic_config)
+        with engine.begin() as connection:
+            delivery = connection.execute(
+                text(
+                    "SELECT status, finished_at IS NOT NULL, error_code "
+                    "FROM notification_deliveries WHERE id = :id"
+                ),
+                {"id": delivery_id},
+            ).one()
+            attempt = connection.execute(
+                text(
+                    "SELECT status, finished_at IS NOT NULL, error_code "
+                    "FROM notification_delivery_attempts WHERE id = :id"
+                ),
+                {"id": attempt_id},
+            ).one()
+            connection.execute(
+                text(
+                    "INSERT INTO notification_delivery_operator_events "
+                    "(action_id, delivery_id, part_number, attempt_id, event_type, outcome) "
+                    "VALUES ('00000000-0000-0000-0000-000000000012', :delivery_id, 1, "
+                    ":attempt_id, 'completed', 'accepted')"
+                ),
+                {"delivery_id": delivery_id, "attempt_id": attempt_id},
+            )
+
+        assert delivery == (
+            "accepted",
+            True,
+            "notification.provider_receipt_unavailable",
+        )
+        assert attempt == (
+            "accepted",
+            True,
+            "notification.provider_receipt_unavailable",
+        )
+
+        command.downgrade(alembic_config, "0011_delivery_operator_audit")
+        with engine.connect() as connection:
+            assert (
+                connection.execute(
+                    text("SELECT status FROM notification_deliveries WHERE id = :id"),
+                    {"id": delivery_id},
+                ).scalar_one()
+                == "unknown"
+            )
+            assert (
+                connection.execute(
+                    text("SELECT status FROM notification_delivery_attempts WHERE id = :id"),
+                    {"id": attempt_id},
+                ).scalar_one()
+                == "unknown"
+            )
+            assert (
+                connection.execute(
+                    text(
+                        "SELECT outcome FROM notification_delivery_operator_events "
+                        "WHERE action_id = '00000000-0000-0000-0000-000000000012'"
+                    )
+                ).scalar_one()
+                == "unknown"
+            )
+        with pytest.raises(SQLAlchemyError), engine.begin() as connection:
+            connection.execute(
+                text(
+                    "UPDATE notification_delivery_operator_events "
+                    "SET error_code = 'mutation-forbidden' "
+                    "WHERE action_id = '00000000-0000-0000-0000-000000000012'"
+                )
+            )
+
+        command.upgrade(alembic_config, "head")
+        command.check(alembic_config)
+    finally:
+        _reset_test_schema(engine)
         engine.dispose()
 
 

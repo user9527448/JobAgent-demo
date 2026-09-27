@@ -15,7 +15,7 @@ JAI-027 通过 PushPlus 把一份不可变日报快照投递到个人微信通�
                 │             │
                 │             └─ UNIQUE(report_snapshot_id, channel)
                 ▼
-有序消息分段 → notification_delivery_attempts → PushPlus → 最终结果查询
+有序消息分段 → notification_delivery_attempts → PushPlus → 有界最终结果查询
 ```
 
 不可变快照 ID 与固定 `pushplus_wechat` 通道共同构成逻辑幂等键。`delivery_version`、消息哈希、
@@ -37,14 +37,14 @@ JAI-027 通过 PushPlus 把一份不可变日报快照投递到个人微信通�
 触发器拒绝 `UPDATE` 和 `DELETE`，因此既有不明确尝试与操作证据都不能被改写。
 
 ```text
-投递：pending → sending → succeeded | failed | unknown
-尝试：submitting → accepted → succeeded
-                    └────────→ failed | unknown | interrupted
+投递：pending → sending → accepted | succeeded | failed | unknown
+尝试：submitting → accepted | succeeded | failed | unknown | interrupted
 ```
 
-只有每个分段都得到 provider 最终成功确认后，父记录才成为 `succeeded`。`failed` 表示永久拒绝或
-有界尝试已经耗尽；`unknown` 表示 provider 可能已受理，但系统无法证明最终身份或结果，因此禁止
-自动重新提交。
+只有每个分段都得到 provider 最终成功确认后，父记录才成为 `succeeded`。若所有分段都有持久
+provider 消息身份，但至少一段无法取得最终回执，父记录成为终态 `accepted`。`failed` 表示在获得
+持久受理前被永久拒绝或耗尽有界尝试；`unknown` 只用于系统无法判断提交本身是否被受理的高风险
+情形。`accepted`、`succeeded` 和 `unknown` 均禁止自动重新提交。
 
 ## 渲染、限制与顺序
 
@@ -65,9 +65,10 @@ OpenAPI 结果状态 0/1/2/3 分别表示待投递、发送中、已发送和发
 
 - 只有明确发生在提交前的失败，或 provider 显式临时拒绝，才允许创建下一次提交尝试。
 - 每段最多提交三次，退避 30 秒和 60 秒。
-- 已持久化受理 `shortCode` 时，只在有界窗口查询，不重新提交；后续流水线重试继续查询。
-- `shortCode` 已持久化后，只要错误导致无法查询最终结果，即使该查询错误本身属于永久错误，也应记为
-  `unknown`；只有 provider 明确返回最终投递失败，才能把已受理尝试终结为 `failed`。
+- 已持久化受理 `shortCode` 时，只在一个有界窗口查询且不重新提交；若回执仍待处理或不可用，尝试
+  终结为 `accepted`。后续流水线调用直接复用该终态证据，不再查询或提交。
+- `shortCode` 已持久化后，只有 provider 明确返回最终投递失败，才能把尝试终结为 `failed`；回执
+  查询失败会在终态 `accepted` 上保留安全错误码，不再把已知受理降为 `unknown`。
 - 写入/读取超时、已受理提交响应畸形、提交期间取消，或遗留 `submitting` 尝试都会转为 `unknown`，
   因为外部系统可能已经受理。
 - PostgreSQL session advisory lock 会串行化同一日报/通道的 scheduler 与人工操作；锁竞争返回
@@ -93,8 +94,8 @@ access key 只在内存中获取和缓存。凭据不得进入 Git、数据库�
 
 ## 操作命令
 
-普通命令只要求迁移 `0010_notification_delivery`；受审计重发命令还要求
-`0011_delivery_operator_audit`：
+当前命令要求迁移 `0012_delivery_accepted`；受审计重发历史仍由
+`0011_delivery_operator_audit` 提供：
 
 ```powershell
 jobagent-delivery show --delivery-id 1
@@ -103,12 +104,13 @@ jobagent-delivery resend --delivery-id 2 --part-number 1 --reason "负责人已�
 ```
 
 - `show` 不需要 provider 凭据，返回安全父记录、有序尝试和有序操作事件。
-- `send` 只为一份明确的不可变快照创建或恢复合资格工作。既有成功投递返回 `reused`；
-  `succeeded` 和 `unknown` 都不会自动重新提交。
+- `send` 只为一份明确的不可变快照创建或恢复合资格工作。既有终态 `accepted`、`succeeded` 或
+  `unknown` 投递返回 `reused`，且都不会自动重新提交。
 - `resend` 仅在 `JOBAGENT_ENVIRONMENT=development` 时可用。它只接受已有终态尝试的 `failed` 或
   `unknown` 投递分段，必须给出 10～500 字符原因及显式重复风险确认，只新增一次尝试并且只调用
   provider 提交一次；既有尝试永不修改，也不隐式重试提交。
-- 退出码 `0` 表示成功/复用投递或查询，`2` 表示配置/不存在/终态失败，`3` 表示锁竞争。
+- 退出码 `0` 表示已受理、provider 已确认成功、复用投递或查询；其中 `accepted` 不表示最终送达。
+  退出码 `2` 表示配置/不存在/终态失败，`3` 表示锁竞争。
 
 不得仅为了测试配置而运行 `send`，它可能创建真实外部消息。获批的真实测试必须提前指定唯一快照。
 G1 只在 `_test` 数据库和合成 provider 上验证 `resend`；业务库迁移、凭据检查、真实重发、补跑或
@@ -117,6 +119,9 @@ scheduler 重启仍分别需要下一次明确审批。
 业务库已在 2026-09-27 的 A-012 G3 下到达 `0011_delivery_operator_audit`。同一闸门消耗了一次补跑
 和一次新日报提交，终态仍为 `unknown`。没有执行重发，操作事件台账仍为空，后续 provider 调用仍
 需另行审批。
+
+A-013 G1 只批准源码实现、迁移 `0012_delivery_accepted`、页面状态及离线/`_test` 验证；不重分类
+历史业务记录，不迁移业务库，不访问 PushPlus，不启动 scheduler，不补跑，也不重发任何消息。
 
 ## 启用闸门
 

@@ -762,7 +762,7 @@ class NotificationDelivery(TimestampMixin, Base):
         CheckConstraint("message_hash ~ '^[0-9a-f]{64}$'", name="message_hash_sha256"),
         CheckConstraint("part_count > 0", name="part_count_positive"),
         CheckConstraint(
-            "status IN ('pending', 'sending', 'succeeded', 'failed', 'unknown')",
+            "status IN ('pending', 'sending', 'accepted', 'succeeded', 'failed', 'unknown')",
             name="status_valid",
         ),
         CheckConstraint(
@@ -772,7 +772,7 @@ class NotificationDelivery(TimestampMixin, Base):
         CheckConstraint(
             "(status = 'pending' AND started_at IS NULL AND finished_at IS NULL) OR "
             "(status = 'sending' AND started_at IS NOT NULL AND finished_at IS NULL) OR "
-            "(status IN ('succeeded', 'failed', 'unknown') "
+            "(status IN ('accepted', 'succeeded', 'failed', 'unknown') "
             "AND started_at IS NOT NULL AND finished_at IS NOT NULL)",
             name="state_timestamps",
         ),
@@ -833,8 +833,8 @@ class NotificationDeliveryAttempt(Base):
             name="finish_after_start",
         ),
         CheckConstraint(
-            "(status IN ('submitting', 'accepted') AND finished_at IS NULL) OR "
-            "(status IN ('succeeded', 'failed', 'unknown', 'interrupted') "
+            "(status = 'submitting' AND finished_at IS NULL) OR "
+            "(status IN ('accepted', 'succeeded', 'failed', 'unknown', 'interrupted') "
             "AND finished_at IS NOT NULL)",
             name="state_timestamps",
         ),
@@ -894,7 +894,8 @@ class NotificationDeliveryOperatorEvent(Base):
             name="event_type_valid",
         ),
         CheckConstraint(
-            "outcome IS NULL OR outcome IN ('succeeded', 'failed', 'unknown', 'interrupted')",
+            "outcome IS NULL OR outcome IN "
+            "('accepted', 'succeeded', 'failed', 'unknown', 'interrupted')",
             name="outcome_valid",
         ),
         CheckConstraint(

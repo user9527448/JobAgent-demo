@@ -40,6 +40,7 @@ class DeliveryStatus(StrEnum):
 
     PENDING = "pending"
     SENDING = "sending"
+    ACCEPTED = "accepted"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     UNKNOWN = "unknown"
@@ -75,6 +76,7 @@ class DeliveryOperatorEventType(StrEnum):
 class DeliveryOperatorOutcome(StrEnum):
     """Safe terminal outcome recorded for an operator action."""
 
+    ACCEPTED = "accepted"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     UNKNOWN = "unknown"

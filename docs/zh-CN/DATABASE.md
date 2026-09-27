@@ -95,8 +95,10 @@ A-012 G3 后续明确批准并应用到已有数据的业务库，且没有改�
 - `daily_report_snapshots` 要求 payload 为 JSON 对象，输入/内容 SHA-256 合法。日期/时区/报告版本/输入哈希身份避免重复快照，同时把同日发生变化的输入保留为独立不可变记录。
 - `pipeline_runs` 把 UTC 计划时刻作为逻辑身份的一部分，同时保留解析后的本地报告日期和时区；同一时刻的计划触发与补跑因此不能创建重复运行。
 - `pipeline_stage_runs` 只允许采集、抽取、匹配、日报和投递阶段。恢复时仍在运行的尝试会变为 `interrupted`；已完成尝试及其 JSON 产物引用继续保留。
-- 投递父状态和尝试状态都有显式时间戳约束；已受理/成功尝试必须有非空 provider 消息身份；哈希必须是小写 SHA-256，分段号和尝试号必须为正。
-- `notification_deliveries` 按不可变日报/通道唯一；`unknown` 对自动执行属于终态，防止外部受理结果有歧义时静默重发。
+- 投递父状态和尝试状态都有显式时间戳约束；终态 `accepted`/`succeeded` 尝试必须有非空 provider
+  消息身份；哈希必须是小写 SHA-256，分段号和尝试号必须为正。
+- `notification_deliveries` 按不可变日报/通道唯一；`accepted` 表示 provider 受理身份已持久化但最终
+  回执不可用，`unknown` 表示提交本身是否受理仍有歧义。两者对自动执行均为终态，均不得静默重发。
 - `apscheduler_jobs` 最多供一个 scheduler 进程使用。领域 advisory lock 仍是跨进程权威，可阻止竞争进程写入重复运行。
 
 ## 迁移
@@ -116,8 +118,8 @@ docker compose exec api alembic upgrade head
 ```
 
 迁移集成测试具有破坏性，因此拒绝操作名称不以 `_test` 结尾的数据库。
-迁移 `0009_pipeline_scheduling`、`0010_notification_delivery` 和
-`0011_delivery_operator_audit` 都受此保护。迁移 `0010` 新增两张
+迁移 `0009_pipeline_scheduling`、`0010_notification_delivery`、
+`0011_delivery_operator_audit` 和 `0012_delivery_accepted` 都受此保护。迁移 `0010` 新增两张
 投递表，并把流水线约束扩展到第五个 `delivery` 阶段。将它应用到已有数据的业务库、注入 PushPlus
 凭据或发送真实消息均属于需要明确批准的独立 G5 操作。
 
@@ -129,3 +131,8 @@ A-011 G1 在 `jobagent_test` 验证了 `0011` 的升级/检查/降级行为。20
 A-012 G3，已有数据的业务库从 `0010_notification_delivery` 升级到
 `0011_delivery_operator_audit`。`alembic check` 显示无待执行操作，既有实体计数不变，操作事件表
 为空，只追加触发器存在。迁移本身不授权重发、provider 调用、补跑或 scheduler 重启。
+
+A-013 G1 只在 `_test` 验证 `0012_delivery_accepted`。该迁移把 `accepted` 设为投递父记录、尝试和
+操作结果的终态；只回填已有 `accepted` 尝试及所有分段均具备持久 provider 身份的合资格处理中父
+记录；降级时保守映射 `accepted` 为 `unknown`，并恢复只追加操作触发器。已有数据的业务库仍保持
+`0011_delivery_operator_audit`，本次仅源码闸门不会重分类任何历史业务记录。

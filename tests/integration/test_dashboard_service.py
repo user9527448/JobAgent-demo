@@ -76,17 +76,19 @@ def test_dashboard_reads_pre_delivery_schema_and_tracked_delivery() -> None:
                     delivery_version="jai-027-v1",
                     message_hash="c" * 64,
                     part_count=1,
-                    status="succeeded",
+                    status="accepted",
                     started_at=datetime(2026, 9, 10, 1, 1, tzinfo=UTC),
                     finished_at=datetime(2026, 9, 10, 1, 2, tzinfo=UTC),
+                    error_code="pushplus.access_key_rejected",
+                    error_message="Provider accepted; final receipt unavailable.",
                 )
             )
             session.commit()
 
         after = _read_dashboard(database_url)
-        assert after.delivery.state is DeliveryEvidenceState.SUCCEEDED
+        assert after.delivery.state is DeliveryEvidenceState.ACCEPTED
         assert after.delivery.channel == "pushplus_wechat"
-        assert after.delivery.error_code is None
+        assert after.delivery.error_code == "pushplus.access_key_rejected"
     finally:
         _reset_test_schema(engine)
         engine.dispose()

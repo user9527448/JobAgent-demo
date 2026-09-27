@@ -112,7 +112,10 @@ async def _execute(args: argparse.Namespace) -> int:
         print(json.dumps(result.as_json(), ensure_ascii=False, indent=2))
         if result.dispatch_status is DeliveryDispatchStatus.LOCKED:
             return 3
-        if result.delivery is None or result.delivery.status is not DeliveryStatus.SUCCEEDED:
+        if result.delivery is None or result.delivery.status not in {
+            DeliveryStatus.ACCEPTED,
+            DeliveryStatus.SUCCEEDED,
+        }:
             return 2
         return 0
     finally:

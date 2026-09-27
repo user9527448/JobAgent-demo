@@ -16,6 +16,7 @@ class DeliveryEvidenceState(StrEnum):
     NOT_CREATED = "not_created"
     PENDING = "pending"
     SENDING = "sending"
+    ACCEPTED = "accepted"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     UNKNOWN = "unknown"

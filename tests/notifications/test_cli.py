@@ -244,6 +244,13 @@ def _now() -> datetime:
             ),
             0,
         ),
+        (
+            DeliveryExecutionResult(
+                DeliveryDispatchStatus.EXECUTED,
+                _delivery(DeliveryStatus.ACCEPTED),
+            ),
+            0,
+        ),
     ],
 )
 def test_send_maps_dispatch_result_and_closes_resources(

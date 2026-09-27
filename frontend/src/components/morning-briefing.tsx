@@ -494,21 +494,30 @@ function DeliveryPanel({
   timezone: string;
 }) {
   const content = deliveryCopy(delivery);
+  const succeeded = delivery.state === "succeeded";
+  const accepted = delivery.state === "accepted";
   return (
     <section
       aria-labelledby="delivery-heading"
       className={cn(
         "rounded-lg border p-5",
-        delivery.state === "succeeded"
+        succeeded
           ? "border-success/20 bg-success/[0.055]"
-          : "border-attention/25 bg-attention/[0.08]",
+          : accepted
+            ? "border-evidence/20 bg-evidence/[0.06]"
+            : "border-attention/25 bg-attention/[0.08]",
       )}
     >
       <div className="flex gap-3">
-        {delivery.state === "succeeded" ? (
+        {succeeded ? (
           <Check
             aria-hidden="true"
             className="mt-0.5 size-5 shrink-0 text-success"
+          />
+        ) : accepted ? (
+          <Send
+            aria-hidden="true"
+            className="mt-0.5 size-5 shrink-0 text-evidence"
           />
         ) : (
           <ShieldAlert
@@ -546,15 +555,18 @@ function StatusBadge({ status }: { status: string }) {
   const variant =
     status === "succeeded"
       ? "success"
-      : status === "failed" || status === "interrupted"
-        ? "destructive"
-        : status === "partial" || status === "unknown"
-          ? "attention"
-          : "neutral";
+      : status === "accepted"
+        ? "evidence"
+        : status === "failed" || status === "interrupted"
+          ? "destructive"
+          : status === "partial" || status === "unknown"
+            ? "attention"
+            : "neutral";
   const labels: Record<string, string> = {
     pending: "等待中",
     running: "运行中",
     sending: "发送中",
+    accepted: "已受理",
     succeeded: "成功",
     partial: "部分完成",
     failed: "失败",
@@ -692,6 +704,12 @@ function deliveryCopy(delivery: DeliveryEvidence) {
       title: "微信投递",
       status: "发送处理中",
       description: "发送流程已开始，请以最终持久化状态为准。",
+    },
+    accepted: {
+      title: "微信投递",
+      status: "服务商已受理",
+      description:
+        "消息已获得服务商身份，但最终送达回执不可用；系统不会自动重复发送。",
     },
     succeeded: {
       title: "微信投递",

@@ -251,6 +251,7 @@ class SqlAlchemyDeliveryRepository:
     ) -> DeliveryOperatorEventSnapshot:
         """Append the safe terminal outcome for one operator action."""
         outcomes = {
+            DeliveryAttemptStatus.ACCEPTED: DeliveryOperatorOutcome.ACCEPTED,
             DeliveryAttemptStatus.SUCCEEDED: DeliveryOperatorOutcome.SUCCEEDED,
             DeliveryAttemptStatus.FAILED: DeliveryOperatorOutcome.FAILED,
             DeliveryAttemptStatus.UNKNOWN: DeliveryOperatorOutcome.UNKNOWN,
@@ -385,6 +386,9 @@ class SqlAlchemyDeliveryRepository:
                     )
                 model.status = DeliveryAttemptStatus.ACCEPTED.value
                 model.provider_message_id = provider_message_id
+                model.finished_at = datetime.now(UTC)
+                model.error_code = None
+                model.error_message = None
                 await session.flush()
                 return _attempt_snapshot(model)
         except SQLAlchemyError as error:
@@ -399,6 +403,7 @@ class SqlAlchemyDeliveryRepository:
         error_message: str | None = None,
     ) -> DeliveryAttemptSnapshot:
         if status not in {
+            DeliveryAttemptStatus.ACCEPTED,
             DeliveryAttemptStatus.SUCCEEDED,
             DeliveryAttemptStatus.FAILED,
             DeliveryAttemptStatus.UNKNOWN,
@@ -426,6 +431,7 @@ class SqlAlchemyDeliveryRepository:
         error_message: str | None = None,
     ) -> DeliverySnapshot:
         if status not in {
+            DeliveryStatus.ACCEPTED,
             DeliveryStatus.SUCCEEDED,
             DeliveryStatus.FAILED,
             DeliveryStatus.UNKNOWN,

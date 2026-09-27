@@ -4,6 +4,7 @@ export type DeliveryState =
   | "not_created"
   | "pending"
   | "sending"
+  | "accepted"
   | "succeeded"
   | "failed"
   | "unknown";

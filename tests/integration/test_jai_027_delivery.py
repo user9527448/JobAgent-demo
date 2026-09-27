@@ -14,7 +14,7 @@ from sqlalchemy import create_engine, func, select, text, update
 from sqlalchemy.engine import URL, Engine, make_url
 from sqlalchemy.exc import SQLAlchemyError
 
-from jobagent.core import PermanentJobAgentError, TransientJobAgentError
+from jobagent.core import PermanentJobAgentError
 from jobagent.db import Database
 from jobagent.db.models import (
     NotificationDelivery,
@@ -203,11 +203,16 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
                 confirmation_error_snapshot.id
             )
             assert confirmation_error.delivery is not None
-            assert confirmation_error.delivery.status is DeliveryStatus.UNKNOWN
+            assert confirmation_error.delivery.status is DeliveryStatus.ACCEPTED
             assert confirmation_error.delivery.error_code == "pushplus.access_key_rejected"
             assert confirmation_error_reused.dispatch_status is DeliveryDispatchStatus.REUSED
             assert confirmation_error_provider.submit_calls == 1
             assert confirmation_error_provider.result_calls == ["synthetic-confirmation-error"]
+            confirmation_attempt = (await repository.list_attempts(confirmation_error.delivery.id))[
+                0
+            ]
+            assert confirmation_attempt.status is DeliveryAttemptStatus.ACCEPTED
+            assert confirmation_attempt.finished_at is not None
 
             final_failure_snapshot = await reports.generate(date(2026, 9, 18))
             final_failure_provider = ScriptedProvider(
@@ -264,9 +269,9 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
                 policy=DeliveryServicePolicy(max_result_polls=1),
             ).deliver(accepted_snapshot.id)
             assert resumed.delivery is not None
-            assert resumed.delivery.status is DeliveryStatus.SUCCEEDED
+            assert resumed.delivery.status is DeliveryStatus.ACCEPTED
             assert resume_provider.submit_calls == 0
-            assert resume_provider.result_calls == ["synthetic-resume"]
+            assert resume_provider.result_calls == []
 
             pending_snapshot = await reports.generate(date(2026, 9, 14))
             pending_provider = ScriptedProvider(
@@ -283,13 +288,16 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
                 pending_provider,
                 policy=DeliveryServicePolicy(max_result_polls=1),
             )
-            with pytest.raises(TransientJobAgentError, match="remains accepted"):
-                await pending_service.deliver(pending_snapshot.id)
+            pending = await pending_service.deliver(pending_snapshot.id)
             pending_resumed = await pending_service.deliver(pending_snapshot.id)
+            assert pending.delivery is not None
+            assert pending.delivery.status is DeliveryStatus.ACCEPTED
+            assert pending.delivery.error_code == "notification.result_pending"
             assert pending_resumed.delivery is not None
-            assert pending_resumed.delivery.status is DeliveryStatus.SUCCEEDED
+            assert pending_resumed.delivery.status is DeliveryStatus.ACCEPTED
+            assert pending_resumed.dispatch_status is DeliveryDispatchStatus.REUSED
             assert pending_provider.submit_calls == 1
-            assert pending_provider.result_calls == ["synthetic-pending", "synthetic-pending"]
+            assert pending_provider.result_calls == ["synthetic-pending"]
 
             exhausted_snapshot = await reports.generate(date(2026, 9, 15))
             exhausted_provider = ScriptedProvider(
@@ -356,7 +364,15 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
             assert operator_delivery.delivery.status is DeliveryStatus.UNKNOWN
             original_attempt = (await repository.list_attempts(operator_delivery.delivery.id))[0]
 
-            resend_provider = ScriptedProvider([ProviderSubmission("synthetic-operator-success")])
+            resend_provider = ScriptedProvider(
+                [ProviderSubmission("synthetic-operator-accepted")],
+                results=[
+                    DeliveryProviderError(
+                        "pushplus.access_key_rejected",
+                        kind=DeliveryFailureKind.PERMANENT,
+                    )
+                ],
+            )
             resend_service = SqlAlchemyNotificationDeliveryService(
                 reports,
                 repository,
@@ -371,10 +387,10 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
                 duplicate_risk_confirmed=True,
             )
             assert resend.delivery is not None
-            assert resend.delivery.status is DeliveryStatus.SUCCEEDED
+            assert resend.delivery.status is DeliveryStatus.ACCEPTED
             assert resend.attempt is not None
             assert resend.attempt.attempt == 2
-            assert resend.attempt.status is DeliveryAttemptStatus.SUCCEEDED
+            assert resend.attempt.status is DeliveryAttemptStatus.ACCEPTED
             assert resend_provider.submit_calls == 1
             operator_attempts = await repository.list_attempts(operator_delivery.delivery.id)
             assert len(operator_attempts) == 2
@@ -387,7 +403,7 @@ def test_delivery_ledger_reuses_retries_recovers_and_locks_with_postgresql() -> 
             ]
             assert {event.action_id for event in events} == {resend.action_id}
             assert events[0].duplicate_risk_confirmed is True
-            assert events[2].outcome is DeliveryOperatorOutcome.SUCCEEDED
+            assert events[2].outcome is DeliveryOperatorOutcome.ACCEPTED
             with pytest.raises(PermanentJobAgentError, match="failed or unknown"):
                 await resend_service.resend(
                     delivery_id=operator_delivery.delivery.id,

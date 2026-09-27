@@ -32,8 +32,9 @@ uses the scheduled date in `Asia/Shanghai` and the existing immutable snapshot s
 
 Delivery resolves the exact `report_snapshot_id` from that same run's successful report-stage
 output, then creates or reuses the unique report/channel ledger described in [DELIVERY.md](DELIVERY.md).
-A successful prior delivery is reused. Permanent, retry-exhausted, or ambiguous terminal delivery
-prevents a successful pipeline result while preserving the report and safe delivery evidence.
+A prior terminal delivery is reused. Both provider-confirmed `succeeded` and durable-identity
+`accepted` complete the pipeline successfully; permanent, retry-exhausted, or ambiguous `unknown`
+delivery prevents success while preserving the report and safe delivery evidence.
 
 ## Configuration
 
@@ -52,14 +53,16 @@ prevents a successful pipeline result while preserving the report and safe deliv
 Only `TransientJobAgentError` is retried, with default delays of 30 and 60 seconds. Permanent and
 unexpected failures stop downstream work and retain a safe error code/type. A final collection
 attempt that has at least one successful source continues as `partial` while preserving failures.
-Delivery submission retries have their own persistent three-attempt ledger; an ambiguous external
-outcome becomes `unknown` and is not retried automatically.
+Delivery submission retries have their own persistent three-attempt ledger. A durable provider
+identity with no obtainable final receipt becomes terminal `accepted`; ambiguous submission
+acceptance becomes `unknown`. Neither is retried automatically.
 
 ## Operator commands
 
-Apply the current migration head (`0011_delivery_operator_audit`) before running the five-stage
-scheduler. Do not migrate or restart the long-lived scheduler against a populated business database
-until the relevant runtime gate has been explicitly approved and both delivery secrets are ready.
+Apply the current source migration head (`0012_delivery_accepted`) before running this five-stage
+scheduler build. The populated business database remains at `0011_delivery_operator_audit`; do not
+migrate it, rebuild/recreate the runtime, or restart the long-lived scheduler until the relevant
+runtime gate is explicitly approved and both delivery secrets are ready.
 
 ```powershell
 jobagent-scheduler start
@@ -85,6 +88,12 @@ A-012 G3 later provided one narrow exception: apply `0011` to the business datab
 one 2026-09-27 makeup with one PushPlus submission for its new report. That allowance is consumed.
 Run `6` ended `failed` because delivery finality remained `unknown`; the formal scheduler stayed
 stopped and no further makeup, resend, provider call, or scheduler restart is authorized.
+
+A-013 G1 changes only source, migration, UI, and offline/`_test` evidence. After `0012`, a run may
+complete when every message part is either provider-confirmed `succeeded` or terminal `accepted`
+with a durable message identity. Historical run `6` and delivery/attempt `3` remain unchanged;
+business migration, runtime image replacement, scheduler restart, provider calls, makeup, and
+resend each require a later explicit gate.
 
 Collection stage output records attempted, successful, partial, and failed source IDs. When only a
 subset fails transiently, the next bounded stage attempt targets those retryable failed IDs instead

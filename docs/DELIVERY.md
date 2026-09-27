@@ -16,7 +16,7 @@ deterministic renderer → notification_deliveries
                 │             │
                 │             └─ UNIQUE(report_snapshot_id, channel)
                 ▼
-ordered message parts → notification_delivery_attempts → PushPlus → final-result query
+ordered message parts → notification_delivery_attempts → PushPlus → bounded final-result query
 ```
 
 The immutable snapshot ID and fixed `pushplus_wechat` channel form the logical idempotency key.
@@ -44,15 +44,16 @@ trigger rejects `UPDATE` and `DELETE`, so prior ambiguous attempts and operator 
 rewritten.
 
 ```text
-delivery: pending → sending → succeeded | failed | unknown
-attempt:  submitting → accepted → succeeded
-                     └──────────→ failed | unknown | interrupted
+delivery: pending → sending → accepted | succeeded | failed | unknown
+attempt:  submitting → accepted | succeeded | failed | unknown | interrupted
 ```
 
-The parent becomes `succeeded` only after every part reaches provider-confirmed final success.
-`failed` means a permanent rejection or exhausted bounded attempts. `unknown` means the provider
-may have accepted a submission but the system cannot prove its final identity or result; automatic
-resubmission is forbidden.
+The parent becomes `succeeded` only after every part reaches provider-confirmed final success. It
+becomes terminal `accepted` when every part has a durable provider message identity but at least one
+part has no obtainable final receipt. `failed` means a permanent rejection or exhausted bounded
+attempts before durable acceptance. `unknown` is reserved for the more dangerous case where the
+system cannot determine whether submission itself was accepted. `accepted`, `succeeded`, and
+`unknown` all forbid automatic resubmission.
 
 ## Rendering, limits, and order
 
@@ -76,11 +77,12 @@ users. See the official [send API](https://www.pushplus.plus/doc/guide/api.html)
 - Only a failure known to occur before submission, or an explicit temporary provider rejection,
   may create another submission attempt.
 - A part receives at most three submissions with 30- and 60-second delays.
-- A durable accepted `shortCode` is queried in a bounded window without resubmission. A later
-  pipeline retry resumes that query.
-- After a `shortCode` is durable, any error that prevents final-result lookup is recorded as
-  `unknown`, even when that lookup error itself is permanent. Only an explicit provider final
-  status of failed may terminate the accepted attempt as `failed`.
+- A durable accepted `shortCode` is queried in one bounded window without resubmission. If the
+  provider receipt remains pending or unavailable, the attempt becomes terminal `accepted`.
+  Later pipeline invocations reuse that terminal evidence without another query or submission.
+- After a `shortCode` is durable, only an explicit provider final status of failed terminates the
+  attempt as `failed`. Receipt lookup failure preserves a safe error code on terminal `accepted`;
+  it no longer collapses known provider acceptance into `unknown`.
 - A write/read timeout, malformed accepted submission response, cancellation during submission,
   or stale `submitting` attempt becomes `unknown` because external acceptance may already exist.
 - A PostgreSQL session advisory lock serializes scheduler and operator work for one report/channel.
@@ -107,8 +109,8 @@ secret key configured, and the sending host allowed by the provider's security-I
 
 ## Operator commands
 
-Migration `0010_notification_delivery` is sufficient for the normal commands. The audited resend
-command additionally requires `0011_delivery_operator_audit`:
+The current commands require migration `0012_delivery_accepted`; audited resend history remains
+provided by `0011_delivery_operator_audit`:
 
 ```powershell
 jobagent-delivery show --delivery-id 1
@@ -118,13 +120,15 @@ jobagent-delivery resend --delivery-id 2 --part-number 1 --reason "Approved deve
 
 - `show` needs no provider credential and returns the safe parent, ordered attempts, and ordered
   operator events.
-- `send` creates or resumes eligible work for one explicit immutable snapshot. A successful prior
-  delivery returns `reused`; `succeeded` and `unknown` are never resubmitted automatically.
+- `send` creates or resumes eligible work for one explicit immutable snapshot. A prior terminal
+  `accepted`, `succeeded`, or `unknown` delivery returns `reused` and is never resubmitted
+  automatically.
 - `resend` is rejected unless `JOBAGENT_ENVIRONMENT=development`. It accepts only a `failed` or
   `unknown` delivery part with a prior terminal attempt, requires a 10–500 character reason and the
   explicit duplicate-risk flag, creates one new attempt, and performs exactly one provider
   submission. It never changes the prior attempt and never has an implicit submission retry.
-- Exit code `0` means successful/reused delivery or inspection, `2` means configuration/not-found/
+- Exit code `0` means accepted, provider-confirmed successful, reused delivery, or inspection. An
+  accepted result does not claim final delivery. Exit code `2` means configuration/not-found/
   terminal failure, and `3` means lock contention.
 
 Do not use `send` merely to test configuration: it can create real external messages. The approved
@@ -136,6 +140,10 @@ The business database reached `0011_delivery_operator_audit` under A-012 G3 on 2
 gate consumed one makeup and one new-report submission; finality remained `unknown`. No resend was
 performed, the operator-event ledger remains empty, and later provider calls remain separately
 gated.
+
+A-013 G1 approves only the source implementation, migration `0012_delivery_accepted`, page state,
+and offline/`_test` verification. It does not reclassify historical business rows, migrate the
+business database, contact PushPlus, start the scheduler, run makeup, or resend any message.
 
 ## Activation gates
 

@@ -151,7 +151,7 @@ class SyntheticDelivery:
                 delivery_version="integration-v1",
                 message_hash="d" * 64,
                 part_count=1,
-                status=DeliveryStatus.SUCCEEDED,
+                status=DeliveryStatus.ACCEPTED,
                 started_at=FIRST_SLOT,
                 finished_at=FIRST_SLOT,
                 error_code=None,
@@ -208,7 +208,7 @@ def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Pat
             assert first_attempts[1].output["extraction_version"] == "jai-026-v1"
             assert first_attempts[2].output["score_version"]
             assert first_attempts[3].output["report_snapshot_id"]
-            assert first_attempts[4].output["status"] == "succeeded"
+            assert first_attempts[4].output["status"] == "accepted"
             assert delivery.snapshot_ids == [first_attempts[3].output["report_snapshot_id"]]
 
             repeated = await coordinator.execute(FIRST_SLOT, PipelineTrigger.SCHEDULED)

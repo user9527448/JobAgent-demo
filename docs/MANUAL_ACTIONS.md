@@ -25,13 +25,15 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
 | `A-011` | G1 complete; G2 returned provider `403`; G2.1 lookup complete and the owner confirmed the security IP was saved | Preserve the append-only recovery controls; use them only under a separately recorded execution gate | G3 later applied `0011`; authentication remains unverified and resend/scheduler restart remain gated |
 | `A-012` | G3 executed once; delivery remained `unknown` | Decide provider allowlist remediation versus a separately designed finality strategy; approve any later real call separately | Business DB is at `0011`; run `6` failed safely after one PushPlus submission; scheduler remains stopped and JAI-028 is 0/5 |
+| `A-013` | G1 approved and implemented offline | Adopt terminal `accepted` when a durable PushPlus message identity exists but final receipt is unavailable | Source migration `0012`, state machine, page state, and `_test` evidence only; business migration/runtime remains gated |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
 safety gate requires the narrower `A-008` authorization before generated report/job content may be
 sent to the external PushPlus destination on up to five automatic runs. A-012 G3 later authorized
 and consumed one diagnostic makeup/submission without changing the 0/5 acceptance count. No further
-makeup, manual delivery/resend, scheduler scaling, JAI-051, or JAI-029 release work is authorized.
+business migration, runtime replacement, makeup, manual delivery/resend, scheduler start/scaling,
+JAI-051, or JAI-029 release work is authorized.
 The earlier JAI-027 one-off live notification allowance remains consumed and is not reused.
 
 ## A-007 — Deploy JAI-050 and run JAI-028 unattended acceptance
@@ -175,6 +177,21 @@ The provider identity was retained, but the final-status lookup still returned
 `pushplus.access_key_rejected`, so delivery/attempt `3` are terminal `unknown` and the pipeline is
 `failed`. No operator resend event, second provider submission, or job-application action occurred.
 Any later provider call, makeup/resend, or scheduler restart needs a new recorded approval.
+
+## A-013 — Provider-accepted terminal delivery
+
+The owner approved G1 for the PushPlus `accepted` terminal strategy. When `/send` has returned and a
+durable provider message identity is stored, bounded receipt-query failure or exhaustion terminates
+the attempt and parent as `accepted`, not `unknown`. Only provider-confirmed final success is
+`succeeded`; `unknown` is reserved for ambiguous submission acceptance. `accepted`, `succeeded`, and
+`unknown` all block automatic resubmission. The pipeline may complete on `accepted`, while the page
+must explicitly say that final delivery is unconfirmed.
+
+G1 is limited to migration `0012`, the state machine, read-only page presentation, and offline/
+`_test` tests. It does not migrate or reclassify the populated business database, rebuild/recreate a
+runtime container, call PushPlus, start the scheduler, run makeup, or resend. Historical run `6` and
+delivery/attempt `3` remain authoritative and unchanged. A later gate must separately approve the
+business migration, runtime image replacement, and any replacement observation window.
 
 The post-run offline audit matched the repository request shape to the current official PushPlus
 OpenAPI contract and found no client-side path, JSON-field, header, or result-query mismatch.

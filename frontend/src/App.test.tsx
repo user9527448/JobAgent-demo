@@ -110,6 +110,45 @@ describe("Morning Briefing", () => {
     expect(screen.getByText("暂无可投递日报")).toBeInTheDocument();
     expect(screen.getByText("未找到固定调度作业记录。")).toBeInTheDocument();
   });
+
+  it("distinguishes provider acceptance from confirmed delivery", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: string | URL | Request) => {
+        const path = String(input);
+        if (path.endsWith("/health/live"))
+          return Promise.resolve(
+            Response.json({ status: "alive", checks: null }),
+          );
+        if (path.endsWith("/health/ready"))
+          return Promise.resolve(
+            Response.json({
+              status: "ready",
+              checks: { database: "available" },
+            }),
+          );
+        return Promise.resolve(
+          Response.json({
+            ...fixture,
+            delivery: {
+              state: "accepted",
+              channel: "pushplus_wechat",
+              updated_at: "2026-09-27T01:00:00Z",
+              error_code: "pushplus.access_key_rejected",
+            },
+          } satisfies BriefingResponse),
+        );
+      }),
+    );
+
+    render(<App />);
+
+    expect(await screen.findByText("服务商已受理")).toBeInTheDocument();
+    expect(
+      screen.getByText(/最终送达回执不可用；系统不会自动重复发送/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("已成功发送")).not.toBeInTheDocument();
+  });
 });
 
 async function fetchStub(input: string | URL | Request) {

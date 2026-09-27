@@ -278,7 +278,7 @@ class ProductionPipelineStages:
             "part_count": delivery.part_count,
             "dispatch_status": result.dispatch_status.value,
         }
-        if delivery.status is not DeliveryStatus.SUCCEEDED:
+        if delivery.status not in {DeliveryStatus.ACCEPTED, DeliveryStatus.SUCCEEDED}:
             raise PermanentJobAgentError(
                 "The report delivery did not reach a successful final state.",
                 code=delivery.error_code or "notification.delivery_failed",

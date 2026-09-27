@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | Offline E2E complete; unattended acceptance still 0/5 | `feature/jai-028-e2e-unattended-trials` | Business DB is `0011`; run `6` checked 5/5 sources but its sole PushPlus submission remains `unknown`; scheduler stopped and no automatic job applications |
+| JAI-028 | A-013 G1 accepted-state offline implementation complete; unattended acceptance still 0/5 | `feature/jai-028-e2e-unattended-trials` | Source head is `0012`; business DB remains `0011`; historical run `6` and delivery/attempt `3` remain unchanged; scheduler stopped and no automatic job applications |
 
 ## 2. Current decisions
 
@@ -330,6 +330,14 @@ targets the next bounded retry only at retryable failed source IDs; the latest p
 restores that selection after a process restart. Legacy attempt output without source identities
 falls back to the prior full-stage retry behavior. This changes no HTTP retry limits, source set,
 schedule, or downstream ordering.
+
+### D-046 Durable provider acceptance is a distinct terminal state
+
+`succeeded` is reserved for provider-confirmed final delivery. If every message part has a durable
+provider identity but a bounded final-receipt query cannot establish delivery, the attempt and
+parent become terminal `accepted`; the pipeline may complete, but the UI must not claim delivery.
+`unknown` is reserved for ambiguous submission acceptance. `accepted`, `succeeded`, and `unknown`
+all block automatic resubmission. Historical business rows are never silently reclassified.
 
 ## 3. Active work history
 
@@ -1273,6 +1281,40 @@ schedule, or downstream ordering.
   existing HTTPS URL, no persistent Git proxy is configured, and the pre-existing untracked
   `架构图V1.png` remains excluded.
 
+### 2026-09-27 — A-013 G1 terminal accepted-state implementation
+
+- The owner approved the D-046 strategy and G1 boundary: implement migration
+  `0012_delivery_accepted`, delivery/pipeline state handling, Morning Briefing evidence, and
+  offline/`_test` verification only. The populated business database must remain at `0011`; no
+  PushPlus or public-source call, scheduler start, makeup, resend, business migration, runtime
+  container recreation, or historical-row repair is authorized.
+- Added terminal `accepted` to delivery, attempt, operator-outcome, dashboard, and frontend
+  contracts. A durable provider message identity now ends as `accepted` when bounded receipt lookup
+  remains pending or unavailable. All parts continue in order, the parent becomes `accepted` when
+  appropriate, later invocations reuse the evidence without polling or submitting again, and the
+  delivery stage/CLI complete without representing provider acceptance as confirmed delivery.
+- Added migration `0012`: it expands constraints, closes legacy accepted attempts with safe receipt
+  metadata, and promotes only qualifying in-progress parents whose complete latest part set already
+  has durable accepted/succeeded identities. Downgrade maps accepted evidence conservatively to
+  `unknown` and restores the append-only operator-event trigger. Historical business rows remain
+  untouched because G1 runs migration tests only on `_test`.
+- The Morning Briefing renders `accepted` as evidence-colored **Provider accepted**, explains that
+  final receipt is unavailable, and does not use the green confirmed-success treatment. Paired
+  delivery, database, scheduling, design, manual-action, plan, backlog, and work-log documentation
+  records the new boundary without creating a new Issue or changing the critical path.
+- The first targeted migration run failed before product assertions because Alembic's naming
+  convention doubled four literal constraint names. Using `op.f(...)` for the existing physical
+  names corrected the migration. The repeated `_test` run then passed all four targeted migration,
+  delivery, dashboard, and scheduling tests. No business database or external system was touched.
+- Final gates passed: Ruff format checked 267 files, Ruff lint passed, Mypy checked 176 source files,
+  and all 362 PostgreSQL-enabled tests passed without skips at 85.62% coverage. Frontend Prettier,
+  ESLint, strict TypeScript, all four Vitest cases, and the production build passed. Paired heading
+  counts, 57-Item backlog order, and `git diff --check` passed. Read-only runtime verification found
+  healthy `db`/`api`, the sole scheduler still `Exited (143)`, business Alembic still at
+  `0011_delivery_operator_audit`, delivery/attempt `3` still `unknown`, zero operator events and
+  non-terminal pipeline/stage rows, and zero public tables left in `jobagent_test`. No G1-forbidden
+  effect occurred.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -1305,13 +1347,12 @@ schedule, or downstream ordering.
 
 1. Keep the scheduler stopped and preserve run `6`, snapshot `5`, and delivery/attempt `3` as the
    authoritative A-012 G3 evidence. Business Alembic is now `0011`; do not downgrade or rewrite it.
-2. Obtain an owner decision for provider-side allowlist resolution versus a separately designed
-   delivery-finality strategy, then approve any credential retest and replacement observation window.
-   Do not make another provider call, makeup/resend, or scheduler restart without that record.
-3. The scoped fixes, offline E2E, and synthetic/PostgreSQL gates have passed. A replacement unattended
-   window now requires explicit owner approval; before start, recreate exactly one scheduler from
-   image `sha256:035456affc0f...` and verify its identity. Do not start JAI-051 or JAI-029 before
-   JAI-028 closes.
+2. Commit and normally push the completed A-013 G1 source-only `0012` evidence. Do not migrate or
+   reclassify the business database, replace runtime containers, or contact PushPlus under G1.
+3. After the pushed G1 evidence, request a separate gate for business migration `0012`, runtime image replacement,
+   credential/live verification, and a replacement unattended window. Do not make another provider
+   call, makeup/resend, or scheduler restart without that record, and do not start JAI-051 or JAI-029
+   before JAI-028 closes.
 
 ## 6. Update template
 

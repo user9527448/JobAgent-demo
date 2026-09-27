@@ -134,6 +134,11 @@ and loaded content. Empty is not error. An unavailable delivery schema before JA
 **Delivery not enabled · awaiting migration/configuration**, not as a failed delivery. Raw exception
 texts, provider payloads, hashes, tokens, and database URLs never reach the page.
 
+Delivery evidence distinguishes provider acceptance from confirmed delivery. `accepted` uses the
+evidence color and the copy **Provider accepted · final receipt unavailable**; it must never use the
+green success treatment or claim that the message was delivered. `succeeded` alone receives the
+confirmed-success treatment. `unknown` remains an ambiguity warning.
+
 ## 8. Read-only API contract
 
 JAI-050 uses these GET boundaries only:
