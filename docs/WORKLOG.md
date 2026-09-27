@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | A-012 G3 diagnostic completed; still 0/5 | `feature/jai-028-e2e-unattended-trials` | Business DB is `0011`; run `6` checked 5/5 sources but its sole PushPlus submission remains `unknown`; scheduler stopped and no automatic job applications |
+| JAI-028 | Offline E2E complete; unattended acceptance still 0/5 | `feature/jai-028-e2e-unattended-trials` | Business DB is `0011`; run `6` checked 5/5 sources but its sole PushPlus submission remains `unknown`; scheduler stopped and no automatic job applications |
 
 ## 2. Current decisions
 
@@ -1244,6 +1244,30 @@ schedule, or downstream ordering.
   on the prior image. A future approved observation window must recreate exactly that one scheduler
   from the new image and re-verify its identity before start.
 
+### 2026-09-27 — JAI-028 offline end-to-end acceptance completed
+
+- The existing PostgreSQL scheduling acceptance now begins with only a synthetic enabled source.
+  Its offline collection stage persists the immutable raw announcement through the production raw
+  document repository, records created/skipped evidence, and then executes the real deterministic
+  extraction, matching, report, and injected synthetic-delivery stages. A second logical day proves
+  the same source document is deduplicated while a new immutable match result and report snapshot
+  are still produced. No public source or PushPlus request is possible in this fixture.
+- The focused `_test` run passed and proved two pipeline runs, eleven stage attempts including stale
+  recovery, two crawl runs, one deduplicated raw document/post, two immutable match results, two
+  report snapshots, and two synthetic deliveries. This closes the JAI-028 offline-E2E acceptance
+  checkbox; it does not count as any of the five real unattended runs.
+- A first complete-gate invocation accidentally omitted `JOBAGENT_TEST_DATABASE_URL`: all 340
+  non-database tests passed, 20 PostgreSQL tests were skipped, and coverage correctly failed at
+  75.11%. The next attempt stopped at Ruff because the edited test needed one import-group blank
+  line. After correcting both invocation and formatting, the authoritative gate passed Ruff format
+  over 266 files, Ruff lint, Mypy over 176 source files, and all 360 PostgreSQL-enabled tests without
+  skips at 85.55% coverage.
+- Post-gate read-only verification found zero tables in the `jobagent_test` public schema, business
+  Alembic still at `0011_delivery_operator_audit`, zero operator events and zero non-terminal
+  pipeline/stage/delivery/attempt rows. `db`/`api` remain healthy and the sole formal scheduler
+  remains stopped on its prior image. No business row, credential, external provider, live source,
+  makeup/resend, container recreation, or automatic job application was involved.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -1279,9 +1303,10 @@ schedule, or downstream ordering.
 2. Obtain an owner decision for provider-side allowlist resolution versus a separately designed
    delivery-finality strategy, then approve any credential retest and replacement observation window.
    Do not make another provider call, makeup/resend, or scheduler restart without that record.
-3. After the scoped fixes and synthetic/PostgreSQL gates pass, request an approved replacement
-   unattended observation window; its gate must recreate exactly one scheduler from image
-   `sha256:035456affc0f...` before start. Do not start JAI-051 or JAI-029 before JAI-028 closes.
+3. The scoped fixes, offline E2E, and synthetic/PostgreSQL gates have passed. A replacement unattended
+   window now requires explicit owner approval; before start, recreate exactly one scheduler from
+   image `sha256:035456affc0f...` and verify its identity. Do not start JAI-051 or JAI-029 before
+   JAI-028 closes.
 
 ## 6. Update template
 

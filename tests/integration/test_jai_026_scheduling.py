@@ -1,4 +1,4 @@
-"""PostgreSQL acceptance for JAI-026 orchestration, reuse, and restart recovery."""
+"""PostgreSQL acceptance for JAI-026 scheduling and the JAI-028 offline E2E."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ import asyncio
 import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import cast
 
 import pytest
 from alembic import command
@@ -18,8 +17,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Session
 
 from jobagent.core import Settings
-from jobagent.core.exceptions import JsonValue
-from jobagent.crawlers import SqlAlchemyCrawlRunRepository
+from jobagent.crawlers import (
+    RawDocumentInput,
+    RawDocumentWriteStatus,
+    SourceDefinition,
+    SqlAlchemyCrawlRunRepository,
+    SqlAlchemyRawDocumentRepository,
+)
 from jobagent.db import Database
 from jobagent.db.models import (
     CrawlRun,
@@ -65,32 +69,66 @@ class SyntheticCollectionStages:
     def __init__(
         self,
         session_factory: async_sessionmaker[AsyncSession],
-        source_id: int,
+        source: SourceDefinition,
         production: ProductionPipelineStages,
     ) -> None:
         self._crawl_runs = SqlAlchemyCrawlRunRepository(session_factory)
-        self._source_id = source_id
+        self._documents = SqlAlchemyRawDocumentRepository(session_factory)
+        self._source = source
         self._production = production
 
     async def run(self, stage: PipelineStage, context: PipelineContext) -> StageOutcome:
         if stage is not PipelineStage.COLLECTION:
             return await self._production.run(stage, context)
         run_id = await self._crawl_runs.start_run(
-            self._source_id,
-            {"fixture": "jai-026"},
+            self._source.id,
+            {"fixture": "jai-028-offline-e2e"},
         )
+        write = await self._documents.save(
+            self._source,
+            RawDocumentInput(
+                url="https://example.invalid/notices/28",
+                title="Synthetic scheduled recruitment",
+                raw_text=(
+                    "招聘单位: 测试大学\n"
+                    "招聘类型: 事业单位\n"
+                    "地区: 上海\n"
+                    "报名开始时间: 2026-09-01\n"
+                    "报名截止时间: 2026-09-10\n"
+                    "报名链接: https://apply.example.invalid/jobs\n"
+                    "学历: 本科\n"
+                    "招聘人数: 3人"
+                ),
+                published_at=FIRST_SLOT,
+            ),
+        )
+        created = int(write.status is RawDocumentWriteStatus.CREATED)
+        updated = int(write.status is RawDocumentWriteStatus.UPDATED)
+        skipped = int(write.status is RawDocumentWriteStatus.UNCHANGED)
         await self._crawl_runs.finish_run(
             run_id,
             status="succeeded",
-            stats={"fixture": "jai-026", "stored_documents": 1},
+            stats={
+                "fixture": "jai-028-offline-e2e",
+                "discovered": 1,
+                "detail_attempted": 1,
+                "detail_succeeded": 1,
+                "created": created,
+                "updated": updated,
+                "skipped": skipped,
+                "failed": 0,
+            },
         )
         return StageOutcome(
             StageStatus.SUCCEEDED,
             {
                 "source_count": 1,
+                "attempted_source_ids": [self._source.id],
                 "successful_sources": 1,
                 "partial_sources": 0,
-                "crawl_run_ids": cast(list[JsonValue], [run_id]),
+                "successful_source_ids": [self._source.id],
+                "partial_source_ids": [],
+                "crawl_run_ids": [run_id],
                 "failures": [],
             },
         )
@@ -129,7 +167,7 @@ def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Pat
     sync_engine = create_engine(database_url)
     _reset_test_schema(sync_engine)
     command.upgrade(_alembic_config(database_url), "head")
-    source_id = _seed_raw_document(sync_engine)
+    source = _seed_source(sync_engine)
 
     async def scenario() -> None:
         rendered_url = database_url.render_as_string(hide_password=False)
@@ -150,7 +188,7 @@ def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Pat
                 SqlAlchemyPipelineLock(database.session_factory),
                 SyntheticCollectionStages(
                     database.session_factory,
-                    source_id,
+                    source,
                     ProductionPipelineStages(
                         database.session_factory,
                         settings,
@@ -208,6 +246,12 @@ def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Pat
             assert session.scalar(select(func.count()).select_from(PipelineRun)) == 2
             assert session.scalar(select(func.count()).select_from(PipelineStageRun)) == 11
             assert session.scalar(select(func.count()).select_from(CrawlRun)) == 2
+            crawl_runs = tuple(session.scalars(select(CrawlRun).order_by(CrawlRun.id)))
+            assert crawl_runs[0].stats["created"] == 1
+            assert crawl_runs[0].stats["skipped"] == 0
+            assert crawl_runs[1].stats["created"] == 0
+            assert crawl_runs[1].stats["skipped"] == 1
+            assert session.scalar(select(func.count()).select_from(RawDocument)) == 1
             assert session.scalar(select(func.count()).select_from(JobPost)) == 1
             assert session.scalar(select(func.count()).select_from(MatchResult)) == 2
             assert session.scalar(select(func.count()).select_from(DailyReportSnapshot)) == 2
@@ -216,33 +260,24 @@ def test_daily_pipeline_closes_reuses_and_recovers_with_postgresql(tmp_path: Pat
         sync_engine.dispose()
 
 
-def _seed_raw_document(engine: Engine) -> int:
+def _seed_source(engine: Engine) -> SourceDefinition:
     with Session(engine) as session:
-        document = RawDocument(
-            source=Source(
-                name="JAI-026 scheduled flow source",
-                base_url="https://example.invalid",
-                category="public_exam",
-                adapter="scheduler_test",
-            ),
-            canonical_url="https://example.invalid/notices/26",
-            title="Synthetic scheduled recruitment",
-            raw_text=(
-                "招聘单位: 测试大学\n"
-                "招聘类型: 事业单位\n"
-                "地区: 上海\n"
-                "报名开始时间: 2026-09-01\n"
-                "报名截止时间: 2026-09-10\n"
-                "报名链接: https://apply.example.invalid/jobs\n"
-                "学历: 本科\n"
-                "招聘人数: 3人"
-            ),
-            fetched_at=FIRST_SLOT,
-            content_hash="a" * 64,
+        source = Source(
+            name="JAI-028 offline E2E source",
+            base_url="https://example.invalid",
+            category="public_exam",
+            adapter="scheduler_test",
         )
-        session.add(document)
+        session.add(source)
         session.commit()
-        return document.source_id
+        return SourceDefinition(
+            id=source.id,
+            name=source.name,
+            base_url=source.base_url,
+            category=source.category,
+            adapter=source.adapter,
+            enabled=source.enabled,
+        )
 
 
 def _test_database_url() -> URL:
