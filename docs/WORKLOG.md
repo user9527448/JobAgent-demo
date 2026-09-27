@@ -1237,6 +1237,12 @@ schedule, or downstream ordering.
   timeout; one command-scoped proxy push succeeded. Local HEAD, tracking ref, and GitHub then
   matched. `origin` remains the existing HTTPS URL and no persistent Git proxy is configured. The
   pre-existing untracked `架构图V1.png` was preserved and deliberately excluded from this commit.
+- The final D-045 source was built into `jobagent-scheduler:latest` with image ID
+  `sha256:035456affc0f...`. Dependency wheels were downloaded during the isolated build, which took
+  about five minutes; the build itself made no business/provider call. `db`/`api` remained healthy,
+  and the formal scheduler container was neither recreated nor started: it remains `Exited (143)`
+  on the prior image. A future approved observation window must recreate exactly that one scheduler
+  from the new image and re-verify its identity before start.
 
 ## 4. Verification and blockers
 
@@ -1274,7 +1280,8 @@ schedule, or downstream ordering.
    delivery-finality strategy, then approve any credential retest and replacement observation window.
    Do not make another provider call, makeup/resend, or scheduler restart without that record.
 3. After the scoped fixes and synthetic/PostgreSQL gates pass, request an approved replacement
-   unattended observation window. Do not start JAI-051 or JAI-029 before JAI-028 closes.
+   unattended observation window; its gate must recreate exactly one scheduler from image
+   `sha256:035456affc0f...` before start. Do not start JAI-051 or JAI-029 before JAI-028 closes.
 
 ## 6. Update template
 
