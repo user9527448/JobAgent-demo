@@ -26,6 +26,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-011` | G1 complete; G2 returned provider `403`; G2.1 lookup complete and the owner confirmed the security IP was saved | Preserve the append-only recovery controls; use them only under a separately recorded execution gate | G3 later applied `0011`; authentication remains unverified and resend/scheduler restart remain gated |
 | `A-012` | G3 executed once; delivery remained `unknown` | Decide provider allowlist remediation versus a separately designed finality strategy; approve any later real call separately | Business DB is at `0011`; run `6` failed safely after one PushPlus submission; scheduler remains stopped and JAI-028 is 0/5 |
 | `A-013` | G2 completed; replacement window active | Apply terminal `accepted`, migrate the business DB, deploy the runtime, and restart five visible observations | Business DB/API/page are at `0012`; one scheduler runs; observations are 2026-09-29 through 2026-10-03 at 08:15 `Asia/Shanghai` |
+| `A-014` | G1 approved and executed once: 2026-09-28 | Run one controlled production-like full-flow makeup for 2026-09-28 | Run `8` succeeded; snapshot `6` and delivery/attempt `4` are terminal `accepted`; it does not count toward the unattended 0/5 |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -208,6 +209,22 @@ activated exactly one scheduler and replaced the observation window with 2026-09
 `Asia/Shanghai`. Success, failure, missing, and still-running outcomes must all be visible. No
 2026-09-28 makeup, historical resend, manual send, scheduler expansion, automatic application,
 JAI-051/JAI-029 start, or develop merge is approved.
+
+## A-014 — One controlled production full-flow test
+
+The owner explicitly approved exactly one 2026-09-28 `makeup` after clarifying that “full test”
+meant the real production feature path, not only the repository regression suite. This gate allowed
+all enabled public sources, business writes, and exactly one PushPlus submission for the new report.
+It did not authorize a second invocation, historical resend, duplicate submission, automatic job
+application, or counting the result in the replacement five-day unattended sequence. Failure,
+ambiguous delivery, or a non-terminal ledger required stopping the sole scheduler.
+
+Execution created run `8`, which completed all five stages once and succeeded. All 5/5 sources
+succeeded; 30 details succeeded, two documents were created, 28 were skipped by deduplication, and
+none failed. Snapshot `6` contains 13 items. Delivery/attempt `4` each have one row and end as
+`accepted` with a durable provider identity; no duplicate group or operator resend event exists.
+The page shows the accepted evidence. Because `accepted` is the A-013 safe terminal and is not an
+ambiguous submission, the scheduler remains running for the 2026-09-29 unattended start.
 
 ## M-003 — Restore the Docker build prerequisite
 

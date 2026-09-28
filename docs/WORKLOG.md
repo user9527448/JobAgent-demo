@@ -1356,6 +1356,40 @@ all block automatic resubmission. Historical business rows are never silently re
   against the guarded `jobagent_test` database passed Ruff format/lint, Mypy across 176 source
   files, and all 362 tests without skips at 85.62% coverage. No product source changed in G2.
 
+### 2026-09-28 — Manual full regression after G2
+
+- At the owner's request, the complete offline/`_test` regression was run again without any live
+  source or PushPlus call. Ruff format/lint passed, Mypy passed across 176 source files, and all 362
+  PostgreSQL-enabled tests passed without skips at 85.62% coverage.
+- Frontend Prettier, ESLint, strict TypeScript, four Vitest cases, four Sites worker cases, and the
+  production Vite/Sites build all passed. Post-test evidence showed zero public tables in
+  `jobagent_test`, business Alembic still at `0012_delivery_accepted`, zero 2026-09-28 pipeline
+  rows, healthy `db`/`api`, and the sole scheduler still running with its next slot at
+  2026-09-29 08:00 `Asia/Shanghai`.
+
+### 2026-09-28 — A-014 G1 controlled production full-flow test
+
+- The owner clarified that “full test” meant the real production feature path and explicitly
+  approved one 2026-09-28 makeup with all enabled public sources, business writes, and exactly one
+  PushPlus submission for the new report. The result is excluded from the replacement unattended
+  0/5 sequence; a second invocation, historical resend, duplicate submission, and automatic job
+  applications remain prohibited.
+- Run `8` completed `collection → extraction → matching → report → delivery` once per stage and
+  ended `succeeded` in 46.283 seconds. Collection checked 5/5 sources with crawl runs `44`–`48`:
+  30 discoveries/details succeeded, two documents were created, 28 were skipped by deduplication,
+  and none were updated or failed. Extraction created posts `64`–`65` and positions `13`–`14`;
+  matching processed 12 results with one pass and 11 filters. Six validation issues on the two new
+  posts remain visible rather than being suppressed.
+- Report snapshot `6` contains 13 items: one priority application and 12 needing confirmation.
+  Delivery/attempt `4` each have one row and ended terminal `accepted` with a durable provider
+  identity after one `/send`; final receipt lookup remained unavailable. There are no duplicate
+  delivery/attempt groups, no operator resend event, and no non-terminal run/stage row. The page
+  displays accepted evidence without claiming final delivery.
+- Current 56 posts have five-field completeness 72.50%; all 56 source URLs are HTTPS, while only
+  2/56 have a distinct HTTPS `apply_url`. Current duplicate canonical URLs and current duplicate
+  posts are both zero. `db`/`api` remain healthy, the sole scheduler remains running with restart
+  count zero, and the next slot remains 2026-09-29 08:00 `Asia/Shanghai`.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.

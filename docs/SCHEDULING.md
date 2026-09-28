@@ -160,3 +160,8 @@ scheduled for 08:00 `Asia/Shanghai`; automation `jai-028` performs its evidence 
 bounded-wait status. Only the real automatic run for each named date can count. No makeup, manual
 send/resend, scheduler expansion, automatic job application, early JAI-051/JAI-029 work, or silent
 implementation of scorecard recommendations is authorized.
+
+A-014 G1 later authorized one explicit 2026-09-28 production-like makeup outside the unattended
+count. Run `8` completed all five stages once in 46.283 seconds and ended `succeeded`; its delivery
+ended terminal `accepted`. The scheduler was not expanded or restarted, and its next automatic slot
+remains 2026-09-29 08:00 `Asia/Shanghai`. This one-off evidence does not change the 0/5 count.

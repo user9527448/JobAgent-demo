@@ -451,6 +451,8 @@ On 2026-09-27 the owner explicitly defined JAI-028 as the project's initial end-
 
 On 2026-09-28 A-013 G2 completed: the business database migrated to `0012_delivery_accepted` without drift, historical `unknown` evidence remained unchanged, and the API/page and sole scheduler moved to the G2 images. Exactly one scheduler is running, its next persisted slot is 2026-09-29 08:00 `Asia/Shanghai`, and no 2026-09-28 makeup occurred. The replacement five-run window is fixed to 2026-09-29 through 2026-10-03; existing automation `jai-028` now audits explicitly at 08:15 `Asia/Shanghai`, and success, failure, missing, or still-running outcomes must all be visible. Counting, stop-on-anomaly, no-makeup/resend/automatic-application, and later-Issue gates remain unchanged.
 
+The owner then explicitly approved A-014 G1 for one 2026-09-28 production full-flow makeup outside the unattended count. Run `8` finished all five stages once in 46.283 seconds: 5/5 sources and 30/30 details succeeded, two were created, 28 were deduplicated/skipped, and none failed. Snapshot `6` contains 13 items, and the sole delivery/attempt `4` safely ended `accepted` without duplication. This proves the new terminal state can close the real flow, but JAI-028 remains 0/5 and formal acceptance still starts on 2026-09-29.
+
 ### 13.1 MVP execution control board (2026-09-25)
 
 | Order | Issue/baseline | Actual state | Closure condition | Allowed next action |

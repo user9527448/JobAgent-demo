@@ -152,6 +152,11 @@ durable PushPlus message identity is stored but final receipt lookup is unavaila
 the page must say **Provider accepted; final delivery unconfirmed**. `accepted` blocks duplicate
 submission exactly like `succeeded` and `unknown`; no historical resend or manual send is approved.
 
+Under A-014 G1, snapshot `6` was submitted exactly once as delivery/attempt `4`. Both rows are
+terminal `accepted`, the attempt retains a durable provider identity, and the ledger contains no
+duplicate delivery/attempt group or operator resend event. This is evidence of provider acceptance,
+not final delivery confirmation, and it must not be resubmitted.
+
 ## Activation gates
 
 - G4 covers paired documentation, Compose environment wiring, and the complete repository gate.
