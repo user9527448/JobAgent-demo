@@ -1326,6 +1326,36 @@ all block automatic resubmission. Historical business rows are never silently re
   formal scheduler remains stopped, and no provider/source call, runtime rebuild/recreation, makeup,
   resend, historical reclassification, or automatic job application occurred.
 
+### 2026-09-28 — A-013 G2 runtime activation and five-day reset
+
+- The owner approved G2 and a replacement JAI-028 window. Preflight found branch/tracking at
+  `870f1c20d2c5e21e892d689b99a0457369b4a61c`, the expected local author, HTTPS origin with no
+  persistent proxy, healthy `db`/`api`, one stopped old-image scheduler, business Alembic `0011`,
+  and zero 2026-09-28 pipeline rows. The pre-existing untracked `架构图V1.png` remained untouched.
+- New API and scheduler images built successfully, including the production frontend. The populated
+  business database then upgraded once to `0012_delivery_accepted`; `alembic check` found no drift.
+  All three historical delivery rows and attempts remained `unknown`, operator events remained zero,
+  and no current-day pipeline row appeared. The API was recreated and returned HTTP 200 for live,
+  ready, `/app/`, and Morning Briefing endpoints; the image contains the accepted UI and backend
+  contract.
+- The first stopped-container recreation command used an unsupported `docker compose create
+  --no-deps` flag and made no scheduler change. `docker compose up --no-start --no-deps
+  --force-recreate scheduler` then recreated exactly one scheduler on the new image in `Created`
+  state. After G2 passed, the approved start produced one running scheduler with restart count zero.
+  APScheduler replaced the stale job before processing due work, moving the next slot to
+  2026-09-29 08:00 `Asia/Shanghai`; 2026-09-28 remained at zero runs, so no makeup occurred.
+- Existing automation `jai-028` was updated rather than duplicated. Its first structured recurrence
+  update was rejected because the app requires a string recurrence and changed nothing. The
+  successful update explicitly starts at 2026-09-29 08:15 `Asia/Shanghai` for five daily checks,
+  covering 2026-09-29 through 2026-10-03. Its prompt now requires a visible result for success,
+  failure, missing, or still-running state, recognizes `accepted` as provider acceptance rather than
+  confirmed delivery, stops the scheduler on anomalies, and prohibits makeup, resend, scheduler
+  expansion, automatic applications, early JAI-051/JAI-029 work, and develop merge.
+- The first complete-gate invocation omitted `JOBAGENT_TEST_DATABASE_URL`: 341 tests passed, 21
+  PostgreSQL tests were correctly skipped, and the 75.14% coverage gate failed. Rerunning only
+  against the guarded `jobagent_test` database passed Ruff format/lint, Mypy across 176 source
+  files, and all 362 tests without skips at 85.62% coverage. No product source changed in G2.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -1356,14 +1386,12 @@ all block automatic resubmission. Historical business rows are never silently re
 
 ## 5. Next actions
 
-1. Keep the scheduler stopped and preserve run `6`, snapshot `5`, and delivery/attempt `3` as the
-   authoritative A-012 G3 evidence. Business Alembic is now `0011`; do not downgrade or rewrite it.
-2. A-013 G1 source-only `0012` evidence is committed and pushed. Do not migrate or reclassify the
-   business database, replace runtime containers, or contact PushPlus under the completed G1 gate.
-3. Request a separate gate for business migration `0012`, runtime image replacement, credential/live
-   verification, and a replacement unattended window. Do not make another provider call,
-   makeup/resend, or scheduler restart without that record, and do not start JAI-051 or JAI-029
-   before JAI-028 closes.
+1. Keep exactly one scheduler running on the G2 image. The production job runs at 08:00 and
+   automation `jai-028` audits at 08:15, both `Asia/Shanghai`, on 2026-09-29 through 2026-10-03.
+2. Count only each named date's real automatic run. Report success, failure, missing, or still
+   running visibly; on any anomaly stop the scheduler and do not makeup, resend, or retry externally.
+3. Preserve historical run `6`, snapshot `5`, and delivery/attempt `3` as `unknown`. Do not start
+   JAI-051/JAI-029 or merge develop until JAI-028 completes and the owner reviews closure evidence.
 
 ## 6. Update template
 

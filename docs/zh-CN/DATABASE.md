@@ -136,3 +136,8 @@ A-013 G1 只在 `_test` 验证 `0012_delivery_accepted`。该迁移把 `accepted
 操作结果的终态；只回填已有 `accepted` 尝试及所有分段均具备持久 provider 身份的合资格处理中父
 记录；降级时保守映射 `accepted` 为 `unknown`，并恢复只追加操作触发器。已有数据的业务库仍保持
 `0011_delivery_operator_audit`，本次仅源码闸门不会重分类任何历史业务记录。
+
+在 2026-09-28 另行批准的 A-013 G2 下，已有数据的业务库已升级到
+`0012_delivery_accepted`，`alembic check` 显示无待执行操作。既有 3 条投递和 3 条尝试全部继续为
+`unknown`，操作事件表仍为空，且没有创建 2026-09-28 流水线行。该迁移不倒推声称 provider 已送达，
+也不授权历史重发或重分类。

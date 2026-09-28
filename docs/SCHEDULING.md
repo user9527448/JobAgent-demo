@@ -145,3 +145,18 @@ Compose passes optional PushPlus variables only to the scheduler. Empty values l
 unconfigured; after migration, a scheduled delivery stage then fails safely instead of contacting a
 provider. JAI-026/JAI-027 database tests use only a guarded database whose name ends in `_test` and
 replace public HTTP/provider traffic with synthetic boundaries.
+
+## A-013 G2 runtime activation and replacement observation window
+
+On 2026-09-28 the owner approved and G2 completed the populated-business migration to
+`0012_delivery_accepted`, rebuilt the API and scheduler images, activated the updated `/app/`, and
+verified the sole scheduler was still stopped before the new window was enabled. The scheduler
+startup path replaces the persisted cron job before processing due jobs, so the stale
+2026-09-28 08:00 row advanced to 2026-09-29 08:00 `Asia/Shanghai` without a makeup run.
+
+The replacement JAI-028 window is 2026-09-29 through 2026-10-03. The production pipeline remains
+scheduled for 08:00 `Asia/Shanghai`; automation `jai-028` performs its evidence audit at 08:15
+`Asia/Shanghai`. All five outcomes are visible: success, failure, missing run, or still-running
+bounded-wait status. Only the real automatic run for each named date can count. No makeup, manual
+send/resend, scheduler expansion, automatic job application, early JAI-051/JAI-029 work, or silent
+implementation of scorecard recommendations is authorized.

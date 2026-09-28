@@ -146,3 +146,9 @@ in-progress parents that already have complete durable provider identities; and 
 conservatively to `unknown` on downgrade while restoring the append-only operator trigger. The
 populated business database remains at `0011_delivery_operator_audit`; no historical business row
 is reclassified by this source-only gate.
+
+Under the separately approved A-013 G2 on 2026-09-28, the populated business database advanced to
+`0012_delivery_accepted`. `alembic check` reported no pending operations. All three existing
+delivery rows and all three existing attempt rows remained `unknown`, the operator-event table
+remained empty, and no 2026-09-28 pipeline row was created. This migration does not retroactively
+claim provider delivery and does not authorize historical resend or reclassification.

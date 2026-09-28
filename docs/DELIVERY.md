@@ -145,6 +145,13 @@ A-013 G1 approves only the source implementation, migration `0012_delivery_accep
 and offline/`_test` verification. It does not reclassify historical business rows, migrate the
 business database, contact PushPlus, start the scheduler, run makeup, or resend any message.
 
+A-013 G2 applied `0012_delivery_accepted` to the populated business database and deployed the new
+API/page and scheduler image. Historical delivery/attempt rows remain `unknown`. During the new
+2026-09-29 through 2026-10-03 unattended window, a new report may complete as `accepted` when its
+durable PushPlus message identity is stored but final receipt lookup is unavailable. Scorecards and
+the page must say **Provider accepted; final delivery unconfirmed**. `accepted` blocks duplicate
+submission exactly like `succeeded` and `unknown`; no historical resend or manual send is approved.
+
 ## Activation gates
 
 - G4 covers paired documentation, Compose environment wiring, and the complete repository gate.

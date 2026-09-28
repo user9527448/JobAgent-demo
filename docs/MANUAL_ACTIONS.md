@@ -25,7 +25,7 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
 | `A-011` | G1 complete; G2 returned provider `403`; G2.1 lookup complete and the owner confirmed the security IP was saved | Preserve the append-only recovery controls; use them only under a separately recorded execution gate | G3 later applied `0011`; authentication remains unverified and resend/scheduler restart remain gated |
 | `A-012` | G3 executed once; delivery remained `unknown` | Decide provider allowlist remediation versus a separately designed finality strategy; approve any later real call separately | Business DB is at `0011`; run `6` failed safely after one PushPlus submission; scheduler remains stopped and JAI-028 is 0/5 |
-| `A-013` | G1 approved and implemented offline | Adopt terminal `accepted` when a durable PushPlus message identity exists but final receipt is unavailable | Source migration `0012`, state machine, page state, and `_test` evidence only; business migration/runtime remains gated |
+| `A-013` | G2 completed; replacement window active | Apply terminal `accepted`, migrate the business DB, deploy the runtime, and restart five visible observations | Business DB/API/page are at `0012`; one scheduler runs; observations are 2026-09-29 through 2026-10-03 at 08:15 `Asia/Shanghai` |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
@@ -198,6 +198,16 @@ OpenAPI contract and found no client-side path, JSON-field, header, or result-qu
 Provider code `403` remains documented as unauthorized request IP. The next owner action is therefore
 to resolve provider-side allowlist recognition or approve a separately designed finality strategy;
 neither choice authorizes another real call by itself.
+
+The owner subsequently approved G2. The business database migrated from `0011` to
+`0012_delivery_accepted` with no drift; all three historical delivery/attempt pairs remained
+`unknown`. New API and scheduler images were built, the API and `/app/` were recreated and verified,
+and the sole scheduler was recreated while stopped. After G2 verification, the same approval
+activated exactly one scheduler and replaced the observation window with 2026-09-29 through
+2026-10-03. The pipeline runs at 08:00 and automation `jai-028` audits at 08:15, both explicitly in
+`Asia/Shanghai`. Success, failure, missing, and still-running outcomes must all be visible. No
+2026-09-28 makeup, historical resend, manual send, scheduler expansion, automatic application,
+JAI-051/JAI-029 start, or develop merge is approved.
 
 ## M-003 — Restore the Docker build prerequisite
 
