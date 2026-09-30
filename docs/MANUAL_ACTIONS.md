@@ -25,14 +25,16 @@ Update the paired files whenever an item is added, completed, deferred, or super
 | `A-010` | Retest failed: provider `403` | Verify PushPlus OpenAPI credentials/IP allowlist locally and approve any remediation test, scheduler restart, and replacement observation window | Security-IP configuration still blocks AccessKey |
 | `A-011` | G1 complete; G2 returned provider `403`; G2.1 lookup complete and the owner confirmed the security IP was saved | Preserve the append-only recovery controls; use them only under a separately recorded execution gate | G3 later applied `0011`; authentication remains unverified and resend/scheduler restart remain gated |
 | `A-012` | G3 executed once; delivery remained `unknown` | Decide provider allowlist remediation versus a separately designed finality strategy; approve any later real call separately | Business DB is at `0011`; run `6` failed safely after one PushPlus submission; scheduler remains stopped and JAI-028 is 0/5 |
-| `A-013` | G2 completed; replacement window active | Apply terminal `accepted`, migrate the business DB, deploy the runtime, and restart five visible observations | Business DB/API/page are at `0012`; one scheduler runs; observations are 2026-09-29 through 2026-10-03 at 08:15 `Asia/Shanghai` |
+| `A-013` | G2 completed; replacement window interrupted | Apply terminal `accepted`, migrate the business DB, deploy the runtime, and restart five visible observations | Business DB/API/page are at `0012`; 2026-09-29/30 scheduled runs are missing, scheduler stopped, and a new window needs approval |
 | `A-014` | G1 approved and executed once: 2026-09-28 | Run one controlled production-like full-flow makeup for 2026-09-28 | Run `8` succeeded; snapshot `6` and delivery/attempt `4` are terminal `accepted`; it does not count toward the unattended 0/5 |
+| `A-015` | Approved and consumed once: 2026-09-30 | Run one date-specific production-like makeup without starting scheduler | Run `9` is `partial` after China Mobile discovery failure; snapshot `7` and delivery/attempt `5` are terminal `accepted`; still 0/5 |
 
 `A-007` authorized the normal scheduled JAI-028 window, including public-source requests, resulting
 business writes, and possible PushPlus notifications. The API deployment completed, but the runtime
 safety gate requires the narrower `A-008` authorization before generated report/job content may be
 sent to the external PushPlus destination on up to five automatic runs. A-012 G3 later authorized
-and consumed one diagnostic makeup/submission without changing the 0/5 acceptance count. No further
+and consumed one diagnostic makeup/submission without changing the 0/5 acceptance count. A-014 and
+A-015 each later authorized and consumed one separate date-specific makeup. No further
 business migration, runtime replacement, makeup, manual delivery/resend, scheduler start/scaling,
 JAI-051, or JAI-029 release work is authorized.
 The earlier JAI-027 one-off live notification allowance remains consumed and is not reused.
@@ -225,6 +227,21 @@ none failed. Snapshot `6` contains 13 items. Delivery/attempt `4` each have one 
 `accepted` with a durable provider identity; no duplicate group or operator resend event exists.
 The page shows the accepted evidence. Because `accepted` is the A-013 safe terminal and is not an
 ambiguous submission, the scheduler remains running for the 2026-09-29 unattended start.
+
+## A-015 — One controlled 2026-09-30 makeup after missing scheduled runs
+
+The owner approved exactly one 2026-09-30 makeup after a read-only audit found no scheduled run on
+either 2026-09-29 or 2026-09-30 and the formal scheduler already stopped. This gate allowed reads
+from enabled public sources, business writes, and exactly one PushPlus submission for the new
+report. It did not authorize a second makeup, historical resend, automatic job application,
+scheduler activation, or unattended-trial credit.
+
+The single invocation created run `9`, which ended `partial` after the China Mobile list discovery
+failed in all three bounded collection attempts. Four other sources succeeded; six new raw
+versions were extracted, matched, and included in snapshot `7`. Delivery/attempt `5` each have
+one row and safely ended `accepted` with a durable provider identity after one submission, but
+final delivery is unconfirmed. The scheduler remains stopped and JAI-028 remains 0/5. Any new
+five-day window, scheduler start, makeup, or resend requires a separate owner decision.
 
 ## M-003 — Restore the Docker build prerequisite
 

@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | A-013 G2 deployed; replacement unattended window interrupted, still 0/5 | `feature/jai-028-e2e-unattended-trials` | Business DB is `0012`; 2026-09-29 and 2026-09-30 have no scheduled-run evidence; scheduler is stopped; a new window and restart require owner review |
+| JAI-028 | A-013 G2 deployed; replacement unattended window interrupted, still 0/5 | `feature/jai-028-e2e-unattended-trials` | Business DB is `0012`; 2026-09-29/30 scheduled runs are missing; separately approved 2026-09-30 makeup `9` is `partial` and excluded; scheduler is stopped |
 
 ## 2. Current decisions
 
@@ -1407,6 +1407,39 @@ all block automatic resubmission. Historical business rows are never silently re
   The original 2026-09-29–2026-10-03 five-consecutive-run window cannot complete as planned.
   Restarting the retained job now could trigger an overdue slot within its misfire grace period;
   await owner approval for a replacement window and controlled scheduler activation.
+
+### 2026-09-30 — A-015 one controlled makeup completed partially
+
+- After a second read-only audit confirmed no 2026-09-30 run, report, delivery, or non-terminal
+  pipeline row, the owner explicitly approved one date-specific makeup: read enabled public sources,
+  write the business database, and submit the new report to PushPlus exactly once. It excludes
+  historical resend, automatic applications, a scheduler start, and unattended-trial credit.
+- The single `makeup --date 2026-09-30` invocation produced run `9` (`partial`) from 12:08:30 to
+  12:10:27 `Asia/Shanghai` (116.476 s). Collection attempted all five enabled sources: four
+  succeeded; China Mobile failed list discovery with `crawler.http_retry_exhausted` in three
+  bounded collection attempts (crawl runs `53`–`55`). D-045 correctly retried only that source;
+  successful crawl runs `49`–`52` were not repeated. Those four sources discovered and fetched
+  16/16 details, created four raw documents, updated two versions, skipped ten unchanged items,
+  and had zero detail failures. Source availability was 4/5, not 5/5; the failed source is not
+  represented as a successful zero-new-item check.
+- Six new raw-document versions were parsed into posts `66`–`71` and positions `15`–`16` with no
+  extraction failure. The six posts have 25 visible validation issues (15 errors, ten warnings).
+  Matching created 14 results (one passed, 13 filtered). Snapshot `7` contains 15 item occurrences
+  across 14 unique match results: one priority and 14 needing confirmation. All 15 occurrences
+  have HTTPS source URLs; none exposes an `apply_url`. Across 62 current posts, five-core-field
+  completeness is 225/310 (72.58%), and only 2/62 have a distinct HTTPS `apply_url`; current
+  duplicate canonical URLs and duplicate current post/document groups are both zero.
+- Delivery/attempt `5` are one part and one attempt, terminal `accepted` with a durable provider
+  message identity after one `/send`; `pushplus.access_key_rejected` remains recorded for the
+  unavailable final-receipt check. This is provider acceptance, not confirmed final delivery.
+  There is exactly one run, one report, one delivery, one attempt, no non-terminal stage row,
+  no duplicate delivery group, and no operator resend event. The formal scheduler remains
+  `Exited (143)` while `db`/`api` are healthy. Run `9` is not a successful unattended trial;
+  JAI-028 remains 0/5. Do not retry China Mobile, resend, or activate the scheduler without a
+  separately approved recovery/window decision.
+- Documentation-only checks passed: `git diff --check`; paired heading counts are 111/111 for
+  WORKLOG, 17/17 for manual actions, 46/46 for development plans, and 73/73 for backlogs.
+  No application code or configuration changed, so no runtime/test gate was rerun for this record.
 
 ## 4. Verification and blockers
 
