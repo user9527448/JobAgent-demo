@@ -6,7 +6,7 @@
 > [`archive/WORKLOG-LEGACY-THROUGH-JAI-046.md`](archive/WORKLOG-LEGACY-THROUGH-JAI-046.md)
 > with SHA-256 `E9CB9D3652A065491F5C88D3D24610A0593B6079AA49353A912F8B40B9E9A0F7`.
 >
-> Last updated: 2026-09-28
+> Last updated: 2026-09-30
 >
 > Active branch: `feature/jai-028-e2e-unattended-trials`
 
@@ -37,7 +37,7 @@
 | JAI-026 | Complete; merged to `develop` after G1–G4 | `develop` / current non-fast-forward merge | Business migration, one live scheduler, controlled makeup/reuse, and the post-merge full gate passed |
 | JAI-027 | Complete; merged and pushed to `develop` after D-037/G1–G5 | `develop` / `5c56af3` | Business schema is at `0010`; snapshot 2 was submitted once, its unconfirmed accepted outcome is durably `unknown`, and the post-merge full gate passed |
 | JAI-050 | Complete; merged and pushed to `develop` | `develop` / `dcdd697` | 357 tests, 85.80% coverage, design QA, and rebuilt container image passed |
-| JAI-028 | A-013 G1 accepted-state offline implementation complete; unattended acceptance still 0/5 | `feature/jai-028-e2e-unattended-trials` | Source head is `0012`; business DB remains `0011`; historical run `6` and delivery/attempt `3` remain unchanged; scheduler stopped and no automatic job applications |
+| JAI-028 | A-013 G2 deployed; replacement unattended window interrupted, still 0/5 | `feature/jai-028-e2e-unattended-trials` | Business DB is `0012`; 2026-09-29 and 2026-09-30 have no scheduled-run evidence; scheduler is stopped; a new window and restart require owner review |
 
 ## 2. Current decisions
 
@@ -1390,6 +1390,24 @@ all block automatic resubmission. Historical business rows are never silently re
   posts are both zero. `db`/`api` remain healthy, the sole scheduler remains running with restart
   count zero, and the next slot remains 2026-09-29 08:00 `Asia/Shanghai`.
 
+### 2026-09-30 — JAI-028 replacement-window audit found two missing runs
+
+- The owner manually restored Docker Desktop and confirmed the 08:15 Codex Desktop audit woke late
+  because the desktop app had been closed. Read-only Compose inspection then found healthy `db` and
+  `api`, but the only scheduler container was `Exited (143)`: it had stopped at 2026-09-28 13:41:54
+  `Asia/Shanghai`, with zero restarts and the same image ID as `jobagent-scheduler`.
+- The populated business database remains at `0012_delivery_accepted`. Its fixed APScheduler job
+  still points to 2026-09-29 08:00 `Asia/Shanghai`. Neither 2026-09-29 nor 2026-09-30 has a
+  `pipeline_runs` row; there are also zero crawl runs, fetched raw documents, report snapshots,
+  and notification deliveries on those dates. The absence of a pipeline run precludes a stage or
+  full-flow scorecard; no success or failure is inferred from missing data. Both dates count 0/5.
+- The container's termination signal is visible, but the initiating action is not established by
+  the available evidence. The scheduler was already stopped, so no further stop was possible or
+  needed. No makeup, resend, provider/source request, migration, or business write was performed.
+  The original 2026-09-29–2026-10-03 five-consecutive-run window cannot complete as planned.
+  Restarting the retained job now could trigger an overdue slot within its misfire grace period;
+  await owner approval for a replacement window and controlled scheduler activation.
+
 ## 4. Verification and blockers
 
 - JAI-046 final gate: Ruff format/lint passed; Mypy passed across 56 source files; 89 tests passed with PostgreSQL; coverage 88.35%.
@@ -1420,9 +1438,11 @@ all block automatic resubmission. Historical business rows are never silently re
 
 ## 5. Next actions
 
-1. Keep exactly one scheduler running on the G2 image. The production job runs at 08:00 and
-   automation `jai-028` audits at 08:15, both `Asia/Shanghai`, on 2026-09-29 through 2026-10-03.
-2. Count only each named date's real automatic run. Report success, failure, missing, or still
+1. Keep the scheduler stopped. Seek owner approval for a replacement five-day window and a
+   controlled restart that cannot accidentally execute an overdue 2026-09-29/30 slot. The existing
+   `jai-028` automation remains scheduled at 08:15 `Asia/Shanghai`; Codex Desktop must be open for
+   on-time observation or a separately approved monitoring arrangement is needed.
+2. Count only real automatic runs in an approved window. Report success, failure, missing, or still
    running visibly; on any anomaly stop the scheduler and do not makeup, resend, or retry externally.
 3. Preserve historical run `6`, snapshot `5`, and delivery/attempt `3` as `unknown`. Do not start
    JAI-051/JAI-029 or merge develop until JAI-028 completes and the owner reviews closure evidence.
